@@ -31,13 +31,21 @@ const makeWorld = () => {
 	canvas.style["image-rendering"] = "pixelated"
 	world.tick = () => {}
 
+	
+	world.atoms = []
+	world.update = () => {
+		for (const atom of world.atoms) {
+			atom.update(atom, world)
+		}
+	}
+
 	world.draw = () => {
+		context.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 		for (const atom of world.atoms) {
 			atom.draw(atom, context)
 		}
 	}
 
-	world.atoms = []
 
 	
 
@@ -55,15 +63,37 @@ const defaultElementDraw = (self, context) => {
 	context.fillRect(self.x, self.y, self.width, self.height)
 }
 
-const makeElement = ({width = 20, height = 20, draw = defaultElementDraw, colour = "rgb(255, 70, 70)"}) => {
-	const element = {width, height, draw, colour}
+const GRAVITY = 0.5
+const defaultElementUpdate = (self, world) => {
+
+	const {x, y, dx, dy} = self
+
+	let nx = x + dx
+	let ny = y + dy
+
+	const bottom = ny + self.height
+
+	if (bottom > WORLD_HEIGHT) {
+		ny = WORLD_HEIGHT - self.height
+		self.dy = 0
+	}
+	
+	self.x = nx
+	self.y = ny
+	self.dy += GRAVITY
+
+
+}
+
+const makeElement = ({width = 20, height = 20, update = defaultElementUpdate, draw = defaultElementDraw, colour = "rgb(255, 70, 70)"}) => {
+	const element = {width, height, draw, update, colour}
 	return element
 }
 
 const Box = makeElement({width: 50, height: 50})
 
-const makeAtom = ({element = Box, x = 20, y = 20}) => {
-	const atom = {x, y, ...element}
+const makeAtom = ({element = Box, x = 20, y = 20, dx = 0, dy = 0}) => {
+	const atom = {x, y, dx, dy, ...element}
 	return atom
 }
 
