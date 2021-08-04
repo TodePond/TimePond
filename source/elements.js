@@ -1,3 +1,3 @@
 
-const Box = makeElement({w: 50, h: 50})
-const Platform = makeElement({w: 100, h: 25, colour: "grey"})
+const Box = makeElement({width: 50, height: 50})
+const Platform = makeElement({width: 100, height: 25, colour: "rgb(159, 174, 201)"})

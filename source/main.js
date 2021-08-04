@@ -2,7 +2,7 @@
 const worlds = []
 
 on.load(() => {
-	document.body.style["background-color"] = "rgb(45, 56, 77)"
+	document.body.style["background-color"] = "rgb(23, 29, 40)"
 	document.body.style["margin"] = "0"
 	
 	// Create and start initial timeline
@@ -14,10 +14,13 @@ on.load(() => {
 })
 
 
+let hand = undefined
+
 const tick = () => {
+	const paused = hand !== undefined
 	for (const world of worlds) {
-		world.update()
+		world.update(paused)
 		world.draw()
 	}
-	requestAnimationFrame(tick)
+	requestAnimationFrame(tick, 0)
 }
