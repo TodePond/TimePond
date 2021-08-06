@@ -1,26 +1,10 @@
 
-const worlds = []
+const multiverse = makeMultiverse()
 
 on.load(() => {
-	document.body.style["background-color"] = "rgb(23, 29, 40)"
+	document.body.style["background-color"] = Colour.Black
 	document.body.style["margin"] = "0"
-	
-	// Create and start initial timeline
-	const world = makeWorld()
-	addWorld(world)
-	tick()
-
-	
+	document.body.appendChild(multiverse.context.canvas)
+	trigger("resize")
 })
 
-
-let hand = undefined
-
-const tick = () => {
-	const paused = hand !== undefined
-	for (const world of worlds) {
-		world.update(paused)
-		world.draw()
-	}
-	requestAnimationFrame(tick, 0)
-}

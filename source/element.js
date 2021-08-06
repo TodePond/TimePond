@@ -3,8 +3,8 @@ const makeElement = ({width = 20, height = 20, update = UPDATE_MOVER, draw = DRA
 	const element = {width, height, draw, update, colour}
 	return element
 }
-
 // Defaults
+const GRAVITY = 0.5
 const DRAW_RECTANGLE = (self, context) => {
 	const {x, y, width, height, colour} = self
 	context.fillStyle = colour
