@@ -55,8 +55,7 @@ const getBounds = ({x, y, width, height}) => {
 	return {top, bottom, left, right}
 }
 
-const pointOverlaps = (point, atom) => {
-	const {x, y} = point
+const pointOverlaps = ({x, y}, atom) => {
 	const {left, right, top, bottom} = getBounds(atom)
 	return x >= left && x <= right && y >= top && y <= bottom
 }

@@ -18,27 +18,26 @@ const UPDATE_MOVER = (self, world) => {
 	let [nx, ny] = [x+dx, y+dy]
 
 	const nbounds = getBounds({x: nx, y: ny, width, height})
-
-	if (nbounds.bottom >= WORLD_HEIGHT) {
-		ny = WORLD_HEIGHT - height
-		self.dy = 0
-	}
-
 	const bounds = getBounds(self)
 	for (const atom of world.atoms) {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
 
 		// vert collision
-		if (dy > 0 && bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
-			if (bounds.right >= abounds.left && bounds.left <= abounds.right) {
-				ny = abounds.top - height
-				self.dy = 0
+		if (dy > 0) {
+			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
+				if (bounds.right >= abounds.left && bounds.left <= abounds.right) {
+					ny = abounds.top - height
+					self.dy = 0
+				}
 			}
+		}
+		else if (dy < 0) {
+			// TODO
 		}
 
 		// horiz collision
-
+		// TODO
 
 	}
 

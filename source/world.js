@@ -8,6 +8,10 @@ const makeWorld = () => {
 	const left = makeAtom({...ELEMENT_VOID, turns: 1})
 	const right = makeAtom({...ELEMENT_VOID, turns: 1, x: WORLD_WIDTH-ELEMENT_VOID.height})
 	world.atoms = [top, bottom, left, right]
+
+	// Debug
+	world.atoms.push(makeAtom(ELEMENT_BOX))
+
 	return world
 }
 
