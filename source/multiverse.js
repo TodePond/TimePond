@@ -49,6 +49,7 @@ const hand = {
 	atom: undefined,
 	source: undefined,
 	offset: {x: undefined, y: undefined},
+	previous: {x: undefined, y: undefined}
 }
 const updateCursor = (multiverse, context) => {
 	const [mx, my] = Mouse.position
@@ -61,12 +62,11 @@ const updateCursor = (multiverse, context) => {
 
 		if (down) {
 			for (const atom of world.atoms) {
-				if (pointOverlaps({x, y}, atom)) {
+				if (atom.grabbable && pointOverlaps({x, y}, atom)) {
 					hand.atom = atom
-					hand.atom.dx = 0
-					hand.atom.dy = 0
 					hand.source = world
 					hand.offset = {x: atom.x-x, y: atom.y-y}
+					hand.previous = {x: mx, y: my}
 				}
 			}
 		}
@@ -76,7 +76,6 @@ const updateCursor = (multiverse, context) => {
 	// State: HOLDING SOMETHING
 	else {
 		
-
 		if (world !== hand.source) {
 			hand.source.atoms = hand.source.atoms.filter(atom => atom !== hand.atom)
 			world.atoms.push(hand.atom)
@@ -87,8 +86,12 @@ const updateCursor = (multiverse, context) => {
 		hand.atom.y = y+hand.offset.y
 
 		if (!down) {
+			hand.atom.dx = (mx - hand.previous.x) / 2
+			hand.atom.dy = (my - hand.previous.y) / 2
 			hand.atom = undefined
 		}
+		
+		hand.previous = {x: mx, y: my}
 
 	}
 
@@ -98,6 +101,9 @@ const updateMultiverse = (multiverse) => {
 	if (hand.atom !== undefined) return
 	for (const world of multiverse.worlds) {
 		updateWorld(world)
+	}
+	for (const world of multiverse.worlds) {
+		prepWorld(world)
 	}
 }
 

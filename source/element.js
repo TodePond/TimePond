@@ -28,22 +28,44 @@ const UPDATE_MOVER = (self, world) => {
 			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
 				if (bounds.right >= abounds.left && bounds.left <= abounds.right) {
 					ny = abounds.top - height
-					self.dy = 0
+					self.nextdy = atom.dy
+					self.nextdx = self.dx * 0.9
 				}
 			}
 		}
 		else if (dy < 0) {
-			// TODO
+			if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
+				if (bounds.right >= abounds.left && bounds.left <= abounds.right) {
+					ny = abounds.bottom
+					self.nextdy = 0
+				}
+			}
 		}
 
 		// horiz collision
-		// TODO
+		if (dx > 0) {
+			if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
+				if (bounds.bottom >= abounds.top && bounds.top <= abounds.bottom) {
+					nx = abounds.left - width
+					self.nextdx = 0
+				}
+			}
+		}
+		else if (dx < 0) {
+			if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
+				if (bounds.bottom >= abounds.top && bounds.top <= abounds.bottom) {
+					nx = abounds.right
+					self.nextdx = 0
+				}
+			}
+		}
 
 	}
+	
+	self.nextdy += UPDATE_MOVER_GRAVITY
 
 	self.x = nx
 	self.y = ny
-	self.dy += UPDATE_MOVER_GRAVITY
 }
 
 //==========//
@@ -62,4 +84,5 @@ const ELEMENT_VOID = {
 	height: 10,
 	width: WORLD_WIDTH,
 	y: 0,
+	grabbable: false,
 }

@@ -18,8 +18,17 @@ const makeWorld = () => {
 //===========//
 // Game Loop //
 //===========//
+const prepWorld = (world) => {
+	for (const atom of world.atoms) {
+		atom.dx = atom.nextdx
+		atom.dy = atom.nextdy
+	}
+}
+
 const updateWorld = (world) => {
 	for (const atom of world.atoms) {
+		atom.nextdx = atom.dx
+		atom.nextdy = atom.dy
 		updateAtom(atom, world)
 	}
 }
