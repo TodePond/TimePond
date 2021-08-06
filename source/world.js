@@ -3,13 +3,23 @@
 //=======//
 const makeWorld = () => {
 	const world = {}
-	world.atoms = []
+	const top = makeAtom(ELEMENT_VOID)
+	const bottom = makeAtom({...ELEMENT_VOID, y: WORLD_HEIGHT-ELEMENT_VOID.height})
+	const left = makeAtom({...ELEMENT_VOID, turns: 1})
+	const right = makeAtom({...ELEMENT_VOID, turns: 1, x: WORLD_WIDTH-ELEMENT_VOID.height})
+	world.atoms = [top, bottom, left, right]
 	return world
 }
 
 //===========//
 // Game Loop //
 //===========//
+const updateWorld = (world) => {
+	for (const atom of world.atoms) {
+		updateAtom(atom, world)
+	}
+}
+
 const drawWorld = (world, context) => {
 
 	context.fillStyle = Colour.Grey

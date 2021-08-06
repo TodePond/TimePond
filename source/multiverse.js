@@ -39,7 +39,14 @@ const addWorld = (multiverse, world) => {
 // Game Loop //
 //===========//
 const tickMultiverse = (multiverse, context) => {
+	updateMultiverse(multiverse)
 	drawMultiverse(multiverse, context)
+}
+
+const updateMultiverse = (multiverse) => {
+	for (const world of multiverse.worlds) {
+		updateWorld(world)
+	}
 }
 
 const drawMultiverse = (multiverse, context) => {
@@ -52,13 +59,13 @@ const drawMultiverse = (multiverse, context) => {
 		x += WORLD_WIDTH
 		context.translate(WORLD_WIDTH, 0)
 		if (x + WORLD_WIDTH >= context.canvas.width) {
-			context.translate(-x, 0)
-			context.translate(0, WORLD_HEIGHT)
 			x = 0
 			y += WORLD_HEIGHT
+			context.resetTransform()
+			context.translate(0, y)
 		}
 	}
-	context.translate(-x, -y)
+	context.resetTransform()
 }
 
 //=========//
