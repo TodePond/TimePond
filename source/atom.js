@@ -10,13 +10,18 @@ const makeAtom = ({
 	dy = 0,
 	draw = DRAW_RECTANGLE,
 	update = UPDATE_MOVER,
+	...args
 } = {}) => {
-	const atom = {width, height, x, y, dx, dy, draw, update}
+	const atom = {width, height, x, y, dx, dy, draw, update, ...args}
 	return atom
 }
 
-const drawAtom = (context, x, y, atom) => {
-
+//===========//
+// Game Loop //
+//===========//
+const drawAtom = (atom, context) => {
+	const {draw} = atom
+	draw(atom, context)
 }
 
 //=========//

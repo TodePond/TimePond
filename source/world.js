@@ -10,15 +10,13 @@ const makeWorld = () => {
 //===========//
 // Game Loop //
 //===========//
-const drawWorld = (world, context, x, y) => {
-
-	const {atoms} = world
+const drawWorld = (world, context) => {
 
 	context.fillStyle = Colour.Grey
-	context.fillRect(x, y, WORLD_WIDTH, WORLD_HEIGHT)
+	context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 
-	for (const atom of atoms) {
-		atom.draw()
+	for (const atom of world.atoms) {
+		drawAtom(atom, context)
 	}
 
 }

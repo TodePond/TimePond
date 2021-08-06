@@ -7,8 +7,8 @@ const WORLD_HEIGHT = 500
 //=======//
 // Setup //
 //=======//
-const worlds = makeWorlds()
-const canvas = makeWorldsCanvas(worlds)
+const multiverse = makeMultiverse()
+const canvas = makeMultiverseCanvas(multiverse)
 
 on.load(() => {
 	document.body.style["background-color"] = Colour.Black
