@@ -53,7 +53,8 @@ const hand = {
 }
 
 const updateCursor = (multiverse, context) => {
-	const [mx, my] = Mouse.position
+	const [cx, cy] = Mouse.position
+	const [mx, my] = [cx + scrollX, cy + scrollY]
 	const down = Mouse.Left
 	const address = getAddress(mx, my, multiverse, context)
 	const {world, x, y} = address
@@ -169,5 +170,5 @@ const getMultiverseHeight = (multiverse, canvas) => {
 			y += WORLD_HEIGHT
 		}
 	}
-	return y + WORLD_HEIGHT
+	return y + WORLD_HEIGHT + MENU_HEIGHT
 }

@@ -29,6 +29,9 @@ const updateWorld = (world) => {
 	for (const atom of world.atoms) {
 		atom.nextdx = atom.dx
 		atom.nextdy = atom.dy
+	}
+	
+	for (const atom of world.atoms) {
 		updateAtom(atom, world)
 	}
 }
