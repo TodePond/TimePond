@@ -61,4 +61,7 @@ const pointOverlaps = ({x, y}, atom) => {
 	return x >= left && x <= right && y >= top && y <= bottom
 }
 
+const atomOverlaps = (self, atom) => {
+	
+}
 
