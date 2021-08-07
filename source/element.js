@@ -76,8 +76,10 @@ const UPDATE_MOVER = (self, world) => {
 			if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
 				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
 					nx = abounds.left - width
+					atom.nextdx *= 0.5
 					atom.nextdx += self.dx/2
-					self.nextdx *= -0.5
+					self.nextdx = -0.5
+					self.nextdx += atom.dx/2
 				}
 			}
 		}
@@ -85,8 +87,10 @@ const UPDATE_MOVER = (self, world) => {
 			if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
 				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
 					nx = abounds.right
+					atom.nextdx *= 0.5
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
+					self.nextdx += atom.dx/2
 				}
 			}
 		}
