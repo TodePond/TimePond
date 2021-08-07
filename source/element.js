@@ -10,9 +10,38 @@ const DRAW_RECTANGLE = (atom, context) => {
 //==========//
 // Updaters //
 //==========//
-const UPDATE_STATIC = () => {}
+const UPDATE_STATIC = (self) => {
+	self.dx = 0
+	self.dy = 0
+	self.nextdx = 0
+	self.nextdy = 0
+}
+
+const getSide = (point, [left, right]) => {
+	if (point < left) return -1
+	if (point > right) return 1
+	return 0
+}
+
+const aligns = ([left, right], [nleft, nright], [aleft, aright]) => {
+	const leftSide = getSide(left, [aleft, aright])
+	const rightSide = getSide(right, [aleft, aright])
+	const nleftSide = getSide(nleft, [aleft, aright])
+	const nrightSide = getSide(nright, [aleft, aright])
+
+	if (leftSide === 0) return true
+	if (rightSide === 0) return true
+	if (nleftSide === 0) return true
+	if (nrightSide === 0) return true
+	if (leftSide*-1 == nleftSide) return true
+	if (rightSide*-1 == nrightSide) return true
+
+	return false
+}
 
 const UPDATE_MOVER_GRAVITY = 0.5
+const UPDATE_MOVER_AIR_RESISTANCE = 0.99
+const UPDATE_MOVER_FRICTION = 0.8
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height} = self
 	let [nx, ny] = [x+dx, y+dy]
@@ -26,16 +55,16 @@ const UPDATE_MOVER = (self, world) => {
 		// vert collision
 		if (dy > 0) {
 			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
-				if (bounds.right >= abounds.left && bounds.left <= abounds.right) {
+				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.top - height
 					self.nextdy = atom.dy
-					self.nextdx = self.dx * 0.9
+					self.nextdx *= UPDATE_MOVER_FRICTION
 				}
 			}
 		}
 		else if (dy < 0) {
 			if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
-				if (bounds.right >= abounds.left && bounds.left <= abounds.right) {
+				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.bottom
 					self.nextdy = 0
 				}
@@ -45,17 +74,19 @@ const UPDATE_MOVER = (self, world) => {
 		// horiz collision
 		if (dx > 0) {
 			if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
-				if (bounds.bottom >= abounds.top && bounds.top <= abounds.bottom) {
+				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
 					nx = abounds.left - width
-					self.nextdx = 0
+					atom.nextdx += self.dx/2
+					self.nextdx *= -0.5
 				}
 			}
 		}
 		else if (dx < 0) {
 			if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
-				if (bounds.bottom >= abounds.top && bounds.top <= abounds.bottom) {
+				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
 					nx = abounds.right
-					self.nextdx = 0
+					atom.nextdx += self.dx/2
+					self.nextdx *= -0.5
 				}
 			}
 		}
@@ -63,10 +94,17 @@ const UPDATE_MOVER = (self, world) => {
 	}
 	
 	self.nextdy += UPDATE_MOVER_GRAVITY
+	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
 
 	self.x = nx
 	self.y = ny
 }
+
+//==========//
+// Grabbers //
+//==========//
+const GRAB_DRAG = (self) => self
+const GRAB_STATIC = () => {}
 
 //==========//
 // Elements //
@@ -75,14 +113,19 @@ const ELEMENT_BOX = {
 	colour: Colour.Orange,
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_MOVER,
+	grab: GRAB_DRAG,
 }
 
 const ELEMENT_VOID = {
 	colour: Colour.Black,
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_STATIC,
+	grab: GRAB_STATIC,
 	height: 10,
 	width: WORLD_WIDTH,
 	y: 0,
-	grabbable: false,
+}
+
+const ELEMENT_SPAWNER = {
+	
 }

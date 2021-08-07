@@ -51,6 +51,7 @@ const hand = {
 	offset: {x: undefined, y: undefined},
 	previous: {x: undefined, y: undefined}
 }
+
 const updateCursor = (multiverse, context) => {
 	const [mx, my] = Mouse.position
 	const down = Mouse.Left
@@ -62,11 +63,15 @@ const updateCursor = (multiverse, context) => {
 
 		if (down) {
 			for (const atom of world.atoms) {
-				if (atom.grabbable && pointOverlaps({x, y}, atom)) {
-					hand.atom = atom
-					hand.source = world
-					hand.offset = {x: atom.x-x, y: atom.y-y}
-					hand.previous = {x: mx, y: my}
+				if (pointOverlaps({x, y}, atom)) {
+					const {grab} = atom
+					const grabbed = grab(atom)
+					hand.atom = grabbed
+					if (grabbed !== undefined) {
+						hand.source = world
+						hand.offset = {x: atom.x-x, y: atom.y-y}
+						hand.previous = {x: mx, y: my}
+					}
 				}
 			}
 		}
@@ -86,8 +91,8 @@ const updateCursor = (multiverse, context) => {
 		hand.atom.y = y+hand.offset.y
 
 		if (!down) {
-			hand.atom.dx = (mx - hand.previous.x) / 2
-			hand.atom.dy = (my - hand.previous.y) / 2
+			hand.atom.dx = (mx - hand.previous.x)
+			hand.atom.dy = (my - hand.previous.y)
 			hand.atom = undefined
 		}
 		
@@ -109,9 +114,12 @@ const updateMultiverse = (multiverse) => {
 
 const drawMultiverse = (multiverse, context) => {
 	context.clearRect(0, 0, canvas.width, canvas.height)
-	drawWorld(multiverse.void, context)
+	drawWorld(multiverse.void, context, false)
+	
 	let x = 0
 	let y = 0
+	
+	context.translate(0, MENU_HEIGHT)
 	for (let i = 0; i < multiverse.worlds.length; i++) {
 		const world = multiverse.worlds[i]
 		drawWorld(world, context)
@@ -122,7 +130,7 @@ const drawMultiverse = (multiverse, context) => {
 			x = 0
 			y += WORLD_HEIGHT
 			context.resetTransform()
-			context.translate(0, y)
+			context.translate(0, y + MENU_HEIGHT)
 		}
 	}
 	context.resetTransform()
@@ -131,15 +139,13 @@ const drawMultiverse = (multiverse, context) => {
 //=========//
 // Usefuls //
 //=========//
-const getAddress = (mx, my, multiverse, context) => {
-	const wx = mx % WORLD_WIDTH
-	const wy = my % WORLD_HEIGHT
+const getAddress = (mx, my, multiverse) => {
 	const column = Math.floor(mx / WORLD_WIDTH)
-	const row = Math.floor(my / WORLD_HEIGHT)
+	const row = Math.floor((my-MENU_HEIGHT) / WORLD_HEIGHT)
 	const world = getWorldFromGridPosition(column, row, multiverse, canvas)
 	if (world === multiverse.void) return {world, x: mx, y: my}
 	const x = mx - column*WORLD_WIDTH
-	const y = my - row*WORLD_HEIGHT
+	const y = my-MENU_HEIGHT - row*WORLD_HEIGHT
 	return {world, x, y}
 }
 

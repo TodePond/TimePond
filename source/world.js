@@ -33,10 +33,12 @@ const updateWorld = (world) => {
 	}
 }
 
-const drawWorld = (world, context) => {
+const drawWorld = (world, context, colourBackground = true) => {
 
-	context.fillStyle = Colour.Grey
-	context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+	if (colourBackground) {
+		context.fillStyle = Colour.Grey
+		context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+	}
 
 	for (const atom of world.atoms) {
 		drawAtom(atom, context)

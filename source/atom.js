@@ -10,11 +10,11 @@ const makeAtom = ({
 	dy = 0,
 	draw = DRAW_RECTANGLE,
 	update = UPDATE_STATIC,
-	grabbable = true,
+	grab = GRAB_DRAG,
 	turns = 0,
 	...args
 } = {}) => {
-	const atom = {width, height, x, y, dx, dy, nextdx: dx, nextdy: dy, draw, update, grabbable, ...args}
+	const atom = {width, height, x, y, dx, dy, nextdx: dx, nextdy: dy, draw, update, grab, ...args}
 	turnAtom(atom, turns)
 	return atom
 }
