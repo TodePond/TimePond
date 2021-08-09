@@ -31,9 +31,9 @@ const UPDATE_MOVER = (self, world) => {
 		const abounds = getBounds(atom)
 
 		// vert collision
-		if (dy > 0) {
+		if (dy >= 0) {
 			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
-				if (UPDATE_MOVER.aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
+				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.top - height
 					self.nextdy = atom.dy
 					self.nextdx *= UPDATE_MOVER_FRICTION
@@ -42,7 +42,7 @@ const UPDATE_MOVER = (self, world) => {
 		}
 		else if (dy < 0) {
 			if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
-				if (UPDATE_MOVER.aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
+				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.bottom
 					self.nextdy = 0
 				}
@@ -52,7 +52,7 @@ const UPDATE_MOVER = (self, world) => {
 		// horiz collision
 		if (dx > 0) {
 			if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
-				if (UPDATE_MOVER.aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
+				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
 					nx = abounds.left - width
 					atom.nextdx *= 0.5
 					atom.nextdx += self.dx/2
@@ -63,7 +63,7 @@ const UPDATE_MOVER = (self, world) => {
 		}
 		else if (dx < 0) {
 			if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
-				if (UPDATE_MOVER.aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
+				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
 					nx = abounds.right
 					atom.nextdx *= 0.5
 					atom.nextdx += self.dx/2
@@ -82,28 +82,6 @@ const UPDATE_MOVER = (self, world) => {
 	self.y = ny
 }
 
-UPDATE_MOVER.getPointSide = (point, [left, right]) => {
-	if (point < left) return -1
-	if (point > right) return 1
-	return 0
-}
-
-UPDATE_MOVER.aligns = ([left, right], [nleft, nright], [aleft, aright]) => {
-	const leftSide = UPDATE_MOVER.getPointSide(left, [aleft, aright])
-	const rightSide = UPDATE_MOVER.getPointSide(right, [aleft, aright])
-	const nleftSide = UPDATE_MOVER.getPointSide(nleft, [aleft, aright])
-	const nrightSide = UPDATE_MOVER.getPointSide(nright, [aleft, aright])
-
-	if (leftSide === 0) return true
-	if (rightSide === 0) return true
-	if (nleftSide === 0) return true
-	if (nrightSide === 0) return true
-	if (leftSide*-1 == nleftSide) return true
-	if (rightSide*-1 == nrightSide) return true
-
-	return false
-}
-
 //==========//
 // Grabbers //
 //==========//
@@ -118,6 +96,15 @@ const ELEMENT_BOX = {
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_MOVER,
 	grab: GRAB_DRAG,
+}
+
+const ELEMENT_PLATFORM = {
+	colour: Colour.White,
+	draw: DRAW_RECTANGLE,
+	update: UPDATE_STATIC,
+	grab: GRAB_DRAG,
+	width: 150,
+	height: 25,
 }
 
 const ELEMENT_VOID = {

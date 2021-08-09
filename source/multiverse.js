@@ -3,7 +3,7 @@
 //=======//
 const makeMultiverse = () => {
 	const multiverse = {}
-	multiverse.worlds = [makeWorld()]
+	multiverse.worlds = [makeWorld(), makeWorld()]
 	multiverse.void = {atoms: []}
 	return multiverse
 }
@@ -52,6 +52,7 @@ const hand = {
 	previous: {x: undefined, y: undefined}
 }
 
+const CURSOR_SQUEEZE_EFFORT = 100
 const updateCursor = (multiverse, context) => {
 	const [cx, cy] = Mouse.position
 	const [mx, my] = [cx + scrollX, cy + scrollY]
@@ -81,22 +82,40 @@ const updateCursor = (multiverse, context) => {
 
 	// State: HOLDING SOMETHING
 	else {
-		
+
+		// Move it to the dragged position!
+		hand.atom.x = x + hand.offset.x
+		hand.atom.y = y + hand.offset.y
+			
+		// Transfer the dragged atom to another world if needed
 		if (world !== hand.source) {
 			hand.source.atoms = hand.source.atoms.filter(atom => atom !== hand.atom)
 			world.atoms.push(hand.atom)
 			hand.source = world
 		}
 		
-		hand.atom.x = x+hand.offset.x
-		hand.atom.y = y+hand.offset.y
-
+		// Are we letting go of the atom?
 		if (!down) {
-			hand.atom.dx = (mx - hand.previous.x)
-			hand.atom.dy = (my - hand.previous.y)
-			hand.atom = undefined
+
+			// Can we actually drop it here?
+			let canDrop = true
+			for (const atom of world.atoms) {
+				if (atom === hand.atom) continue
+				if (atomOverlaps(hand.atom, atom)) {
+					canDrop = false
+					break
+				}
+			}
+			
+			// If there's room, drop it!
+			if (canDrop) {
+				hand.atom.dx = (mx - hand.previous.x)
+				hand.atom.dy = (my - hand.previous.y)
+				hand.atom = undefined
+			}
 		}
 		
+		// Help keep track of hand speed
 		hand.previous = {x: mx, y: my}
 
 	}

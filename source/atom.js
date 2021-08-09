@@ -62,6 +62,49 @@ const pointOverlaps = ({x, y}, atom) => {
 }
 
 const atomOverlaps = (self, atom) => {
-	
+
+	const bounds = getBounds(self)
+	const abounds = getBounds(atom)
+
+	const horizAligns = aligns([bounds.left, bounds.right], [], [abounds.left, abounds.right])
+	const vertAligns = aligns([bounds.top, bounds.bottom], [], [abounds.top, abounds.bottom])
+	if (horizAligns && vertAligns) return true
+	if (horizAligns && bounds.top <= abounds.top && bounds.bottom >= abounds.bottom) return true
+	if (horizAligns && bounds.left <= abounds.left && bounds.right >= abounds.right) return true
+
+	const ahorizAligns = aligns([abounds.left, abounds.right], [], [bounds.left, bounds.right])
+	const avertAligns = aligns([abounds.top, abounds.bottom], [], [bounds.top, bounds.bottom])
+	if (ahorizAligns && avertAligns) return true
+	if (ahorizAligns && abounds.top <= bounds.top && abounds.bottom >= bounds.bottom) return true
+	if (avertAligns && abounds.left <= bounds.left && abounds.right >= bounds.right) return true
+
+
+
+	return false
+
 }
 
+const getPointSide = (point, [left, right]) => {
+	if (point < left) return -1
+	if (point > right) return 1
+	return 0
+}
+
+const aligns = ([left, right], [nleft, nright], [aleft, aright]) => {
+	const leftSide = getPointSide(left, [aleft, aright])
+	const rightSide = getPointSide(right, [aleft, aright])
+	if (leftSide === 0) return true
+	if (rightSide === 0) return true
+
+	// For moving things
+	if (nleft !== undefined && nright !== undefined) {
+		const nleftSide = getPointSide(nleft, [aleft, aright])
+		const nrightSide = getPointSide(nright, [aleft, aright])
+		if (nleftSide === 0) return true
+		if (nrightSide === 0) return true
+		if (leftSide*-1 == nleftSide) return true
+		if (rightSide*-1 == nrightSide) return true
+	}
+
+	return false
+}

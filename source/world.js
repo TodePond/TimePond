@@ -11,6 +11,7 @@ const makeWorld = () => {
 
 	// Debug
 	world.atoms.push(makeAtom(ELEMENT_BOX))
+	world.atoms.push(makeAtom(ELEMENT_PLATFORM))
 
 	return world
 }
