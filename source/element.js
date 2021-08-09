@@ -9,6 +9,13 @@ const DRAW_RECTANGLE = (self, context) => {
 
 const images = {}
 const DRAW_IMAGE = (self, context) => {
+	context.save()
+	context.filter = self.filter !== undefined? self.filter : ""
+	if (self.flipX) {
+		context.translate(self.x + self.width/2, self.y + self.height/2)
+		context.scale(-1, 1)
+		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
+	}
 	const {x, y, width, height, source} = self
 	if (images[source] === undefined) {
 		const image = new Image()
@@ -16,7 +23,8 @@ const DRAW_IMAGE = (self, context) => {
 		images[source] = image
 	}
 	const image = images[source]
-	context.drawImage(image, x, y, width, height)
+	context.drawImage(image, x, y, width, height)	
+	context.restore()
 }
 
 const DRAW_SPAWNER = (self, context) => {
@@ -38,6 +46,15 @@ const UPDATE_STATIC = (self) => {
 const UPDATE_MOVER_GRAVITY = 0.5
 const UPDATE_MOVER_AIR_RESISTANCE = 0.99
 const UPDATE_MOVER_FRICTION = 0.8
+const UPDATE_MOVER_BEING = (self, world) => {
+	UPDATE_MOVER(self, world)
+	if (self.flipX) {
+		self.flipX = self.dx > 0
+	}
+	else {
+		self.flipX = !(self.dx < 0)
+	}
+}
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height} = self
 	let [nx, ny] = [x+dx, y+dy]
@@ -122,13 +139,14 @@ const GRAB_SPAWNER = (self, hand, world) => {
 // Elements //
 //==========//
 const ELEMENT_FROG = {
-	colour: Colour.Red,
-	draw: DRAW_RECTANGLE,
-	update: UPDATE_MOVER,
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	flipX: false,
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
 	grab: GRAB_DRAG,
-	source: "images/Blank.png",
-	width: 354 / 2,
-	height: 254 / 2,
+	source: "images/Blank@0.25x.png",
+	width: 354 / 6,
+	height: 254 / 6,
 }
 
 const ELEMENT_BOX = {
