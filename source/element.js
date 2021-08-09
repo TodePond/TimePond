@@ -49,10 +49,10 @@ const UPDATE_MOVER_FRICTION = 0.8
 const UPDATE_MOVER_BEING = (self, world) => {
 	UPDATE_MOVER(self, world)
 	if (self.flipX) {
-		self.flipX = self.dx > 0
+		self.flipX = self.dx > -0.1
 	}
 	else {
-		self.flipX = !(self.dx < 0)
+		self.flipX = self.dx > 0.1
 	}
 }
 const UPDATE_MOVER = (self, world) => {
