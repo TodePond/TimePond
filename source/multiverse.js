@@ -3,8 +3,17 @@
 //=======//
 const makeMultiverse = () => {
 	const multiverse = {}
-	multiverse.worlds = [makeWorld(), makeWorld()]
+	multiverse.worlds = [makeWorld()]
 	multiverse.void = {atoms: []}
+
+	// Menu
+	multiverse.void.atoms.push(makeAtom({
+		...ELEMENT_BOX,
+		...ELEMENT_SPAWNER,
+		spawn: ELEMENT_BOX,
+		y: 25, x: 25
+	}))
+
 	return multiverse
 }
 
@@ -67,7 +76,7 @@ const updateCursor = (multiverse, context) => {
 			for (const atom of world.atoms) {
 				if (pointOverlaps({x, y}, atom)) {
 					const {grab} = atom
-					const grabbed = grab(atom)
+					const grabbed = grab(atom, hand, world)
 					hand.atom = grabbed
 					if (grabbed !== undefined) {
 						hand.source = world

@@ -1,10 +1,16 @@
 //=========//
 // Drawers //
 //=========//
-const DRAW_RECTANGLE = (atom, context) => {
-	const {x, y, width, height, colour = Colour.Red} = atom
+const DRAW_RECTANGLE = (self, context) => {
+	const {x, y, width, height, colour = Colour.Red} = self
 	context.fillStyle = colour
 	context.fillRect(x, y, width, height)
+}
+
+const DRAW_SPAWNER = (self, context) => {
+	const {spawn} = self
+	const {draw} = spawn
+	draw(self, context)
 }
 
 //==========//
@@ -87,6 +93,13 @@ const UPDATE_MOVER = (self, world) => {
 //==========//
 const GRAB_DRAG = (self) => self
 const GRAB_STATIC = () => {}
+const GRAB_SPAWNER = (self, hand, world) => {
+	const atom = makeAtom(self.spawn)
+	world.atoms.push(atom)
+	atom.x = self.x
+	atom.y = self.y
+	return atom
+}
 
 //==========//
 // Elements //
@@ -118,5 +131,8 @@ const ELEMENT_VOID = {
 }
 
 const ELEMENT_SPAWNER = {
-	
+	update: UPDATE_STATIC,
+	draw: DRAW_SPAWNER,
+	grab: GRAB_SPAWNER,
+	spawn: ELEMENT_BOX,
 }
