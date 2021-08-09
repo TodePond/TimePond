@@ -7,14 +7,28 @@ const makeMultiverse = () => {
 	multiverse.void = {atoms: []}
 
 	// Menu
-	multiverse.void.atoms.push(makeAtom({
-		...ELEMENT_BOX,
-		...ELEMENT_SPAWNER,
-		spawn: ELEMENT_BOX,
-		y: 25, x: 25
-	}))
+	addMenuElement(ELEMENT_BOX, multiverse)
+	addMenuElement(ELEMENT_PLATFORM, multiverse)
 
 	return multiverse
+}
+
+const menu = {atoms: [], x: 0}
+const addMenuElement = (element, multiverse) => {
+	menu.x += 25
+	const atom = makeAtom({
+		...element,
+		...ELEMENT_SPAWNER,
+		spawn: element,
+		x: menu.x,
+	})
+
+	const remainingY = MENU_HEIGHT - atom.height
+	atom.y = remainingY/2
+
+	multiverse.void.atoms.push(atom)
+
+	menu.x += atom.width
 }
 
 const makeMultiverseCanvas = (multiverse) => {

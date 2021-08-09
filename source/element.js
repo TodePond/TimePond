@@ -30,7 +30,7 @@ const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height} = self
 	let [nx, ny] = [x+dx, y+dy]
 
-	const nbounds = getBounds({x: nx, y: ny, width, height})
+	let nbounds = getBounds({x: nx, y: ny, width, height})
 	const bounds = getBounds(self)
 	for (const atom of world.atoms) {
 		if (atom === self) continue
@@ -43,6 +43,7 @@ const UPDATE_MOVER = (self, world) => {
 					ny = abounds.top - height
 					self.nextdy = atom.dy
 					self.nextdx *= UPDATE_MOVER_FRICTION
+					nbounds = getBounds({x: nx, y: ny, width, height})
 				}
 			}
 		}
@@ -51,6 +52,7 @@ const UPDATE_MOVER = (self, world) => {
 				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.bottom
 					self.nextdy = 0
+					nbounds = getBounds({x: nx, y: ny, width, height})
 				}
 			}
 		}
@@ -64,6 +66,7 @@ const UPDATE_MOVER = (self, world) => {
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
 					self.nextdx += atom.dx/2
+					nbounds = getBounds({x: nx, y: ny, width, height})
 				}
 			}
 		}
@@ -75,9 +78,11 @@ const UPDATE_MOVER = (self, world) => {
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
 					self.nextdx += atom.dx/2
+					nbounds = getBounds({x: nx, y: ny, width, height})
 				}
 			}
 		}
+		
 
 	}
 	
