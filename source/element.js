@@ -7,6 +7,18 @@ const DRAW_RECTANGLE = (self, context) => {
 	context.fillRect(x, y, width, height)
 }
 
+const images = {}
+const DRAW_IMAGE = (self, context) => {
+	const {x, y, width, height, source} = self
+	if (images[source] === undefined) {
+		const image = new Image()
+		image.src = source
+		images[source] = image
+	}
+	const image = images[source]
+	context.drawImage(image, x, y, width, height)
+}
+
 const DRAW_SPAWNER = (self, context) => {
 	const {spawn} = self
 	const {draw} = spawn
@@ -109,6 +121,16 @@ const GRAB_SPAWNER = (self, hand, world) => {
 //==========//
 // Elements //
 //==========//
+const ELEMENT_FROG = {
+	colour: Colour.Red,
+	draw: DRAW_RECTANGLE,
+	update: UPDATE_MOVER,
+	grab: GRAB_DRAG,
+	source: "images/Blank.png",
+	width: 354 / 2,
+	height: 254 / 2,
+}
+
 const ELEMENT_BOX = {
 	colour: Colour.Orange,
 	draw: DRAW_RECTANGLE,

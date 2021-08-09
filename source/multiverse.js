@@ -7,6 +7,7 @@ const makeMultiverse = () => {
 	multiverse.void = {atoms: []}
 
 	// Menu
+	addMenuElement(ELEMENT_FROG, multiverse)
 	addMenuElement(ELEMENT_BOX, multiverse)
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
 
@@ -36,7 +37,7 @@ const makeMultiverseCanvas = (multiverse) => {
 	stage.tick = () => {}
 	const {context, canvas} = stage
 	canvas.style["background-color"] = Colour.Black
-	canvas.style["image-rendering"] = "pixelated"
+	//canvas.style["image-rendering"] = "pixelated"
 	on.resize(() => {
 		const multiverseHeight = getMultiverseHeight(multiverse, canvas)
 		const height = Math.max(multiverseHeight, document.body.clientHeight)
