@@ -10,17 +10,17 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_FROG, multiverse)
 	addMenuElement(ELEMENT_BOX, multiverse)
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
-	addMenuElement(ELEMENT_PORTAL, multiverse)
+	addMenuElement(ELEMENT_PORTAL, multiverse, ELEMENT_SPAWNER_PORTAL)
 
 	return multiverse
 }
 
 const menu = {atoms: [], x: 0}
-const addMenuElement = (element, multiverse) => {
+const addMenuElement = (element, multiverse, menuElement = ELEMENT_SPAWNER) => {
 	menu.x += 25
 	const atom = makeAtom({
 		...element,
-		...ELEMENT_SPAWNER,
+		...menuElement,
 		spawn: element,
 		x: menu.x,
 	})

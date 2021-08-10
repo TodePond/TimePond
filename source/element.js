@@ -106,6 +106,16 @@ const UPDATE_MOVER = (self, world) => {
 						nbounds = getBounds({x: nx, y: ny, width, height})
 					}
 				}
+				else if (bounds.right <= abounds.right && nbounds.right >= abounds.right) {
+					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
+						nx = abounds.right - width
+						atom.nextdx *= 0.5
+						atom.nextdx += self.dx/2
+						self.nextdx *= -0.5
+						self.nextdx += atom.dx/2
+						nbounds = getBounds({x: nx, y: ny, width, height})
+					}
+				}
 			}
 			else if (dx < 0) {
 				if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
@@ -118,7 +128,19 @@ const UPDATE_MOVER = (self, world) => {
 						nbounds = getBounds({x: nx, y: ny, width, height})
 					}
 				}
+				else if (bounds.left >= abounds.left && nbounds.left <= abounds.left) {
+					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
+						nx = abounds.left
+						atom.nextdx *= 0.5
+						atom.nextdx += self.dx/2
+						self.nextdx *= -0.5
+						self.nextdx += atom.dx/2
+						nbounds = getBounds({x: nx, y: ny, width, height})
+					}
+				}
 			}
+
+
 
 			continue
 		}
@@ -196,6 +218,18 @@ const GRAB_SPAWNER = (self, hand, world) => {
 	return atom
 }
 
+const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
+	if (self.tally === undefined) self.tally = 1
+	const grabbed = GRAB_SPAWNER(self, hand, world)
+	self.tally++
+	if (self.tally % 2 === 0) {
+		if (self.tally/2 >= ELEMENT_PORTAL_COLOURS.length) self.tally = 0
+		self.spawn = {...self.spawn, colour: ELEMENT_PORTAL_COLOURS[self.tally/2]}
+		self.colour = self.spawn.colour
+	}
+	return grabbed
+}
+
 //=========//
 // Portals //
 //=========//
@@ -213,7 +247,7 @@ const ELEMENT_FROG = {
 	update: UPDATE_MOVER_BEING,
 	grab: GRAB_DRAG,
 	source: "images/Blank@0.25x.png",
-	width: 354/6/* - 11 - 6*/,
+	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
 	//drawWidth: 354/6, //59
 	//drawHeight: 254/6, //42.3333
@@ -257,12 +291,26 @@ const ELEMENT_SPAWNER = {
 	spawn: ELEMENT_BOX,
 }
 
+const ELEMENT_SPAWNER_PORTAL = {
+	...ELEMENT_SPAWNER,
+	grab: GRAB_SPAWNER_PORTAL,
+}
+
+const ELEMENT_PORTAL_COLOURS = [
+	Colour.Purple,
+	Colour.Orange,
+	Colour.Green,
+	Colour.Pink,
+	Colour.Yellow,
+	Colour.Cyan,
+	Colour.Red,
+]
 const ELEMENT_PORTAL = {
 	update: UPDATE_STATIC,
 	draw: DRAW_RECTANGLE,
 	grab: GRAB_DRAG,
 	height: 5,
-	width: 100,
+	width: 115,
 	colour: Colour.Purple,
 	isPortal: true,
 }
