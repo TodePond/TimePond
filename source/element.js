@@ -16,14 +16,18 @@ const DRAW_IMAGE = (self, context) => {
 		context.scale(-1, 1)
 		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
 	}
-	const {x, y, width, height, source} = self
+	const {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source} = self
 	if (images[source] === undefined) {
 		const image = new Image()
 		image.src = source
 		images[source] = image
 	}
 	const image = images[source]
-	context.drawImage(image, x, y, width, height)	
+	context.drawImage(image, x+drawOffsetX, y+drawOffsetY, drawWidth, drawHeight)
+	if (self.showBounds) {
+		context.strokeStyle = Colour.White
+		context.strokeRect(x, y, width, height)
+	}
 	context.restore()
 }
 
@@ -65,6 +69,63 @@ const UPDATE_MOVER = (self, world) => {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
 
+		//=============================//
+		// PORTAL CODE STUFF AAAAAAAAA //
+		//=============================//
+		if (atom.isPortal) {
+
+			// Hit edges!
+			if (dy >= 0) {
+				if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
+					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
+						ny = abounds.top - height
+						self.nextdy = atom.dy
+						self.nextdx *= UPDATE_MOVER_FRICTION
+						nbounds = getBounds({x: nx, y: ny, width, height})
+					}
+				}
+			}
+			else if (dy < 0) {
+				if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
+					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right])) {
+						ny = abounds.bottom
+						self.nextdy = 0
+						nbounds = getBounds({x: nx, y: ny, width, height})
+					}
+				}
+			}
+
+			if (dx > 0) {
+				if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
+					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
+						nx = abounds.left - width
+						atom.nextdx *= 0.5
+						atom.nextdx += self.dx/2
+						self.nextdx *= -0.5
+						self.nextdx += atom.dx/2
+						nbounds = getBounds({x: nx, y: ny, width, height})
+					}
+				}
+			}
+			else if (dx < 0) {
+				if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
+					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
+						nx = abounds.right
+						atom.nextdx *= 0.5
+						atom.nextdx += self.dx/2
+						self.nextdx *= -0.5
+						self.nextdx += atom.dx/2
+						nbounds = getBounds({x: nx, y: ny, width, height})
+					}
+				}
+			}
+
+			continue
+		}
+
+		//==========================//
+		// NON-PORTAL COLLISIONS YO //
+		//==========================//
 		// vert collision
 		if (dy >= 0) {
 			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
@@ -135,6 +196,13 @@ const GRAB_SPAWNER = (self, hand, world) => {
 	return atom
 }
 
+//=========//
+// Portals //
+//=========//
+const PORTAL_VOID = () => {
+
+}
+
 //==========//
 // Elements //
 //==========//
@@ -145,8 +213,13 @@ const ELEMENT_FROG = {
 	update: UPDATE_MOVER_BEING,
 	grab: GRAB_DRAG,
 	source: "images/Blank@0.25x.png",
-	width: 354 / 6,
-	height: 254 / 6,
+	width: 354/6/* - 11 - 6*/,
+	height: 254/6,
+	//drawWidth: 354/6, //59
+	//drawHeight: 254/6, //42.3333
+	//drawOffsetX: -11,
+	//drawOffsetY: 0,
+	//showBounds: true,
 }
 
 const ELEMENT_BOX = {
@@ -154,15 +227,17 @@ const ELEMENT_BOX = {
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_MOVER,
 	grab: GRAB_DRAG,
+	width: 40,
+	height: 40
 }
 
 const ELEMENT_PLATFORM = {
-	colour: Colour.White,
+	colour: Colour.Silver,
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_STATIC,
 	grab: GRAB_DRAG,
 	width: 150,
-	height: 25,
+	height: 10,
 }
 
 const ELEMENT_VOID = {
@@ -180,4 +255,19 @@ const ELEMENT_SPAWNER = {
 	draw: DRAW_SPAWNER,
 	grab: GRAB_SPAWNER,
 	spawn: ELEMENT_BOX,
+}
+
+const ELEMENT_PORTAL = {
+	update: UPDATE_STATIC,
+	draw: DRAW_RECTANGLE,
+	grab: GRAB_DRAG,
+	height: 5,
+	width: 100,
+	colour: Colour.Purple,
+	isPortal: true,
+}
+
+const ELEMENT_PORTAL_VOID = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_VOID,
 }

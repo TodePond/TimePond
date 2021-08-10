@@ -88,7 +88,7 @@ const getPointSide = (point, [left, right]) => {
 	return 0
 }
 
-const aligns = ([left, right], [nleft, nright], [aleft, aright]) => {
+const aligns = ([left, right], [nleft, nright], [aleft, aright=aleft]) => {
 	const leftSide = getPointSide(left, [aleft, aright])
 	const rightSide = getPointSide(right, [aleft, aright])
 	if (leftSide === 0) return true
