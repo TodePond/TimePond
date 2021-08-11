@@ -84,6 +84,10 @@ const UPDATE_MOVER = (self, world) => {
 	let nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 	const bounds = getBounds(self)
 
+	// TODO: Instead of processing collisions for each atom, just work out the CLOSEST atom for +dy, -dy, +dx, -dx, and THEN process ONLY those atoms
+	// this avoids phasing through portals
+	// and also the current way just doesnt make sense really
+	// why/when would you want to collide multiple things? i dont think you would, like unless there is a frame-perfect colliding twice, but we can just do that arbitrarily instead!
 	for (const atom of world.atoms) {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
