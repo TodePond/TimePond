@@ -371,7 +371,7 @@ const ELEMENT_FROG = {
 	//drawHeight: 254/6, //42.3333
 	//drawOffsetX: -11,
 	//drawOffsetY: 0,
-	showBounds: true,
+	//showBounds: true,
 	//cutBottom: (254/6)/2,
 	cutLeft: 0,
 	//cutTop: 10,
