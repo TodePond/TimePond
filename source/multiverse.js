@@ -111,6 +111,10 @@ const updateCursor = (multiverse, context) => {
 		// Move it to the dragged position!
 		hand.atom.x = x + hand.offset.x
 		hand.atom.y = y + hand.offset.y
+		if (hand.atom.flipX !== undefined) {
+			if (!hand.atom.flipX) hand.atom.flipX = (mx - hand.previous.x) > 1
+			else hand.atom.flipX = (mx - hand.previous.x) > -1
+		}
 			
 		// Transfer the dragged atom to another world if needed
 		if (world !== hand.source) {

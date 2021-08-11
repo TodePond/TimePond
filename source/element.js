@@ -2,9 +2,9 @@
 // Drawers //
 //=========//
 const DRAW_RECTANGLE = (self, context) => {
-	const {x, y, width, height, colour = Colour.Red} = self
+	const {x, y, width, height, colour = Colour.Red, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 	context.fillStyle = colour
-	context.fillRect(x, y, width, height)
+	context.fillRect(x+cutLeft, y+cutTop, width-(cutRight+cutLeft), height-(cutBottom+cutTop))
 }
 
 const images = {}
@@ -25,7 +25,7 @@ const DRAW_IMAGE = (self, context) => {
 	const image = images[source]
 	const imageHeightRatio = image.height/drawHeight
 	const imageWidthRatio = image.width/drawWidth
-	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-cutRight*imageWidthRatio, image.height-cutBottom*imageHeightRatio, x+drawOffsetX, y+drawOffsetY, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
+	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-(cutRight+cutLeft)*imageWidthRatio, image.height-(cutBottom+cutTop)*imageHeightRatio, x+drawOffsetX, y+drawOffsetY, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
 	if (self.showBounds) {
 		context.strokeStyle = Colour.White
 		const bounds = getBounds(self)
@@ -62,12 +62,24 @@ const UPDATE_MOVER_BEING = (self, world) => {
 	else {
 		self.flipX = self.dx > 0.1
 	}
+	if (self.nextdx < 0.1 && self.nextdx > -0.1 && self.grounded) {
+		if (self.jumpTick > 60) {
+			self.nextdx = 3 * (self.flipX? 1 : -1)
+			self.nextdy = -10
+			self.jumpTick = 0
+		}
+		else {
+			if (self.jumpTick === undefined) self.jumpTick = 0
+			self.jumpTick++
+		}
+	}
 }
 const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 	let [nx, ny] = [x+dx, y+dy]
 	if (self.portals === undefined) self.portals = new Map()
+	self.grounded = false
 
 	let nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 	const bounds = getBounds(self)
@@ -94,16 +106,22 @@ const UPDATE_MOVER = (self, world) => {
 			// Hit edges!
 			if (dy >= 0) {
 				if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
-					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
+					if ((self.cutBottom === undefined || self.cutBottom === 0) && aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
 						ny = abounds.top - height + cutBottom
 						self.nextdy = atom.dy
 						self.nextdx *= 0.975
+						self.grounded = true
+						atom.jumpTick = 0
 						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 					// ENTERTING a new portal
 					else if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-							
-						const blink = makeBlink()
+						
+						let blink = self.portals.get(atom)
+						if (blink === undefined) {
+							blink = makeBlink()
+							atom.portal.enter(self, world)
+						}
 						self.portals.set(atom, blink)
 						atom.subjects.set(self, blink)
 
@@ -111,6 +129,8 @@ const UPDATE_MOVER = (self, world) => {
 						if (self.cutBottom === undefined) self.cutBottom = 0
 						self.cutBottom += nbounds.bottom - abounds.top
 						if (self.cutBottom > height) {
+							self.portals.delete(atom)
+							atom.subjects.delete(self)
 							atom.portal.end(self, world)
 						}
 
@@ -187,6 +207,8 @@ const UPDATE_MOVER = (self, world) => {
 					ny = abounds.top - height + cutBottom
 					self.nextdy = atom.dy
 					self.nextdx *= UPDATE_MOVER_FRICTION
+					self.grounded = true
+					atom.jumpTick = 0
 					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
@@ -196,6 +218,7 @@ const UPDATE_MOVER = (self, world) => {
 				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.bottom
 					self.nextdy = 0
+					self.jumpTick = 0
 					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
@@ -271,9 +294,12 @@ const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
 // Portals //
 //=========//
 const PORTAL_VOID = {
-	enter: () => {},
+	enter: () => {
+		print("Enter void!")
+	},
 	end: (atom, world) => {
 		world.atoms = world.atoms.filter(a => a !== atom)
+		print("End void!")
 	},
 }
 
