@@ -10,7 +10,7 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_FROG, multiverse)
 	addMenuElement(ELEMENT_BOX, multiverse)
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
-	addMenuElement(ELEMENT_PORTAL, multiverse, ELEMENT_SPAWNER_PORTAL)
+	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL)
 
 	return multiverse
 }

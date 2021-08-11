@@ -16,17 +16,21 @@ const DRAW_IMAGE = (self, context) => {
 		context.scale(-1, 1)
 		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
 	}
-	const {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source} = self
+	const {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 	if (images[source] === undefined) {
 		const image = new Image()
 		image.src = source
 		images[source] = image
 	}
 	const image = images[source]
-	context.drawImage(image, x+drawOffsetX, y+drawOffsetY, drawWidth, drawHeight)
+	const imageHeightRatio = image.height/drawHeight
+	const imageWidthRatio = image.width/drawWidth
+	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-cutRight*imageWidthRatio, image.height-cutBottom*imageHeightRatio, x+drawOffsetX, y+drawOffsetY, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
 	if (self.showBounds) {
 		context.strokeStyle = Colour.White
-		context.strokeRect(x, y, width, height)
+		const bounds = getBounds(self)
+
+		context.strokeRect(bounds.left, bounds.top, bounds.right-bounds.left, bounds.bottom-bounds.top)
 	}
 	context.restore()
 }
@@ -59,29 +63,57 @@ const UPDATE_MOVER_BEING = (self, world) => {
 		self.flipX = self.dx > 0.1
 	}
 }
+const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
-	const {x, y, dx, dy, width, height} = self
+	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 	let [nx, ny] = [x+dx, y+dy]
+	if (self.portals === undefined) self.portals = new Map()
 
-	let nbounds = getBounds({x: nx, y: ny, width, height})
+	let nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 	const bounds = getBounds(self)
 	for (const atom of world.atoms) {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
 
-		//=============================//
-		// PORTAL CODE STUFF AAAAAAAAA //
-		//=============================//
-		if (atom.isPortal) {
+		//=====================================//
+		// PROCESS CURRENT PORTAL THAT I AM IN //
+		//=====================================//
+		/*for (const [portal, blink] of self.portals) {
+			
+			// Update cut
+			self.cutBottom = 
+
+		}*/
+
+		//========================//
+		// DETECT ENTERING PORTAL //
+		//========================//
+		if (atom.isPortal && atom.isPortalActive) {
+			if (atom.subjects === undefined) atom.subjects = new Map()
 
 			// Hit edges!
 			if (dy >= 0) {
 				if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
 					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
-						ny = abounds.top - height
+						ny = abounds.top - height + cutBottom
 						self.nextdy = atom.dy
 						self.nextdx *= UPDATE_MOVER_FRICTION
-						nbounds = getBounds({x: nx, y: ny, width, height})
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
+					}
+					// ENTERTING a new portal
+					else if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
+							
+						const blink = makeBlink()
+						self.portals.set(atom, blink)
+						atom.subjects.set(self, blink)
+
+						// Update my cut
+						if (self.cutBottom === undefined) self.cutBottom = 0
+						self.cutBottom += nbounds.bottom - abounds.top
+						if (self.cutBottom > height) {
+							atom.portal.end(self, world)
+						}
+
 					}
 				}
 			}
@@ -90,7 +122,7 @@ const UPDATE_MOVER = (self, world) => {
 					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right])) {
 						ny = abounds.bottom
 						self.nextdy = 0
-						nbounds = getBounds({x: nx, y: ny, width, height})
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 				}
 			}
@@ -103,7 +135,7 @@ const UPDATE_MOVER = (self, world) => {
 						atom.nextdx += self.dx/2
 						self.nextdx *= -0.5
 						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height})
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 				}
 				else if (bounds.right <= abounds.right && nbounds.right >= abounds.right) {
@@ -113,7 +145,7 @@ const UPDATE_MOVER = (self, world) => {
 						atom.nextdx += self.dx/2
 						self.nextdx *= -0.5
 						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height})
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 				}
 			}
@@ -125,7 +157,7 @@ const UPDATE_MOVER = (self, world) => {
 						atom.nextdx += self.dx/2
 						self.nextdx *= -0.5
 						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height})
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 				}
 				else if (bounds.left >= abounds.left && nbounds.left <= abounds.left) {
@@ -135,7 +167,7 @@ const UPDATE_MOVER = (self, world) => {
 						atom.nextdx += self.dx/2
 						self.nextdx *= -0.5
 						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height})
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 				}
 			}
@@ -152,10 +184,10 @@ const UPDATE_MOVER = (self, world) => {
 		if (dy >= 0) {
 			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
 				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-					ny = abounds.top - height
+					ny = abounds.top - height + cutBottom
 					self.nextdy = atom.dy
 					self.nextdx *= UPDATE_MOVER_FRICTION
-					nbounds = getBounds({x: nx, y: ny, width, height})
+					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
 		}
@@ -164,7 +196,7 @@ const UPDATE_MOVER = (self, world) => {
 				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.bottom
 					self.nextdy = 0
-					nbounds = getBounds({x: nx, y: ny, width, height})
+					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
 		}
@@ -178,7 +210,7 @@ const UPDATE_MOVER = (self, world) => {
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
 					self.nextdx += atom.dx/2
-					nbounds = getBounds({x: nx, y: ny, width, height})
+					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
 		}
@@ -190,7 +222,7 @@ const UPDATE_MOVER = (self, world) => {
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
 					self.nextdx += atom.dx/2
-					nbounds = getBounds({x: nx, y: ny, width, height})
+					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
 		}
@@ -208,7 +240,12 @@ const UPDATE_MOVER = (self, world) => {
 //==========//
 // Grabbers //
 //==========//
-const GRAB_DRAG = (self) => self
+const GRAB_DRAG = (self) => {
+	// TODO: uncomment these two lines to prevent cutting froggies in half
+	//if (self.portals !== undefined && self.portals.size > 0) return undefined
+	//if (self.subjects !== undefined && self.subjects.size > 0) return undefined
+	return self
+}
 const GRAB_STATIC = () => {}
 const GRAB_SPAWNER = (self, hand, world) => {
 	const atom = makeAtom(self.spawn)
@@ -219,7 +256,7 @@ const GRAB_SPAWNER = (self, hand, world) => {
 }
 
 const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
-	if (self.tally === undefined) self.tally = 1
+	if (self.tally === undefined) self.tally = 0
 	const grabbed = GRAB_SPAWNER(self, hand, world)
 	self.tally++
 	if (self.tally % 2 === 0) {
@@ -233,8 +270,11 @@ const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
 //=========//
 // Portals //
 //=========//
-const PORTAL_VOID = () => {
-
+const PORTAL_VOID = {
+	enter: () => {},
+	end: (atom, world) => {
+		world.atoms = world.atoms.filter(a => a !== atom)
+	},
 }
 
 //==========//
@@ -254,6 +294,8 @@ const ELEMENT_FROG = {
 	//drawOffsetX: -11,
 	//drawOffsetY: 0,
 	//showBounds: true,
+	//cutBottom: (254/6)/2,
+	cutLeft: 0,
 }
 
 const ELEMENT_BOX = {
@@ -313,9 +355,11 @@ const ELEMENT_PORTAL = {
 	width: 115,
 	colour: Colour.Purple,
 	isPortal: true,
+	isPortalActive: false,
 }
 
 const ELEMENT_PORTAL_VOID = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_VOID,
+	isPortalActive: true,
 }

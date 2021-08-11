@@ -48,11 +48,11 @@ const turnAtom = (atom, turns) => {
 	atom.width = height
 }
 
-const getBounds = ({x, y, width, height}) => {
-	const top = y
-	const bottom = y + height
-	const left = x
-	const right = x + width
+const getBounds = ({x, y, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0}) => {
+	const top = y + cutTop
+	const bottom = y + height - cutBottom
+	const left = x + cutLeft
+	const right = x + width - cutRight
 	return {top, bottom, left, right}
 }
 
