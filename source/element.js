@@ -25,7 +25,7 @@ const DRAW_IMAGE = (self, context) => {
 	const image = images[source]
 	const imageHeightRatio = image.height/drawHeight
 	const imageWidthRatio = image.width/drawWidth
-	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-(cutRight+cutLeft)*imageWidthRatio, image.height-(cutBottom+cutTop)*imageHeightRatio, x+drawOffsetX, y+drawOffsetY, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
+	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-(cutRight+cutLeft)*imageWidthRatio, image.height-(cutBottom+cutTop)*imageHeightRatio, x+drawOffsetX+cutLeft, y+drawOffsetY+cutTop, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
 	if (self.showBounds) {
 		context.strokeStyle = Colour.White
 		const bounds = getBounds(self)
@@ -87,25 +87,16 @@ const UPDATE_MOVER = (self, world) => {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
 
-		//=====================================//
-		// PROCESS CURRENT PORTAL THAT I AM IN //
-		//=====================================//
-		/*for (const [portal, blink] of self.portals) {
-			
-			// Update cut
-			self.cutBottom = 
-
-		}*/
-
-		//========================//
-		// DETECT ENTERING PORTAL //
-		//========================//
+		//========//
+		// PORTAL //
+		//========//
 		if (atom.isPortal && atom.isPortalActive) {
 			if (atom.subjects === undefined) atom.subjects = new Map()
 
-			// Hit edges!
-			if (dy >= 0) {
+			if (dy > 0) {
 				if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
+					
+					// Hit edges!
 					if ((self.cutBottom === undefined || self.cutBottom === 0) && aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
 						ny = abounds.top - height + cutBottom
 						self.nextdy = atom.dy
@@ -114,20 +105,24 @@ const UPDATE_MOVER = (self, world) => {
 						atom.jumpTick = 0
 						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
-					// ENTERTING a new portal
+					// Going through a portal
 					else if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 						
 						let blink = self.portals.get(atom)
 						if (blink === undefined) {
 							blink = makeBlink()
 							atom.portal.enter(self, world)
+							self.portals.set(atom, blink)
+							atom.subjects.set(self, blink)
 						}
-						self.portals.set(atom, blink)
-						atom.subjects.set(self, blink)
+
 
 						// Update my cut
 						if (self.cutBottom === undefined) self.cutBottom = 0
 						self.cutBottom += nbounds.bottom - abounds.top
+						
+						atom.portal.moveIn(self, world)
+
 						if (self.cutBottom > height) {
 							self.portals.delete(atom)
 							atom.subjects.delete(self)
@@ -136,13 +131,61 @@ const UPDATE_MOVER = (self, world) => {
 
 					}
 				}
+				else if (self.portals.has(atom)) {
+					atom.portal.moveOut()
+					self.cutTop -= (nbounds.top - abounds.bottom)
+					if (self.cutTop <= 0) {
+						self.cutTop = 0
+						self.portals.delete(atom)
+						atom.subjects.delete(self)
+						atom.portal.leave(self, world)
+					}
+				}
+
 			}
+			
 			else if (dy < 0) {
 				if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
+					
+					// Hit edges!
 					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right])) {
-						ny = abounds.bottom
+						ny = abounds.bottom - cutTop
 						self.nextdy = 0
 						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
+					}
+
+					// Move through portal
+					else if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
+						
+						let blink = self.portals.get(atom)
+						if (blink === undefined) {
+							blink = makeBlink()
+							atom.portal.enter(self, world)
+							self.portals.set(atom, blink)
+							atom.subjects.set(self, blink)
+						}
+						// Update my cut
+						if (self.cutTop === undefined) self.cutTop = 0
+						self.cutTop += abounds.bottom - nbounds.top
+						
+						atom.portal.moveIn(self, world)
+	
+						if (self.cutTop > height) {
+							self.portals.delete(atom)
+							atom.subjects.delete(self)
+							atom.portal.end(self, world)
+						}
+					}
+				
+				}
+				else if (self.portals.has(atom)) {
+					atom.portal.moveOut()
+					self.cutBottom -= abounds.top - nbounds.bottom
+					if (self.cutBottom <= 0) {
+						self.cutBottom = 0
+						self.portals.delete(atom)
+						atom.subjects.delete(self)
+						atom.portal.leave(self, world)
 					}
 				}
 			}
@@ -182,7 +225,7 @@ const UPDATE_MOVER = (self, world) => {
 				}
 				else if (bounds.left >= abounds.left && nbounds.left <= abounds.left) {
 					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-						nx = abounds.left
+						nx = abounds.left - cutLeft
 						atom.nextdx *= 0.5
 						atom.nextdx += self.dx/2
 						self.nextdx *= -0.5
@@ -216,7 +259,7 @@ const UPDATE_MOVER = (self, world) => {
 		else if (dy < 0) {
 			if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
 				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-					ny = abounds.bottom
+					ny = abounds.bottom - cutTop
 					self.nextdy = 0
 					self.jumpTick = 0
 					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
@@ -240,7 +283,7 @@ const UPDATE_MOVER = (self, world) => {
 		else if (dx < 0) {
 			if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
 				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-					nx = abounds.right
+					nx = abounds.right - cutLeft
 					atom.nextdx *= 0.5
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
@@ -295,11 +338,20 @@ const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
 //=========//
 const PORTAL_VOID = {
 	enter: () => {
-		print("Enter void!")
+		print("Enter voidal!")
 	},
 	end: (atom, world) => {
 		world.atoms = world.atoms.filter(a => a !== atom)
-		print("End void!")
+		print("End voidal!")
+	},
+	moveIn: (atom, world) => {
+		print("Move in voidal!")
+	},
+	moveOut: (atom, world) => {
+		print("Move out voidal!")
+	},
+	leave: () => {
+		print("Leave voidal!")
 	},
 }
 
@@ -319,9 +371,10 @@ const ELEMENT_FROG = {
 	//drawHeight: 254/6, //42.3333
 	//drawOffsetX: -11,
 	//drawOffsetY: 0,
-	//showBounds: true,
+	showBounds: true,
 	//cutBottom: (254/6)/2,
 	cutLeft: 0,
+	//cutTop: 10,
 }
 
 const ELEMENT_BOX = {

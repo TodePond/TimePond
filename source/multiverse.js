@@ -10,7 +10,7 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_FROG, multiverse)
 	addMenuElement(ELEMENT_BOX, multiverse)
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
-	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL)
+	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
 
 	return multiverse
 }
@@ -115,6 +115,11 @@ const updateCursor = (multiverse, context) => {
 			if (!hand.atom.flipX) hand.atom.flipX = (mx - hand.previous.x) > 1
 			else hand.atom.flipX = (mx - hand.previous.x) > -1
 		}
+		hand.atom.dx = (mx - hand.previous.x)
+		hand.atom.dy = (my - hand.previous.y)
+		hand.atom.nextdx = hand.atom.dx
+		hand.atom.nextdy = hand.atom.dy
+		hand.jumpTick = 0
 			
 		// Transfer the dragged atom to another world if needed
 		if (world !== hand.source) {
@@ -138,8 +143,6 @@ const updateCursor = (multiverse, context) => {
 			
 			// If there's room, drop it!
 			if (canDrop) {
-				hand.atom.dx = (mx - hand.previous.x)
-				hand.atom.dy = (my - hand.previous.y)
 				hand.atom = undefined
 			}
 		}
