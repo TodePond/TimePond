@@ -97,7 +97,7 @@ const UPDATE_MOVER = (self, world) => {
 					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
 						ny = abounds.top - height + cutBottom
 						self.nextdy = atom.dy
-						self.nextdx *= UPDATE_MOVER_FRICTION
+						self.nextdx *= 0.975
 						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 					// ENTERTING a new portal
