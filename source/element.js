@@ -83,6 +83,7 @@ const UPDATE_MOVER = (self, world) => {
 
 	let nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 	const bounds = getBounds(self)
+
 	for (const atom of world.atoms) {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
@@ -128,6 +129,7 @@ const UPDATE_MOVER = (self, world) => {
 							atom.subjects.delete(self)
 							atom.portal.end(self, world)
 						}
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 
 					}
 				}
@@ -140,6 +142,7 @@ const UPDATE_MOVER = (self, world) => {
 						atom.subjects.delete(self)
 						atom.portal.leave(self, world)
 					}
+					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 
 			}
@@ -175,6 +178,7 @@ const UPDATE_MOVER = (self, world) => {
 							atom.subjects.delete(self)
 							atom.portal.end(self, world)
 						}
+						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 					}
 				
 				}
@@ -187,6 +191,7 @@ const UPDATE_MOVER = (self, world) => {
 						atom.subjects.delete(self)
 						atom.portal.leave(self, world)
 					}
+					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
 				}
 			}
 
@@ -249,6 +254,11 @@ const UPDATE_MOVER = (self, world) => {
 				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
 					ny = abounds.top - height + cutBottom
 					self.nextdy = atom.dy
+					if (atom.bounce !== undefined) {
+						self.nextdy = -atom.bounce
+						self.nextdx *= 1.5
+					}
+					//self.nextdx += atom.dx * UPDATE_MOVER_FRICTION
 					self.nextdx *= UPDATE_MOVER_FRICTION
 					self.grounded = true
 					atom.jumpTick = 0
@@ -355,6 +365,14 @@ const PORTAL_VOID = {
 	},
 }
 
+const PORTAL_MOVE = {
+	enter: () => {},
+	end: () => {},
+	moveIn: () => {},
+	moveOut: () => {},
+	leave: () => {},
+}
+
 //==========//
 // Elements //
 //==========//
@@ -437,8 +455,32 @@ const ELEMENT_PORTAL = {
 	isPortalActive: false,
 }
 
+const ELEMENT_LILYPAD = {
+	update: UPDATE_STATIC,
+	draw: DRAW_RECTANGLE,
+	grab: GRAB_DRAG,
+	bounce: 15,
+	height: 8,
+	width: 80,
+	colour: Colour.Green,
+	isPortal: true,
+	isPortalActive: false,
+}
+
 const ELEMENT_PORTAL_VOID = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_VOID,
 	isPortalActive: true,
+}
+
+const ELEMENT_PORTAL_MOVE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_MOVE,
+}
+
+const ELEMENT_FROG_DOUBLE = {
+	...ELEMENT_FROG,
+	construct: (self) => {
+		self.children = [makeAtom({...ELEMENT_FROG, x: 0, y: 50})]
+	}
 }

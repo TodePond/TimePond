@@ -12,10 +12,12 @@ const makeAtom = ({
 	update = UPDATE_STATIC,
 	grab = GRAB_DRAG,
 	turns = 0,
+	construct = () => {},
 	...args
 } = {}) => {
 	const atom = {width, height, x, y, dx, dy, nextdx: dx, nextdy: dy, draw, update, grab, ...args}
 	turnAtom(atom, turns)
+	construct(atom)
 	return atom
 }
 
