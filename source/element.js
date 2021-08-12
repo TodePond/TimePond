@@ -21,7 +21,6 @@ const DRAW_IMAGE = (self, context) => {
 	context.filter = self.filter !== undefined? self.filter : ""
 	let {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 	
-	
 	if (self.flipX) {
 		context.translate(self.x + self.width/2, self.y + self.height/2)
 		context.scale(-1, 1)
@@ -51,7 +50,6 @@ const DRAW_IMAGE = (self, context) => {
 	if (self.showBounds) {
 		context.strokeStyle = Colour.White
 		const bounds = getBounds(self)
-
 		context.strokeRect(bounds.left, bounds.top, bounds.right-bounds.left, bounds.bottom-bounds.top)
 	}
 }
@@ -107,7 +105,7 @@ const UPDATE_MOVER_BEING = (self, world) => {
 const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
-	if (self.portals === undefined) self.portals = new Map()
+	
 	self.grounded = false
 
 	const axes = {
@@ -181,17 +179,22 @@ const UPDATE_MOVER = (self, world) => {
 		const {atom} = axis.blocker
 		if (atom === undefined) continue
 		const bbounds = axis.blocker.bounds
-
+		
+		// Allow MODs by elements/atoms
+		if (self.preCollide !== undefined) {
+			const result = self.preCollide({self, atom, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
+			if (result === false) continue
+		}
+		if (atom.preCollided !== undefined) {
+			const result = atom.preCollided({self: atom, atom: self, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
+			if (result === false) continue
+		}
+		
 		// SNAP to the surface!
 		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
 		axis.new = bbounds[axis.back] + newOffset
 		
-		if (self.onCollide !== undefined) {
-			const result = self.onCollide(self, atom, axis, world)
-			if (result === false) continue
-		}
-
-		// MODIFY accelerations!
+		// Change ACCELERATIONS!
 		// Moving right or left
 		if (axis === axes.dx) {
 			atom.nextdx *= 0.5
@@ -199,8 +202,7 @@ const UPDATE_MOVER = (self, world) => {
 			self.nextdx *= -0.5
 			self.nextdx += atom.dx/2
 			
-				
-			if (atom.bounce !== undefined && atom.turns.d % 2 !== 0) {
+			if (atom.bounce !== undefined && atom.turns % 2 !== 0) {
 				self.nextdx = atom.bounce * -axis.direction/2
 			}
 		}
@@ -525,9 +527,35 @@ const PORTAL_MOVE = {
 //===========//
 // Colliders //
 //===========//
-const COLLIDE_POTION_ROTATE = (self, atom, axis, world) => {
-	if (!atom.isVoid) turnAtom(atom, 1, true, true, world, [self])
-	world.atoms = world.atoms.filter(a => a !== self)
+const COLLIDE_POTION_ROTATE = ({self, atom, axis, world}) => {
+	if (self.used) return
+	if (!atom.isVoid && !atom.isPotion) {
+		world.atoms = world.atoms.filter(a => a !== self)
+		turnAtom(atom, 1, true, true, world, [self])
+		self.used = true
+		//atom.nextdx = 0
+		atom.nextdy = -5
+		atom.jumpTick = 0
+		return false
+	}
+}
+
+const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
+	if (self.used) return
+	if (!atom.isVoid && !atom.isPotion) {
+		world.atoms = world.atoms.filter(a => a !== self)
+		turnAtom(atom, 1, true, true, world, [self])
+		self.used = true
+		//atom.nextdx = 0
+		atom.nextdy = -5
+		atom.jumpTick = 0
+		return false
+	}
+}
+
+const COLLIDE_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds}) => {
+	const reach = [bounds[axis.small], bounds[axis.big]]
+	//const nreach
 }
 
 //==========//
@@ -611,6 +639,7 @@ const ELEMENT_PORTAL = {
 	colour: Colour.Purple,
 	isPortal: true,
 	isPortalActive: false,
+	//preCollide: choose your collider,
 }
 
 const ELEMENT_LILYPAD = {
@@ -629,6 +658,7 @@ const ELEMENT_PORTAL_VOID = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_VOID,
 	isPortalActive: true,
+	preCollide: COLLIDE_PORTAL_VOID,
 }
 
 const ELEMENT_PORTAL_MOVE = {
@@ -647,13 +677,15 @@ const ELEMENT_POTION = {
 	colour: Colour.Purple,
 	draw: DRAW_CIRCLE,
 	update: UPDATE_MOVER,
-	height: 10,
-	width: 10,
-	//onCollide: COLLIDE_POTION_ROTATE,
+	height: 20,
+	width: 20,
+	isPotion: true,
+	//preCollide: COLLIDE_POTION_ROTATE,
 }
 
 const ELEMENT_POTION_ROTATE = {
 	...ELEMENT_POTION,
 	colour: Colour.Orange,
-	onCollide: COLLIDE_POTION_ROTATE,
+	preCollide: COLLIDE_POTION_ROTATE,
+	preCollided: COLLIDED_POTION_ROTATE,
 }

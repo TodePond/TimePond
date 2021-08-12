@@ -40,32 +40,32 @@ const drawAtom = (atom, context) => {
 const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
 	if (atom.turns === undefined) atom.turns = 0
 	if (turns === 0) return
-	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world)
+	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world, exceptions=[])
 	if (turns > 1) {
-		turnAtom(atom, 1, fallSafe, rejectIfOverlap, world)
-		turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world)
+		turnAtom(atom, 1, fallSafe, rejectIfOverlap, world, exceptions=[])
+		turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world, exceptions=[])
 		return
 	}
 	const old = {}
+	const obounds = getBounds(atom)
 	const {height, width} = atom
 	old.height = height
 	old.width = width
 	atom.height = width
 	atom.width = height
-	if (fallSafe) {
+	if (rejectIfOverlap) {
+		
 		old.y = atom.y
 		old.x = atom.x
-		atom.y -= atom.height-atom.width
+		atom.y -= atom.height-atom.width + 1 //TODO: BUG BUG BUG BUG stuff can fall through the ground. THIS ISNT ENOUGH!?
 		atom.x -= (atom.width-atom.height)/2
-	}
-	if (rejectIfOverlap) {
 		for (const a of world.atoms) {
 			if (a === atom) continue
 			if (exceptions.includes(a)) continue
 			if (atomOverlaps(atom, a)) {
-				const bounds = getBounds(atom)
-				const abounds = getBounds(a)
-				if (abounds.top === bounds.bottom) continue
+				//const bounds = getBounds(atom)
+				//const abounds = getBounds(a)
+				//if (abounds.top === bounds.bottom) continue
 				for (const key in old) {
 					atom[key] = old[key]
 				}
