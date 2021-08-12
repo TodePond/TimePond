@@ -10,7 +10,7 @@ const makeWorld = () => {
 	world.atoms = [top, bottom, left, right]
 
 	// Debug
-	world.atoms.push({...makeAtom(ELEMENT_FROG), y: 400})
+	world.atoms.push({...makeAtom(ELEMENT_FROG), y: 200})
 	//world.atoms.push({...makeAtom(ELEMENT_PORTAL_VOID),x: 150, y: 360})
 
 	return world

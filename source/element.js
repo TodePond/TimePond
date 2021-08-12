@@ -74,21 +74,127 @@ const UPDATE_MOVER_BEING = (self, world) => {
 		}
 	}
 }
+
 const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
-	let [nx, ny] = [x+dx, y+dy]
 	if (self.portals === undefined) self.portals = new Map()
 	self.grounded = false
 
-	let nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-	const bounds = getBounds(self)
+	const axes = {
+		dy: {},
+		dx: {},
+	}
 
-	// TODO: Instead of processing collisions for each atom, just work out the CLOSEST atom for +dy, -dy, +dx, -dx, and THEN process ONLY those atoms
-	// this avoids phasing through portals
-	// and also the current way just doesnt make sense really
-	// why/when would you want to collide multiple things? i dont think you would, like unless there is a frame-perfect colliding twice, but we can just do that arbitrarily instead!
+	axes.dy.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
+	axes.dy.small = "top"
+	axes.dy.big = "bottom"
+	axes.dy.direction = dy >= 0? 1 : -1
+	axes.dy.front = axes.dy.direction === 1? axes.dy.big : axes.dy.small
+	axes.dy.back = axes.dy.front === axes.dy.small? axes.dy.big : axes.dy.small
+	axes.dy.new = y + dy
+	axes.dy.size = height
+	axes.dy.cutSmall = cutTop
+	axes.dy.cutBig = cutBottom
+
+	axes.dx.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
+	axes.dx.small = "left"
+	axes.dx.big = "right"
+	axes.dx.direction = dx >= 0? 1 : -1
+	axes.dx.front = axes.dx.direction === 1? axes.dx.big : axes.dx.small
+	axes.dx.back = axes.dx.front === axes.dx.big? axes.dx.small : axes.dx.big
+	axes.dx.new = x + dx
+	axes.dx.size = width
+	axes.dx.cutSmall = cutLeft
+	axes.dx.cutBig = cutRight
+
+	// Get my current bounding box
+	// And get my potential NEW bounding box (assuming I can complete the whole movement)
+	const bounds = getBounds(self)
+	const nbounds = getBounds({x: axes.dx.new, y: axes.dy.new, width, height, cutTop, cutBottom, cutLeft, cutRight})
+
+	//==================================================================//
+	// Find the FIRST atom I would hit if I travel forever in each axis //
+	//==================================================================//
 	for (const atom of world.atoms) {
+
+		if (atom === self) continue
+		const abounds = getBounds(atom)
+
+		for (const axis of axes) {
+
+			// Do I go PAST this atom?
+			const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
+			const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
+			if (!startsInFront || !endsThrough) continue
+
+			// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
+			let bumps = true
+			const otherAxes = axes.values().filter(a => a !== axis)
+			for (const other of otherAxes) {
+				const reach = [bounds[other.small], bounds[other.big]]
+				const nreach = [nbounds[other.small], nbounds[other.big]]
+				const areach = [abounds[other.small], abounds[other.big]]
+				if (!aligns(reach, nreach, areach)) bumps = false
+			}
+			if (!bumps) continue
+			
+			// Work out the distance to this atom we would crash into
+			// We don't care about it if we already found a NEARER one to crash into :)
+			const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
+			if (distance < 0) continue
+			if (distance >= axis.blocker.distance) continue
+			axis.blocker = {atom, bounds: abounds, distance}
+		}
+	}
+
+	for (const axis of axes) {
+		const {atom} = axis.blocker
+		if (atom === undefined) continue
+		const bbounds = axis.blocker.bounds
+
+		// SNAP to the surface!
+		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
+		axis.new = bbounds[axis.back] + newOffset
+		
+		// MODIFY accelerations!
+		// Moving right or left
+		if (axis === axes.dx) {
+			atom.nextdx *= 0.5
+			atom.nextdx += self.dx/2
+			self.nextdx *= -0.5
+			self.nextdx += atom.dx/2
+		}
+		
+		// Moving down or up
+		else if (axis === axes.dy) {
+
+			// Moving down
+			if (axis.direction === 1) {
+
+				self.nextdy = atom.dy
+				self.nextdx *= UPDATE_MOVER_FRICTION
+				if (atom.bounce !== undefined) {
+					self.nextdy = -atom.bounce
+					self.nextdx *= 1.5
+				}
+
+				self.grounded = true
+				atom.jumpTick = 0
+
+			}
+
+			// Moving up
+			else {
+				self.nextdy = 0
+				self.jumpTick = 0
+			}
+		}
+
+
+	}
+
+	/*for (const atom of world.atoms) {
 		if (atom === self) continue
 		const abounds = getBounds(atom)
 
@@ -285,7 +391,7 @@ const UPDATE_MOVER = (self, world) => {
 		if (dx > 0) {
 			if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
 				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-					nx = abounds.left - width
+					nx = abounds.left - width + cutRight
 					atom.nextdx *= 0.5
 					atom.nextdx += self.dx/2
 					self.nextdx *= -0.5
@@ -308,13 +414,13 @@ const UPDATE_MOVER = (self, world) => {
 		}
 		
 
-	}
+	}*/
 	
 	self.nextdy += UPDATE_MOVER_GRAVITY
 	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
 
-	self.x = nx
-	self.y = ny
+	self.x = axes.dx.new
+	self.y = axes.dy.new
 }
 
 //==========//
@@ -394,9 +500,9 @@ const ELEMENT_FROG = {
 	//drawOffsetX: -11,
 	//drawOffsetY: 0,
 	//showBounds: true,
-	//cutBottom: (254/6)/2,
-	cutLeft: 0,
-	//cutTop: 10,
+	cutBottom: (254/6)/2,
+	cutLeft: 5,
+	cutTop: 10,
 }
 
 const ELEMENT_BOX = {
