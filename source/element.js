@@ -537,8 +537,8 @@ const COLLIDE_POTION_ROTATE = ({self, atom, axis, world}) => {
 	if (self.used) return
 	if (!atom.isVoid && !atom.isPotion) {
 		world.atoms = world.atoms.filter(a => a !== self)
-		atom.nextturns++
-		//turnAtom(atom, 1, true, true, world, [self])
+		if (!atom.isMover) turnAtom(atom, 1, true, true, world, [self])
+		else atom.nextturns++
 		self.used = true
 		//atom.nextdx = 0
 		atom.nextdy = -5
@@ -551,8 +551,8 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 	if (self.used) return
 	if (!atom.isVoid && !atom.isPotion) {
 		world.atoms = world.atoms.filter(a => a !== self)
-		atom.nextturns++
-		//turnAtom(atom, 1, true, true, world, [self])
+		if (!atom.isMover) turnAtom(atom, 1, true, true, world, [self])
+		else atom.nextturns++
 		self.used = true
 		//atom.nextdx = 0
 		atom.nextdy = -5
@@ -578,6 +578,7 @@ const ELEMENT_FROG = {
 	source: "images/Blank@0.25x.png",
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
+	isMover: true,
 	//drawWidth: 354/6, //59
 	//drawHeight: 254/6, //42.3333
 	//drawOffsetX: -11,
@@ -593,6 +594,7 @@ const ELEMENT_BOX = {
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_MOVER,
 	grab: GRAB_DRAG,
+	isMover: true,
 	width: 40,
 	height: 40
 }
