@@ -123,6 +123,7 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dy.size = height
 	axes.dy.cutSmall = cutTop
 	axes.dy.cutBig = cutBottom
+	axes.dy.other = axes.dx
 
 	axes.dx.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
 	axes.dx.small = "left"
@@ -134,6 +135,7 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dx.size = width
 	axes.dx.cutSmall = cutLeft
 	axes.dx.cutBig = cutRight
+	axes.dx.other = axes.dy
 
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
@@ -180,10 +182,6 @@ const UPDATE_MOVER = (self, world) => {
 		if (atom === undefined) continue
 		const bbounds = axis.blocker.bounds
 		
-		
-		// SNAP to the surface!
-		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
-		axis.new = bbounds[axis.back] + newOffset
 
 		// Allow MODs by elements/atoms
 		if (self.preCollide !== undefined) {
@@ -191,9 +189,13 @@ const UPDATE_MOVER = (self, world) => {
 			if (result === false) continue
 		}
 		if (atom.preCollided !== undefined) {
-			const result = atom.preCollided({self: atom, atom: self, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
+			const result = atom.preCollided({self, atom, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
 			if (result === false) continue
 		}
+		
+		// SNAP to the surface!
+		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
+		axis.new = bbounds[axis.back] + newOffset
 		
 		// Change ACCELERATIONS!
 		// Moving right or left
@@ -221,7 +223,7 @@ const UPDATE_MOVER = (self, world) => {
 
 				if (atom.bounce !== undefined && atom.turns % 2 === 0) {
 					self.nextdy = -atom.bounce
-					self.nextdx *= 1.5
+					self.nextdx *= 1.8
 				}
 				
 			}
@@ -548,22 +550,30 @@ const COLLIDE_POTION_ROTATE = ({self, atom, axis, world}) => {
 }
 
 const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
-	if (self.used) return
-	if (!atom.isVoid && !atom.isPotion) {
-		world.atoms = world.atoms.filter(a => a !== self)
-		if (!atom.isMover) turnAtom(atom, 1, true, true, world, [self])
-		else atom.nextturns++
-		self.used = true
+	if (atom.used) return
+	if (!self.isVoid && !self.isPotion) {
+		world.atoms = world.atoms.filter(a => a !== atom)
+		if (!self.isMover) turnAtom(self, 1, true, true, world, [atom])
+		else self.nextturns++
+		atom.used = true
 		//atom.nextdx = 0
-		atom.nextdy = -5
-		atom.jumpTick = 0
+		self.nextdy = -5
+		self.jumpTick = 0
 		return false
 	}
 }
 
-const COLLIDE_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds}) => {
-	const reach = [bounds[axis.small], bounds[axis.big]]
-	//const nreach
+const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds}) => {
+	const reach = [bounds[axis.other.small], bounds[axis.other.big]]
+	const nreach = [nbounds[axis.other.small], nbounds[axis.other.big]]
+	const bumps = {
+		small: aligns(reach, nreach, [abounds[axis.other.small]]),
+		big: aligns(reach, nreach, [abounds[axis.other.big]]),
+	}
+
+	if (bumps.small || bumps.big) return true
+	return false
+
 }
 
 //==========//
@@ -668,7 +678,7 @@ const ELEMENT_PORTAL_VOID = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_VOID,
 	isPortalActive: true,
-	preCollide: COLLIDE_PORTAL_VOID,
+	preCollided: COLLIDED_PORTAL_VOID,
 }
 
 const ELEMENT_PORTAL_MOVE = {
