@@ -107,6 +107,7 @@ const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 	
 	self.grounded = false
+	self.slip = undefined
 
 	const axes = {
 		dy: {},
@@ -217,7 +218,8 @@ const UPDATE_MOVER = (self, world) => {
 			if (axis.direction === 1) {
 
 				self.nextdy = atom.dy
-				self.nextdx *= UPDATE_MOVER_FRICTION
+				if (self.slip !== undefined) self.nextdx * self.slip
+				else self.nextdx *= UPDATE_MOVER_FRICTION
 				self.grounded = true
 				atom.jumpTick = 0
 
@@ -571,7 +573,27 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 		big: aligns(reach, nreach, [abounds[axis.other.big]]),
 	}
 
-	if (bumps.small || bumps.big) return true
+	if (bumps.small || bumps.big) {
+		self.slip = 0.975
+		return true
+	}
+
+	// TODO
+	//
+	// IGNORE THIS PART, do it later...
+	// here, keep track of this portaling within atom.portals[axis.front] or something
+	// the portal could have an array of portaling atoms maybe?
+	// but why? not sure, therefore DONT DO IT yet
+	//
+	// DO THIS FIRST
+	// update cut. something like atom[axis.cutFront]
+	// i guess it would need to update the cut somewhere else in code, EG: a separate function in UPDATE_MOVER
+	// this is where the thingy above comes in. it needs to keep track of what its portal is for each side.
+	// so it can update its cut if it moves slightly OUT of the portal.
+	//
+	// MUCH LATER... after implementing children
+	// It should make a child and connect it at the other portal
+
 	return false
 
 }
