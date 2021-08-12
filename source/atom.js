@@ -37,17 +37,44 @@ const drawAtom = (atom, context) => {
 //=========//
 // Usefuls //
 //=========//
-const turnAtom = (atom, turns) => {
+const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
+	if (atom.turns === undefined) atom.turns = 0
 	if (turns === 0) return
-	if (turns < 0) return turnAtom(atom, 4+turns)
+	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world)
 	if (turns > 1) {
-		turnAtom(atom, 1)
-		turnAtom(atom, turns-1)
+		turnAtom(atom, 1, fallSafe, rejectIfOverlap, world)
+		turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world)
 		return
 	}
+	const old = {}
 	const {height, width} = atom
+	old.height = height
+	old.width = width
 	atom.height = width
 	atom.width = height
+	if (fallSafe) {
+		old.y = atom.y
+		old.x = atom.x
+		atom.y -= atom.height-atom.width
+		atom.x -= (atom.width-atom.height)/2
+	}
+	if (rejectIfOverlap) {
+		for (const a of world.atoms) {
+			if (a === atom) continue
+			if (exceptions.includes(a)) continue
+			if (atomOverlaps(atom, a)) {
+				const bounds = getBounds(atom)
+				const abounds = getBounds(a)
+				if (abounds.top === bounds.bottom) continue
+				for (const key in old) {
+					atom[key] = old[key]
+				}
+				return
+			}
+		}
+	}
+	atom.turns++
+	if (atom.turns >= 4) atom.turns = 0
 }
 
 const getBounds = ({x, y, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0}) => {

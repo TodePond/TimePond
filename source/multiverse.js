@@ -12,6 +12,7 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
 	addMenuElement(ELEMENT_LILYPAD, multiverse)
 	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
+	addMenuElement(ELEMENT_POTION_ROTATE, multiverse)
 	//addMenuElement(ELEMENT_FROG_DOUBLE, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
 
 	return multiverse

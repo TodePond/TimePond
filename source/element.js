@@ -7,16 +7,37 @@ const DRAW_RECTANGLE = (self, context) => {
 	context.fillRect(x+cutLeft, y+cutTop, width-(cutRight+cutLeft), height-(cutBottom+cutTop))
 }
 
+const DRAW_CIRCLE = (self, context) => {
+	const {x, y, width, height, colour = Colour.Red, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
+	context.fillStyle = colour
+	context.beginPath()
+	context.arc(x+height/2, y+height/2, height/2, 0, 2*Math.PI)
+	context.fill()
+}
+
 const images = {}
 const DRAW_IMAGE = (self, context) => {
 	context.save()
 	context.filter = self.filter !== undefined? self.filter : ""
+	let {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
+	
+	
 	if (self.flipX) {
 		context.translate(self.x + self.width/2, self.y + self.height/2)
 		context.scale(-1, 1)
 		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
 	}
-	const {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
+	if (self.turns !== 0) {
+		context.translate(self.x + self.width/2, self.y + self.height/2)
+		context.rotate(Math.PI/2 * self.turns)
+		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
+		if (self.turns % 2 !== 0) {
+			;[width, height] = [height, width]
+			;[drawWidth, drawHeight] = [drawHeight, drawWidth]
+			x -= (width-height)/2
+			y -= (height-width)/2
+		}
+	}
 	if (images[source] === undefined) {
 		const image = new Image()
 		image.src = source
@@ -26,13 +47,13 @@ const DRAW_IMAGE = (self, context) => {
 	const imageHeightRatio = image.height/drawHeight
 	const imageWidthRatio = image.width/drawWidth
 	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-(cutRight+cutLeft)*imageWidthRatio, image.height-(cutBottom+cutTop)*imageHeightRatio, x+drawOffsetX+cutLeft, y+drawOffsetY+cutTop, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
+	context.restore()
 	if (self.showBounds) {
 		context.strokeStyle = Colour.White
 		const bounds = getBounds(self)
 
 		context.strokeRect(bounds.left, bounds.top, bounds.right-bounds.left, bounds.bottom-bounds.top)
 	}
-	context.restore()
 }
 
 const DRAW_SPAWNER = (self, context) => {
@@ -64,9 +85,17 @@ const UPDATE_MOVER_BEING = (self, world) => {
 	}
 	if (self.nextdx < 0.1 && self.nextdx > -0.1 && self.grounded) {
 		if (self.jumpTick > 60) {
-			self.nextdx = 3 * (self.flipX? 1 : -1)
-			self.nextdy = -10
-			self.jumpTick = 0
+			if (self.turns !== 0) {
+				turnAtom(self, -self.turns, true, true, world)
+				self.nextdx = 1 * (self.flipX? 1 : -1)
+				self.nextdy = -2
+				self.jumpTick = 0
+			}
+			else {
+				self.nextdx = 3 * (self.flipX? 1 : -1)
+				self.nextdy = -10
+				self.jumpTick = 0
+			}
 		}
 		else {
 			if (self.jumpTick === undefined) self.jumpTick = 0
@@ -157,6 +186,11 @@ const UPDATE_MOVER = (self, world) => {
 		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
 		axis.new = bbounds[axis.back] + newOffset
 		
+		if (self.onCollide !== undefined) {
+			const result = self.onCollide(self, atom, axis, world)
+			if (result === false) continue
+		}
+
 		// MODIFY accelerations!
 		// Moving right or left
 		if (axis === axes.dx) {
@@ -164,6 +198,11 @@ const UPDATE_MOVER = (self, world) => {
 			atom.nextdx += self.dx/2
 			self.nextdx *= -0.5
 			self.nextdx += atom.dx/2
+			
+				
+			if (atom.bounce !== undefined && atom.turns.d % 2 !== 0) {
+				self.nextdx = atom.bounce * -axis.direction/2
+			}
 		}
 		
 		// Moving down or up
@@ -174,14 +213,14 @@ const UPDATE_MOVER = (self, world) => {
 
 				self.nextdy = atom.dy
 				self.nextdx *= UPDATE_MOVER_FRICTION
-				if (atom.bounce !== undefined) {
-					self.nextdy = -atom.bounce
-					self.nextdx *= 1.5
-				}
-
 				self.grounded = true
 				atom.jumpTick = 0
 
+				if (atom.bounce !== undefined && atom.turns % 2 === 0) {
+					self.nextdy = -atom.bounce
+					self.nextdx *= 1.5
+				}
+				
 			}
 
 			// Moving up
@@ -483,6 +522,14 @@ const PORTAL_MOVE = {
 	leave: () => {},
 }
 
+//===========//
+// Colliders //
+//===========//
+const COLLIDE_POTION_ROTATE = (self, atom, axis, world) => {
+	if (!atom.isVoid) turnAtom(atom, 1, true, true, world, [self])
+	world.atoms = world.atoms.filter(a => a !== self)
+}
+
 //==========//
 // Elements //
 //==========//
@@ -499,10 +546,10 @@ const ELEMENT_FROG = {
 	//drawHeight: 254/6, //42.3333
 	//drawOffsetX: -11,
 	//drawOffsetY: 0,
+	//cutBottom: (254/6)/2,
+	//cutLeft: 5,
+	//cutTop: 10,
 	//showBounds: true,
-	cutBottom: (254/6)/2,
-	cutLeft: 5,
-	cutTop: 10,
 }
 
 const ELEMENT_BOX = {
@@ -530,6 +577,7 @@ const ELEMENT_VOID = {
 	grab: GRAB_STATIC,
 	height: 10,
 	width: WORLD_WIDTH,
+	isVoid: true,
 	y: 0,
 }
 
@@ -593,4 +641,19 @@ const ELEMENT_FROG_DOUBLE = {
 	construct: (self) => {
 		self.children = [makeAtom({...ELEMENT_FROG, x: 0, y: 50})]
 	}
+}
+
+const ELEMENT_POTION = {
+	colour: Colour.Purple,
+	draw: DRAW_CIRCLE,
+	update: UPDATE_MOVER,
+	height: 10,
+	width: 10,
+	//onCollide: COLLIDE_POTION_ROTATE,
+}
+
+const ELEMENT_POTION_ROTATE = {
+	...ELEMENT_POTION,
+	colour: Colour.Orange,
+	onCollide: COLLIDE_POTION_ROTATE,
 }
