@@ -180,6 +180,11 @@ const UPDATE_MOVER = (self, world) => {
 		if (atom === undefined) continue
 		const bbounds = axis.blocker.bounds
 		
+		
+		// SNAP to the surface!
+		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
+		axis.new = bbounds[axis.back] + newOffset
+
 		// Allow MODs by elements/atoms
 		if (self.preCollide !== undefined) {
 			const result = self.preCollide({self, atom, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
@@ -189,10 +194,6 @@ const UPDATE_MOVER = (self, world) => {
 			const result = atom.preCollided({self: atom, atom: self, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
 			if (result === false) continue
 		}
-		
-		// SNAP to the surface!
-		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
-		axis.new = bbounds[axis.back] + newOffset
 		
 		// Change ACCELERATIONS!
 		// Moving right or left
@@ -462,6 +463,11 @@ const UPDATE_MOVER = (self, world) => {
 
 	self.x = axes.dx.new
 	self.y = axes.dy.new
+	
+	if (self.nextturns !== 0) {
+		turnAtom(self, self.nextturns, true, true, world)
+		self.nextturns = 0
+	}
 }
 
 //==========//
@@ -531,7 +537,8 @@ const COLLIDE_POTION_ROTATE = ({self, atom, axis, world}) => {
 	if (self.used) return
 	if (!atom.isVoid && !atom.isPotion) {
 		world.atoms = world.atoms.filter(a => a !== self)
-		turnAtom(atom, 1, true, true, world, [self])
+		atom.nextturns++
+		//turnAtom(atom, 1, true, true, world, [self])
 		self.used = true
 		//atom.nextdx = 0
 		atom.nextdy = -5
@@ -544,7 +551,8 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 	if (self.used) return
 	if (!atom.isVoid && !atom.isPotion) {
 		world.atoms = world.atoms.filter(a => a !== self)
-		turnAtom(atom, 1, true, true, world, [self])
+		atom.nextturns++
+		//turnAtom(atom, 1, true, true, world, [self])
 		self.used = true
 		//atom.nextdx = 0
 		atom.nextdy = -5
