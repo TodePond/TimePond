@@ -147,7 +147,8 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dy.cutSmall = cutTop
 	axes.dy.cutBig = cutBottom
 	axes.dy.other = axes.dx
-	axes.dy.cutFrontName = axes.dy.direction === 1? ("cut" + axes.dy.front.as(Capitalised)) : ("cut" + axes.dy.back.as(Capitalised))
+	axes.dy.cutFrontName = "cut" + axes.dy.front.as(Capitalised)
+	axes.dy.cutBackName = "cut" + axes.dy.back.as(Capitalised)
 
 	axes.dx.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
 	axes.dx.small = "left"
@@ -160,7 +161,8 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dx.cutSmall = cutLeft
 	axes.dx.cutBig = cutRight
 	axes.dx.other = axes.dy
-	axes.dx.cutFrontName = axes.dx.direction === 1? "cut" + axes.dx.front.as(Capitalised) : "cut" + axes.dx.back.as(Capitalised)
+	axes.dx.cutFrontName = "cut" + axes.dx.front.as(Capitalised)
+	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
 
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
@@ -408,17 +410,19 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	// but why? not sure, therefore DONT DO IT yet
 	//
 	// DO THIS FIRST
-	// update cut. DONE(something like atom[axis.cutFront])
 	// i guess it would need to update the cut somewhere else in code, EG: a separate function in UPDATE_MOVER
 	// this is where the thingy above comes in. it needs to keep track of what its portal is for each side.
 	// so it can update its cut if it moves slightly OUT of the portal.
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
-	self[axis.cutFrontName.d] += nbounds[axis.front] - abounds[axis.back]
-	/*if (self[axis.cutFrontName] > abounds[axis.big] - abounds[axis.small]) {
+
+	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
+	self[axis.cutFrontName.d] += amountInPortal
+	const remainingSize = axis.size - self[axis.cutBackName]
+	if (self[axis.cutFrontName] >= remainingSize) {
 		world.atoms = world.atoms.filter(a => a !== self)
-	}*/
+	}
 
 	return false
 
