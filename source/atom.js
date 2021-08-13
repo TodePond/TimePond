@@ -45,7 +45,7 @@ const makeAtom = ({
 	}
 	for (const autoLink of autoLinks) {
 		const latom = makeAtom(autoLink.element)
-		linkAtom(atom, latom, autoLink.offset)
+		linkAtom(atom, latom, autoLink.offset, autoLink.transfer)
 	}
 	turnAtom(atom, turns)
 	return atom
@@ -62,8 +62,20 @@ const updateAtom = (atom, world) => {
 const updateAtomLinks = (atom) => {
 	for (const link of atom.links) {
 		for (const key of LINKED_PROPERTIES) {
-			link.atom[key] = atom[key]
-			if (link.offset[key] !== undefined) link.atom[key] = link.offset[key](link.atom[key])
+			if (link.transfer[key] !== undefined) {
+				const them = atom[key]
+				const me = link.atom[key]
+				atom[key] = link.transfer[key](them, me)
+			}
+
+			if (link.offset[key] !== undefined) {
+				const them = atom[key]
+				const me = link.atom[key]
+				link.atom[key] = link.offset[key](them, me)
+			}
+			else {
+				link.atom[key] = atom[key]
+			}
 		}
 	}
 }
@@ -76,8 +88,8 @@ const drawAtom = (atom, context) => {
 //=========//
 // Usefuls //
 //=========//
-const linkAtom = (atom, latom, offset) => {
-	atom.links.push({atom: latom, offset})
+const linkAtom = (atom, latom, offset={}, transfer={}) => {
+	atom.links.push({atom: latom, offset, transfer})
 	latom.parent = atom
 }
 
