@@ -163,6 +163,12 @@ const atomOverlaps = (self, atom) => {
 
 	if (self.parent === atom) return false
 	if (atom.parent === self) return false
+
+	for (const link of self.links) {
+		const result = atomOverlaps(link.atom, atom)
+		if (result) return true
+	}
+
 	const bounds = getBounds(self)
 	const abounds = getBounds(atom)
 
@@ -179,7 +185,6 @@ const atomOverlaps = (self, atom) => {
 	//if (avertAligns && abounds.left <= bounds.left && abounds.right >= bounds.right) return true
 
 	return false
-
 }
 
 const getPointSide = (point, [left, right]) => {
