@@ -39,8 +39,10 @@ const DRAW_IMAGE = (self, context) => {
 
 	// Cuts
 	let {cutRight, cutLeft, cutBottom, cutTop} = self
-	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
-
+	if (self.flipX) [cutLeft, cutRight] = [cutRight, cutLeft]
+	if (self.flipX)  for (let i = 0; i < self.turns; i++) [cutRight, cutTop, cutLeft, cutBottom] = [cutTop, cutLeft, cutBottom, cutRight]
+	if (!self.flipX) for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	
 	const cutWidth = cutRight + cutLeft
 	const cutHeight = cutBottom + cutTop
 
@@ -419,7 +421,7 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	// It should make a child and connect it at the other portal
 
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
-	self[axis.cutFrontName.d] += amountInPortal
+	self[axis.cutFrontName] += amountInPortal
 	const remainingSize = axis.size - self[axis.cutBackName]
 	if (self[axis.cutFrontName] >= remainingSize) {
 		world.atoms = world.atoms.filter(a => a !== self)
@@ -432,22 +434,6 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 //==========//
 // Elements //
 //==========//
-const ELEMENT_FROG = {
-	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
-	draw: DRAW_IMAGE,
-	update: UPDATE_MOVER_BEING,
-	grab: GRAB_DRAG,
-	source: "images/Blank@0.25x.png",
-	width: 354/6/* - 11 - 7*/,
-	height: 254/6,
-	isMover: true,
-	//cutBottom: (254/6)/2,
-	//cutRight: 5,
-	cutLeft: 10,
-	//cutTop: 10,
-	showBounds: true,
-}
-
 const ELEMENT_BOX = {
 	colour: Colour.Orange,
 	draw: DRAW_RECTANGLE,
@@ -535,13 +521,6 @@ const ELEMENT_PORTAL_MOVE = {
 	portal: PORTAL_MOVE,
 }
 
-const ELEMENT_FROG_DOUBLE = {
-	...ELEMENT_FROG,
-	construct: (self) => {
-		self.children = [makeAtom({...ELEMENT_FROG, x: 0, y: 50})]
-	}
-}
-
 const ELEMENT_POTION = {
 	colour: Colour.Purple,
 	draw: DRAW_CIRCLE,
@@ -557,4 +536,27 @@ const ELEMENT_POTION_ROTATE = {
 	colour: Colour.Orange,
 	preCollide: COLLIDE_POTION_ROTATE,
 	preCollided: COLLIDED_POTION_ROTATE,
+}
+
+const ELEMENT_FROG = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Blank@0.25x.png",
+	width: 354/6/* - 11 - 7*/,
+	height: 254/6,
+	isMover: true,
+	//cutBottom: (254/6)/2,
+	//cutRight: 5,
+	//cutLeft: 10,
+	//cutTop: 10,
+	//showBounds: true,
+}
+
+const ELEMENT_FROG_DOUBLE = {
+	...ELEMENT_FROG,
+	construct: (self) => {
+		self.children = [makeAtom({...ELEMENT_FROG, x: 0, y: 50})]
+	}
 }
