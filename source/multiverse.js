@@ -126,6 +126,14 @@ const updateCursor = (multiverse, context) => {
 		hand.atom.nextdx = hand.atom.dx
 		hand.atom.nextdy = hand.atom.dy
 		hand.jumpTick = 0
+
+		/*for (const link of hand.atom.links) {
+			link.atom.dx = (mx - hand.previous.x)
+			link.atom.dy = (my - hand.previous.y)
+			link.atom.nextdx = link.atom.dx
+			link.atom.nextdy = link.atom.dy
+			link.jumpTick = 0
+		}*/
 			
 		// Transfer the dragged atom to another world if needed
 		if (world !== hand.source) {

@@ -205,8 +205,8 @@ const UPDATE_MOVER = (self, world) => {
 	//==================================================================//
 	for (const atom of world.atoms) {
 
-		//if (self.parent === atom) continue
-		//if (atom.parent === self) continue
+		if (self.parent === atom) continue
+		if (atom.parent === self) continue
 		if (atom.isVisual) continue
 		if (atom === self) continue
 		const abounds = getBounds(atom)
@@ -630,13 +630,17 @@ const ELEMENT_BOX_DOUBLE = {
 	...ELEMENT_BOX,
 	autoLinks: [
 		{
-			element: {...ELEMENT_BOX, update: UPDATE_MOVER, grab: GRAB_LINKEE},
+			element: {...ELEMENT_BOX, update: UPDATE_NONE, grab: GRAB_LINKEE},
 			offset: {
 				y: (y) => y + 50,
+				dy: () => 0,
+				dx: () => 0,
+				nextdy: () => 0,
+				nextdx: () => 0,
 			},
 			transfer: {
-				nextdx: (them, me) => (them + me)/2,
-				nextdy: (them, me) => (them + me)/2,
+				nextdx: (them, me) => them + me,
+				nextdy: (them, me) => them + me,
 			},
 		},
 	]
