@@ -127,6 +127,7 @@ const Capitalised = {
 
 const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
+
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
 
 	// Reset some game state info
@@ -171,6 +172,31 @@ const UPDATE_MOVER = (self, world) => {
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
 	const bounds = getBounds(self)
 	const nbounds = getBounds({x: axes.dx.new, y: axes.dy.new, width, height, cutTop, cutBottom, cutLeft, cutRight})
+
+	//================================//
+	// Process the EXITING of portals //
+	//================================//
+	for (const key in self.portals) {
+		const portal = self.portals[key]
+		if (portal === undefined) continue
+		const pbounds = getBounds(portal)
+		for (const axis of axes) {
+			if (axis.back !== key) continue
+			
+			// Re-cut myself so that I slightly leave portal! Yikes
+			const gapToPortal = axis.direction * (nbounds[axis.back] - pbounds[axis.front])
+			self[axis.cutBackName] -= gapToPortal
+
+			if (portal.portal.move !== undefined) portal.portal.move()
+			if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
+
+			if (self[axis.cutBackName] <= 0) {
+				self.portals[axis.back] = undefined
+				if (portal.portal.exit !== undefined) portal.portal.exit()
+			}
+
+		}
+	}
 
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
@@ -332,8 +358,7 @@ const PORTAL_VOID = {
 	enter: () => {
 		print("Enter voidal!")
 	},
-	end: (atom, world) => {
-		world.atoms = world.atoms.filter(a => a !== atom)
+	exit: (atom, world) => {
 		print("End voidal!")
 	},
 	moveIn: (atom, world) => {
@@ -342,9 +367,9 @@ const PORTAL_VOID = {
 	moveOut: (atom, world) => {
 		print("Move out voidal!")
 	},
-	leave: () => {
-		print("Leave voidal!")
-	},
+	move: () => {
+		print("Move through voidal!")
+	}
 }
 
 const PORTAL_MOVE = {
@@ -416,17 +441,29 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	// i guess it would need to update the cut somewhere else in code, EG: a separate function in UPDATE_MOVER
 	// this is where the thingy above comes in. it needs to keep track of what its portal is for each side.
 	// so it can update its cut if it moves slightly OUT of the portal.
+	// prevent bumping if mid cut yo
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
 
+	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
 	self[axis.cutFrontName] += amountInPortal
 	const remainingSize = axis.size - self[axis.cutBackName]
 	if (self[axis.cutFrontName] >= remainingSize) {
 		world.atoms = world.atoms.filter(a => a !== self)
 	}
+	
+	// Register (or re-register) that I am currently using this portal
+	if (self.portals[axis.front] === undefined) {
+		self.portals[axis.front] = atom
+		if (atom.portal.enter !== undefined) atom.portal.enter()
+	}
+	
+	if (atom.portal.move !== undefined) atom.portal.move()
+	if (atom.portal.moveIn !== undefined) atom.portal.moveIn()
 
+	if (self.portals[axis.front] !== atom) throw new Error(`[TimePond] An atom tried to go through two portals in the same direction.`)
 	return false
 
 }

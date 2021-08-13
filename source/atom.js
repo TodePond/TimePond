@@ -37,6 +37,7 @@ const makeAtom = ({
 		update,
 		grab,
 		flipX: false,
+		portals: {top: undefined, bottom: undefined, left: undefined, right: undefined},
 		...args
 	}
 	turnAtom(atom, turns)
