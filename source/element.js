@@ -17,39 +17,55 @@ const DRAW_CIRCLE = (self, context) => {
 
 const images = {}
 const DRAW_IMAGE = (self, context) => {
-	context.save()
-	context.filter = self.filter !== undefined? self.filter : ""
-	let {x, y, width, height, drawWidth=width, drawHeight=height, drawOffsetX=0, drawOffsetY=0, source, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
-	
-	if (self.flipX) {
-		context.translate(self.x + self.width/2, self.y + self.height/2)
-		context.scale(-1, 1)
-		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
-	}
-	if (self.turns !== 0) {
-		context.translate(self.x + self.width/2, self.y + self.height/2)
-		context.rotate(Math.PI/2 * self.turns)
-		context.translate(-(self.x + self.width/2), -(self.y + self.height/2))
-		if (self.turns % 2 !== 0) {
-			;[width, height] = [height, width]
-			;[drawWidth, drawHeight] = [drawHeight, drawWidth]
-			x -= (width-height)/2
-			y -= (height-width)/2
-		}
-	}
-	if (images[source] === undefined) {
+
+	// Sprite
+	if (images[self.source] === undefined) {
 		const image = new Image()
-		image.src = source
-		images[source] = image
+		image.src = self.source
+		images[self.source] = image
 	}
-	const image = images[source]
-	const imageHeightRatio = image.height/drawHeight
-	const imageWidthRatio = image.width/drawWidth
-	context.drawImage(image, cutLeft*imageWidthRatio, cutTop*imageHeightRatio, image.width-(cutRight+cutLeft)*imageWidthRatio, image.height-(cutBottom+cutTop)*imageHeightRatio, x+drawOffsetX+cutLeft, y+drawOffsetY+cutTop, drawWidth-(cutLeft+cutRight), drawHeight-(cutBottom+cutTop))
+	const image = images[self.source]
+	const imageHeightRatio = image.height/self.height
+	const imageWidthRatio = image.width/self.width
+
+	// Positioning
+	const bounds = getBounds(self)
+	const boundsWidth = bounds.right - bounds.left
+	const boundsHeight = bounds.bottom - bounds.top
+	const boundsDimensionDiff = boundsWidth - boundsHeight
+
+	const centerX = (bounds.right + bounds.left)/2
+	const centerY = (bounds.bottom + bounds.top)/2
+
+	// Cuts
+	let {cutRight, cutLeft, cutBottom, cutTop} = self
+	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	const cutWidth = cutRight + cutLeft
+	const cutHeight = cutBottom + cutTop
+
+	// Snippet
+	const snippetX = cutLeft*imageWidthRatio
+	const snippetY = cutTop*imageHeightRatio
+	const snippetWidth = image.width - cutWidth*imageWidthRatio
+	const snippetHeight = image.height - cutHeight*imageHeightRatio
+
+	// Flips and Rotations
+	context.save()
+	if (self.flipX || self.turns > 0) {
+		context.translate(centerX, centerY)
+		if (self.flipX) context.scale(-1, 1)
+		if (self.turns > 0) context.rotate(Math.PI/2 * self.turns)
+		context.translate(-centerX, -centerY)
+	}
+
+	// Draw!
+	if (self.turns % 2 !== 0) context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
+	else context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
 	context.restore()
+
+	// Debug: Showing bounding box!
 	if (self.showBounds) {
 		context.strokeStyle = Colour.White
-		const bounds = getBounds(self)
 		context.strokeRect(bounds.left, bounds.top, bounds.right-bounds.left, bounds.bottom-bounds.top)
 	}
 }
@@ -102,6 +118,10 @@ const UPDATE_MOVER_BEING = (self, world) => {
 	}
 }
 
+const Capitalised = {
+	convert: (s) => s[0].as(UpperCase) + s.slice(1)
+}
+
 const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
@@ -125,6 +145,7 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dy.cutSmall = cutTop
 	axes.dy.cutBig = cutBottom
 	axes.dy.other = axes.dx
+	axes.dy.cutFrontName = axes.dy.direction === 1? ("cut" + axes.dy.front.as(Capitalised)) : ("cut" + axes.dy.back.as(Capitalised))
 
 	axes.dx.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
 	axes.dx.small = "left"
@@ -137,6 +158,7 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dx.cutSmall = cutLeft
 	axes.dx.cutBig = cutRight
 	axes.dx.other = axes.dy
+	axes.dx.cutFrontName = axes.dx.direction === 1? "cut" + axes.dx.front.as(Capitalised) : "cut" + axes.dx.back.as(Capitalised)
 
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
@@ -566,17 +588,23 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 }
 
 const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds}) => {
+	
+	
 	const reach = [bounds[axis.other.small], bounds[axis.other.big]]
 	const nreach = [nbounds[axis.other.small], nbounds[axis.other.big]]
-	const bumps = {
+
+	const sideBumps = {
 		small: aligns(reach, nreach, [abounds[axis.other.small]]),
 		big: aligns(reach, nreach, [abounds[axis.other.big]]),
 	}
 
-	if (bumps.small || bumps.big) {
+	// Collide with the edges of the portal
+	if (sideBumps.small || sideBumps.big) {
 		self.slip = 0.975
 		return true
 	}
+
+	// Otherwise, go through...
 
 	// TODO
 	//
@@ -586,13 +614,17 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	// but why? not sure, therefore DONT DO IT yet
 	//
 	// DO THIS FIRST
-	// update cut. something like atom[axis.cutFront]
+	// update cut. DONE(something like atom[axis.cutFront])
 	// i guess it would need to update the cut somewhere else in code, EG: a separate function in UPDATE_MOVER
 	// this is where the thingy above comes in. it needs to keep track of what its portal is for each side.
 	// so it can update its cut if it moves slightly OUT of the portal.
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
+	self[axis.cutFrontName.d] += nbounds[axis.front] - abounds[axis.back]
+	/*if (self[axis.cutFrontName] > abounds[axis.big] - abounds[axis.small]) {
+		world.atoms = world.atoms.filter(a => a !== self)
+	}*/
 
 	return false
 
@@ -611,12 +643,9 @@ const ELEMENT_FROG = {
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
 	isMover: true,
-	//drawWidth: 354/6, //59
-	//drawHeight: 254/6, //42.3333
-	//drawOffsetX: -11,
-	//drawOffsetY: 0,
 	//cutBottom: (254/6)/2,
-	//cutLeft: 5,
+	//cutRight: 5,
+	//cutLeft: 10,
 	//cutTop: 10,
 	//showBounds: true,
 }

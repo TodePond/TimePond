@@ -13,9 +13,31 @@ const makeAtom = ({
 	grab = GRAB_DRAG,
 	turns = 0,
 	construct = () => {},
+	cutTop = 0,
+	cutBottom = 0,
+	cutRight = 0,
+	cutLeft = 0,
 	...args
 } = {}) => {
-	const atom = {width, height, x, y, dx, dy, nextdx: dx, nextdy: dy, nextturns: 0, draw, update, grab, ...args}
+	const atom = {
+		width,
+		cutTop,
+		cutBottom,
+		cutRight,
+		cutLeft,
+		height,
+		x,
+		y,
+		dx,
+		dy,
+		nextdx: dx,
+		nextdy: dy,
+		nextturns: 0,
+		draw,
+		update,
+		grab,
+		...args
+	}
 	turnAtom(atom, turns)
 	construct(atom)
 	return atom
@@ -48,16 +70,26 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	}
 	const old = {}
 	const obounds = getBounds(atom)
-	const {height, width} = atom
+	const {height, width, cutTop, cutBottom, cutRight, cutLeft} = atom
 	old.height = height
 	old.width = width
+	old.cutTop = cutTop
+	old.cutBottom = cutBottom
+	old.cutLeft = cutLeft
+	old.cutRight = cutRight
 	atom.height = width
 	atom.width = height
+	atom.cutBottom = cutRight
+	atom.cutLeft = cutBottom
+	atom.cutTop = cutLeft
+	atom.cutRight = cutTop
+
 	if (rejectIfOverlap) {
 		
 		old.y = atom.y
 		old.x = atom.x
-		atom.y -= atom.height-atom.width + 1 //TODO: BUG BUG BUG BUG stuff can fall through the ground. THIS ISNT ENOUGH!?
+		const nbounds = getBounds(atom)
+		atom.y -= nbounds.bottom-obounds.bottom + 1 //TODO: BUG BUG BUG BUG stuff can fall through the ground. THIS ISNT ENOUGH!?
 		atom.x -= (atom.width-atom.height)/2
 		for (const a of world.atoms) {
 			if (a === atom) continue
