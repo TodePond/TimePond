@@ -133,12 +133,15 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	atom.cutTop = cutLeft
 	atom.cutRight = cutTop
 
+	// TODO: rotate the link offsets and transfers!
+	// but make sure you make a copy of it first in case the rotation is not possible and u gotta reverse
+
 	if (rejectIfOverlap) {
 		
 		old.y = atom.y
 		old.x = atom.x
 		const nbounds = getBounds(atom)
-		atom.y -= nbounds.bottom-obounds.bottom + 1 //TODO: BUG BUG BUG BUG stuff can fall through the ground. THIS ISNT ENOUGH!?
+		atom.y -= nbounds.bottom-obounds.bottom + 1
 		atom.x -= (atom.width-atom.height)/2
 		for (const a of world.atoms) {
 			if (a === atom) continue
@@ -150,9 +153,10 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 				for (const key in old) {
 					atom[key] = old[key]
 				}
-				return
+				return false
 			}
 		}
+
 	}
 	atom.turns++
 	if (atom.turns >= 4) atom.turns = 0
