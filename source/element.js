@@ -368,7 +368,7 @@ const PORTAL_VOID = {
 		print("Move out voidal!")
 	},
 	move: () => {
-		print("Move through voidal!")
+		//print("Move through voidal!")
 	}
 }
 
@@ -413,19 +413,24 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 
 const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds}) => {
 	
-	
-	const reach = [bounds[axis.other.small], bounds[axis.other.big]]
-	const nreach = [nbounds[axis.other.small], nbounds[axis.other.big]]
+	//==================================================//
+	// BUMP edges of portal if I'm NOT going through it //
+	//==================================================//
+	if (self.portals[axis.front] !== atom) {
 
-	const sideBumps = {
-		small: aligns(reach, nreach, [abounds[axis.other.small]]),
-		big: aligns(reach, nreach, [abounds[axis.other.big]]),
-	}
+		const reach = [bounds[axis.other.small], bounds[axis.other.big]]
+		const nreach = [nbounds[axis.other.small], nbounds[axis.other.big]]
 
-	// Collide with the edges of the portal
-	if (sideBumps.small || sideBumps.big) {
-		self.slip = 0.975
-		return true
+		const sideBumps = {
+			small: aligns(reach, nreach, [abounds[axis.other.small]]),
+			big: aligns(reach, nreach, [abounds[axis.other.big]]),
+		}
+
+		// Collide with the edges of the portal
+		if (sideBumps.small || sideBumps.big) {
+			self.slip = 0.975
+			return true
+		}
 	}
 
 	// Otherwise, go through...
@@ -438,10 +443,11 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	// but why? not sure, therefore DONT DO IT yet
 	//
 	// DO THIS FIRST
-	// i guess it would need to update the cut somewhere else in code, EG: a separate function in UPDATE_MOVER
-	// this is where the thingy above comes in. it needs to keep track of what its portal is for each side.
-	// so it can update its cut if it moves slightly OUT of the portal.
-	// prevent bumping if mid cut yo
+	// prevent bumping if mid cut yo - OK I got an idea
+	// use the children system
+	// make portals just 3 atoms - the middle, and two 0 width children
+	// so first i gotta make the children system actually
+	// brb
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
@@ -527,7 +533,7 @@ const ELEMENT_PORTAL = {
 	draw: DRAW_RECTANGLE,
 	grab: GRAB_DRAG,
 	height: 5,
-	width: 115,
+	width: 125,
 	colour: Colour.Purple,
 	isPortal: true,
 	isPortalActive: false,
