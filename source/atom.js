@@ -77,6 +77,7 @@ const updateAtomLinks = (atom) => {
 				link.atom[key] = atom[key]
 			}
 		}
+		updateAtomLinks(link.atom)
 	}
 }
 
@@ -175,10 +176,17 @@ const pointOverlaps = ({x, y}, atom) => {
 	return x >= left && x <= right && y >= top && y <= bottom
 }
 
+const atomIsDescendant = (kid, parent) => {
+	if (kid.parent === parent) return true
+	if (kid.parent === undefined) return false
+	return atomIsDescendant(kid.parent, parent)
+}
+
+
 const atomOverlaps = (self, atom) => {
 
-	if (self.parent === atom) return false
-	if (atom.parent === self) return false
+	if (atomIsDescendant(self, atom)) return false
+	if (atomIsDescendant(atom, self)) return false
 
 	for (const link of self.links) {
 		const result = atomOverlaps(link.atom, atom)

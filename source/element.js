@@ -495,7 +495,21 @@ const ELEMENT_BOX = {
 	grab: GRAB_DRAG,
 	isMover: true,
 	width: 40,
-	height: 40
+	height: 40,
+	/*autoLinks: [
+		{
+			element: {draw: DRAW_RECTANGLE, grab: GRAB_LINKEE, colour: Colour.Black, update: UPDATE_NONE, isVisual: true},
+			offset: {width: () => 2, x: (x) => x},
+		},
+		{
+			element: {draw: DRAW_RECTANGLE, grab: GRAB_LINKEE, colour: Colour.Black, update: UPDATE_NONE, isVisual: true},
+			offset: {width: () => 2, x: (x) => x+40-2},
+		},
+		{
+			element: {draw: DRAW_RECTANGLE, grab: GRAB_LINKEE, colour: Colour.Black, update: UPDATE_NONE, isVisual: true},
+			offset: {height: () => 2, x: (x) => x},
+		},
+	]*/
 }
 
 const ELEMENT_PLATFORM = {
@@ -629,6 +643,7 @@ const ELEMENT_FROG = {
 const ELEMENT_BOX_DOUBLE = {
 	...ELEMENT_BOX,
 	autoLinks: [
+		//...ELEMENT_BOX.autoLinks,
 		{
 			element: {...ELEMENT_BOX, update: UPDATE_NONE, grab: GRAB_LINKEE},
 			offset: {
