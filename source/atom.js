@@ -12,36 +12,42 @@ const makeAtom = ({
 	update = UPDATE_STATIC,
 	grab = GRAB_DRAG,
 	turns = 0,
-	construct = () => {},
 	cutTop = 0,
 	cutBottom = 0,
 	cutRight = 0,
 	cutLeft = 0,
+	autoLinks = [],
 	...args
 } = {}) => {
 	const atom = {
 		width,
+		height,
 		cutTop,
 		cutBottom,
 		cutRight,
 		cutLeft,
-		height,
 		x,
 		y,
 		dx,
 		dy,
 		nextdx: dx,
 		nextdy: dy,
+		turns: 0,
 		nextturns: 0,
 		draw,
 		update,
 		grab,
 		flipX: false,
 		portals: {top: undefined, bottom: undefined, left: undefined, right: undefined},
+		children: [],
+		links: [],
 		...args
 	}
+	for (const autoLink of autoLinks) {
+		const latom = makeAtom(autoLink.element)
+		linkAtom(atom, latom, autoLink.offset)
+	}
 	turnAtom(atom, turns)
-	construct(atom)
 	return atom
 }
 
@@ -49,8 +55,17 @@ const makeAtom = ({
 // Game Loop //
 //===========//
 const updateAtom = (atom, world) => {
-	const {update} = atom
-	update(atom, world)
+	atom.update(atom, world)
+	updateAtomLinks(atom, world)
+}
+
+const updateAtomLinks = (atom) => {
+	for (const link of atom.links) {
+		for (const key of LINKED_PROPERTIES) {
+			link.atom[key] = atom[key]
+			if (link.offset[key] !== undefined) link.atom[key] = link.offset[key](link.atom[key])
+		}
+	}
 }
 
 const drawAtom = (atom, context) => {
@@ -61,6 +76,17 @@ const drawAtom = (atom, context) => {
 //=========//
 // Usefuls //
 //=========//
+const linkAtom = (atom, latom, offset) => {
+	atom.links.push({atom: latom, offset})
+	latom.parent = atom
+}
+
+const moveAtom = (atom, x, y) => {
+	atom.x = x
+	atom.y = y
+	updateAtomLinks(atom)
+}
+
 const flipAtom = (atom) => {
 	atom.flipX = !atom.flipX
 	const [cutLeft, cutRight] = [atom.cutRight, atom.cutLeft]
@@ -135,6 +161,8 @@ const pointOverlaps = ({x, y}, atom) => {
 
 const atomOverlaps = (self, atom) => {
 
+	if (self.parent === atom) return false
+	if (atom.parent === self) return false
 	const bounds = getBounds(self)
 	const abounds = getBounds(atom)
 

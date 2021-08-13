@@ -13,7 +13,7 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_LILYPAD, multiverse)
 	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
 	addMenuElement(ELEMENT_POTION_ROTATE, multiverse)
-	//addMenuElement(ELEMENT_FROG_DOUBLE, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
+	addMenuElement(ELEMENT_BOX_DOUBLE, multiverse)
 
 	return multiverse
 }
@@ -29,9 +29,9 @@ const addMenuElement = (element, multiverse, menuElement = ELEMENT_SPAWNER) => {
 	})
 
 	const remainingY = MENU_HEIGHT - atom.height
-	atom.y = remainingY/2
+	atom.y = Math.round(remainingY/2)
 
-	multiverse.void.atoms.push(atom)
+	addAtom(multiverse.void, atom)
 
 	menu.x += atom.width
 }
@@ -95,11 +95,11 @@ const updateCursor = (multiverse, context) => {
 			for (const atom of world.atoms) {
 				if (pointOverlaps({x, y}, atom)) {
 					const {grab} = atom
+					hand.offset = {x: atom.x-x, y: atom.y-y}
 					const grabbed = grab(atom, hand, world)
 					hand.atom = grabbed
 					if (grabbed !== undefined) {
 						hand.source = world
-						hand.offset = {x: atom.x-x, y: atom.y-y}
 						hand.previous = {x: mx, y: my}
 					}
 				}
@@ -112,8 +112,7 @@ const updateCursor = (multiverse, context) => {
 	else {
 
 		// Move it to the dragged position!
-		hand.atom.x = x + hand.offset.x
-		hand.atom.y = y + hand.offset.y
+		moveAtom(hand.atom, x + hand.offset.x, y + hand.offset.y)
 		if (hand.atom.flipX !== undefined) {
 			const mdx = mx - hand.previous.x
 			const oldX = hand.atom.x
@@ -130,8 +129,9 @@ const updateCursor = (multiverse, context) => {
 			
 		// Transfer the dragged atom to another world if needed
 		if (world !== hand.source) {
-			hand.source.atoms = hand.source.atoms.filter(atom => atom !== hand.atom)
-			world.atoms.push(hand.atom)
+			/*hand.source.atoms = hand.source.atoms.filter(atom => atom !== hand.atom)
+			world.atoms.push(hand.atom)*/
+			moveAtomWorld(hand.atom, hand.source, world)
 			hand.source = world
 		}
 		
@@ -163,6 +163,7 @@ const updateCursor = (multiverse, context) => {
 
 const updateMultiverse = (multiverse) => {
 	if (hand.atom !== undefined) return
+	updateWorldLinks(multiverse.void)
 	for (const world of multiverse.worlds) {
 		updateWorld(world)
 	}

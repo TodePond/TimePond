@@ -89,6 +89,8 @@ const UPDATE_STATIC = (self) => {
 	self.nextdy = 0
 }
 
+const UPDATE_NONE = () => {}
+
 const UPDATE_MOVER_GRAVITY = 0.5
 const UPDATE_MOVER_AIR_RESISTANCE = 0.99
 const UPDATE_MOVER_FRICTION = 0.8
@@ -203,6 +205,9 @@ const UPDATE_MOVER = (self, world) => {
 	//==================================================================//
 	for (const atom of world.atoms) {
 
+		if (self.parent === atom) continue
+		if (atom.parent === self) continue
+		if (atom.isVisual) continue
 		if (atom === self) continue
 		const abounds = getBounds(atom)
 
@@ -333,22 +338,28 @@ const GRAB_DRAG = (self) => {
 const GRAB_STATIC = () => {}
 const GRAB_SPAWNER = (self, hand, world) => {
 	const atom = makeAtom(self.spawn)
-	world.atoms.push(atom)
+	addAtom(world, atom)
 	atom.x = self.x
 	atom.y = self.y
 	return atom
 }
 
 const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
-	if (self.tally === undefined) self.tally = 0
+	//if (self.tally === undefined) self.tally = 0
 	const grabbed = GRAB_SPAWNER(self, hand, world)
-	self.tally++
+	/*self.tally++
 	if (self.tally % 2 === 0) {
 		if (self.tally/2 >= ELEMENT_PORTAL_COLOURS.length) self.tally = 0
 		self.spawn = {...self.spawn, colour: ELEMENT_PORTAL_COLOURS[self.tally/2]}
 		self.colour = self.spawn.colour
-	}
+	}*/
 	return grabbed
+}
+
+const GRAB_LINKEE = (self, hand, world) => {
+	hand.offset.x -= self.x - self.parent.x
+	hand.offset.y -= self.y - self.parent.y
+	return self.parent.grab(self.parent, hand, world)
 }
 
 //=========//
@@ -356,16 +367,16 @@ const GRAB_SPAWNER_PORTAL = (self, hand, world) => {
 //=========//
 const PORTAL_VOID = {
 	enter: () => {
-		print("Enter voidal!")
+		//print("Enter voidal!")
 	},
 	exit: (atom, world) => {
-		print("End voidal!")
+		//print("End voidal!")
 	},
 	moveIn: (atom, world) => {
-		print("Move in voidal!")
+		//print("Move in voidal!")
 	},
 	moveOut: (atom, world) => {
-		print("Move out voidal!")
+		//print("Move out voidal!")
 	},
 	move: () => {
 		//print("Move through voidal!")
@@ -457,7 +468,7 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	self[axis.cutFrontName] += amountInPortal
 	const remainingSize = axis.size - self[axis.cutBackName]
 	if (self[axis.cutFrontName] >= remainingSize) {
-		world.atoms = world.atoms.filter(a => a !== self)
+		removeAtom(world, self)
 	}
 	
 	// Register (or re-register) that I am currently using this portal
@@ -537,7 +548,25 @@ const ELEMENT_PORTAL = {
 	colour: Colour.Purple,
 	isPortal: true,
 	isPortalActive: false,
-	//preCollide: choose your collider,
+	autoLinks: [
+		/*{
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
+			offset: {width: (w) => w, y: (y) => y-2, x: (x) => x, height: () => 2,},
+		},*/
+		{
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
+			offset: {width: () => 2, x: (x) => x-2},
+		},
+		{
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
+			offset: {width: () => 2, x: (x) => x+125},
+		},
+		/*{
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
+			offset: {width: (w) => w+4, y: (y) => y+5, x: (x) => x-2, height: () => 2,},
+		},*/
+	]
+
 }
 
 const ELEMENT_LILYPAD = {
@@ -597,9 +626,14 @@ const ELEMENT_FROG = {
 	//showBounds: true,
 }
 
-const ELEMENT_FROG_DOUBLE = {
-	...ELEMENT_FROG,
-	construct: (self) => {
-		self.children = [makeAtom({...ELEMENT_FROG, x: 0, y: 50})]
-	}
+const ELEMENT_BOX_DOUBLE = {
+	...ELEMENT_BOX,
+	autoLinks: [
+		{
+			element: {...ELEMENT_BOX, update: UPDATE_NONE, grab: GRAB_LINKEE},
+			offset: {
+				y: (y) => y + 50,
+			}
+		},
+	]
 }

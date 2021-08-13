@@ -10,10 +10,52 @@ const makeWorld = () => {
 	world.atoms = [top, bottom, left, right]
 
 	// Debug
-	world.atoms.push({...makeAtom(ELEMENT_FROG), y: 400})
-	world.atoms.push({...makeAtom(ELEMENT_PORTAL_VOID), x: 180, y: 360})
+	addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 180, y: 360}))
 
 	return world
+}
+
+//=========//
+// Usefuls //
+//=========//
+const LINKED_PROPERTIES = [
+	"width",
+	"height",
+	"cutTop",
+	"cutBottom",
+	"cutRight",
+	"cutLeft",
+	"x",
+	"y",
+	"dx",
+	"dy",
+	"nextdx",
+	"nextdy",
+	"turns",
+	"nextturns",
+	"flipX",
+]
+
+// TODO!!! These should allow you to NOT bring over specific links. Add a parameter and/or special link properties to cater to this.
+const addAtom = (world, atom) => {
+	world.atoms.push(atom)
+	for (const link of atom.links) {
+		addAtom(world, link.atom)
+	}
+	updateAtomLinks(atom)
+}
+
+const removeAtom = (world, atom) => {
+	world.atoms = world.atoms.filter(a => a !== atom)
+	for (const link of atom.links) {
+		removeAtom(world, link.atom)
+	}
+}
+
+const moveAtomWorld = (atom, world, nworld) => {
+	removeAtom(world, atom)
+	addAtom(nworld, atom)
 }
 
 //===========//
@@ -34,6 +76,12 @@ const updateWorld = (world) => {
 	
 	for (const atom of world.atoms) {
 		updateAtom(atom, world)
+	}
+}
+
+const updateWorldLinks = (world) => {
+	for (const atom of world.atoms) {
+		updateAtomLinks(atom)
 	}
 }
 
