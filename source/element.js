@@ -125,10 +125,12 @@ const Capitalised = {
 const makeBlink = () => ({})
 const UPDATE_MOVER = (self, world) => {
 	const {x, y, dx, dy, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0} = self
-	
+
+	// Reset some game state info
 	self.grounded = false
 	self.slip = undefined
 
+	// Prepare axis-independent info
 	const axes = {
 		dy: {},
 		dx: {},
@@ -200,6 +202,9 @@ const UPDATE_MOVER = (self, world) => {
 		}
 	}
 
+	//===================================================//
+	// COLLIDE with the closest atoms to me in each axis //
+	//===================================================//
 	for (const axis of axes) {
 		const {atom} = axis.blocker
 		if (atom === undefined) continue
@@ -223,28 +228,31 @@ const UPDATE_MOVER = (self, world) => {
 		// Change ACCELERATIONS!
 		// Moving right or left
 		if (axis === axes.dx) {
+
+			// 2-way BOUNCE!
 			atom.nextdx *= 0.5
 			atom.nextdx += self.dx/2
 			self.nextdx *= -0.5
 			self.nextdx += atom.dx/2
 			
+			// Hardcoded trampoline override
 			if (atom.bounce !== undefined && atom.turns % 2 !== 0) {
 				self.nextdx = atom.bounce * -axis.direction/2
 			}
 		}
-		
-		// Moving down or up
 		else if (axis === axes.dy) {
 
 			// Moving down
 			if (axis.direction === 1) {
 
+				// I'm on the ground!
 				self.nextdy = atom.dy
 				if (self.slip !== undefined) self.nextdx * self.slip
 				else self.nextdx *= UPDATE_MOVER_FRICTION
 				self.grounded = true
 				atom.jumpTick = 0
 
+				// Hardcoded trampoline override
 				if (atom.bounce !== undefined && atom.turns % 2 === 0) {
 					self.nextdy = -atom.bounce
 					self.nextdx *= 1.8
@@ -254,235 +262,16 @@ const UPDATE_MOVER = (self, world) => {
 
 			// Moving up
 			else {
+				
+				// Hit my head on something...
 				self.nextdy = 0
 				self.jumpTick = 0
+
 			}
 		}
 
 
 	}
-
-	/*for (const atom of world.atoms) {
-		if (atom === self) continue
-		const abounds = getBounds(atom)
-
-		//========//
-		// PORTAL //
-		//========//
-		if (atom.isPortal && atom.isPortalActive) {
-			if (atom.subjects === undefined) atom.subjects = new Map()
-
-			if (dy > 0) {
-				if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
-					
-					// Hit edges!
-					if ((self.cutBottom === undefined || self.cutBottom === 0) && aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left])) {
-						ny = abounds.top - height + cutBottom
-						self.nextdy = atom.dy
-						self.nextdx *= 0.975
-						self.grounded = true
-						atom.jumpTick = 0
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-					// Going through a portal
-					else if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-						
-						let blink = self.portals.get(atom)
-						if (blink === undefined) {
-							blink = makeBlink()
-							atom.portal.enter(self, world)
-							self.portals.set(atom, blink)
-							atom.subjects.set(self, blink)
-						}
-
-
-						// Update my cut
-						if (self.cutBottom === undefined) self.cutBottom = 0
-						self.cutBottom += nbounds.bottom - abounds.top
-						
-						atom.portal.moveIn(self, world)
-
-						if (self.cutBottom > height) {
-							self.portals.delete(atom)
-							atom.subjects.delete(self)
-							atom.portal.end(self, world)
-						}
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-
-					}
-				}
-				else if (self.portals.has(atom)) {
-					atom.portal.moveOut()
-					self.cutTop -= (nbounds.top - abounds.bottom)
-					if (self.cutTop <= 0) {
-						self.cutTop = 0
-						self.portals.delete(atom)
-						atom.subjects.delete(self)
-						atom.portal.leave(self, world)
-					}
-					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-				}
-
-			}
-			
-			else if (dy < 0) {
-				if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
-					
-					// Hit edges!
-					if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left]) || aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.right])) {
-						ny = abounds.bottom - cutTop
-						self.nextdy = 0
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-
-					// Move through portal
-					else if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-						
-						let blink = self.portals.get(atom)
-						if (blink === undefined) {
-							blink = makeBlink()
-							atom.portal.enter(self, world)
-							self.portals.set(atom, blink)
-							atom.subjects.set(self, blink)
-						}
-						// Update my cut
-						if (self.cutTop === undefined) self.cutTop = 0
-						self.cutTop += abounds.bottom - nbounds.top
-						
-						atom.portal.moveIn(self, world)
-	
-						if (self.cutTop > height) {
-							self.portals.delete(atom)
-							atom.subjects.delete(self)
-							atom.portal.end(self, world)
-						}
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-				
-				}
-				else if (self.portals.has(atom)) {
-					atom.portal.moveOut()
-					self.cutBottom -= abounds.top - nbounds.bottom
-					if (self.cutBottom <= 0) {
-						self.cutBottom = 0
-						self.portals.delete(atom)
-						atom.subjects.delete(self)
-						atom.portal.leave(self, world)
-					}
-					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-				}
-			}
-
-			if (dx > 0) {
-				if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
-					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-						nx = abounds.left - width
-						atom.nextdx *= 0.5
-						atom.nextdx += self.dx/2
-						self.nextdx *= -0.5
-						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-				}
-				else if (bounds.right <= abounds.right && nbounds.right >= abounds.right) {
-					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-						nx = abounds.right - width
-						atom.nextdx *= 0.5
-						atom.nextdx += self.dx/2
-						self.nextdx *= -0.5
-						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-				}
-			}
-			else if (dx < 0) {
-				if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
-					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-						nx = abounds.right
-						atom.nextdx *= 0.5
-						atom.nextdx += self.dx/2
-						self.nextdx *= -0.5
-						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-				}
-				else if (bounds.left >= abounds.left && nbounds.left <= abounds.left) {
-					if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-						nx = abounds.left - cutLeft
-						atom.nextdx *= 0.5
-						atom.nextdx += self.dx/2
-						self.nextdx *= -0.5
-						self.nextdx += atom.dx/2
-						nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-					}
-				}
-			}
-
-
-
-			continue
-		}
-
-		//==========================//
-		// NON-PORTAL COLLISIONS YO //
-		//==========================//
-		// vert collision
-		if (dy >= 0) {
-			if (bounds.bottom <= abounds.top && nbounds.bottom >= abounds.top) {
-				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-					ny = abounds.top - height + cutBottom
-					self.nextdy = atom.dy
-					if (atom.bounce !== undefined) {
-						self.nextdy = -atom.bounce
-						self.nextdx *= 1.5
-					}
-					//self.nextdx += atom.dx * UPDATE_MOVER_FRICTION
-					self.nextdx *= UPDATE_MOVER_FRICTION
-					self.grounded = true
-					atom.jumpTick = 0
-					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-				}
-			}
-		}
-		else if (dy < 0) {
-			if (bounds.top >= abounds.bottom && nbounds.top <= abounds.bottom) {
-				if (aligns([bounds.left, bounds.right], [nbounds.left, nbounds.right], [abounds.left, abounds.right])) {
-					ny = abounds.bottom - cutTop
-					self.nextdy = 0
-					self.jumpTick = 0
-					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-				}
-			}
-		}
-
-		// horiz collision
-		if (dx > 0) {
-			if (bounds.right <= abounds.left && nbounds.right >= abounds.left) {
-				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-					nx = abounds.left - width + cutRight
-					atom.nextdx *= 0.5
-					atom.nextdx += self.dx/2
-					self.nextdx *= -0.5
-					self.nextdx += atom.dx/2
-					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-				}
-			}
-		}
-		else if (dx < 0) {
-			if (bounds.left >= abounds.right && nbounds.left <= abounds.right) {
-				if (aligns([bounds.top, bounds.bottom], [nbounds.top, nbounds.bottom], [abounds.top, abounds.bottom])) {
-					nx = abounds.right - cutLeft
-					atom.nextdx *= 0.5
-					atom.nextdx += self.dx/2
-					self.nextdx *= -0.5
-					self.nextdx += atom.dx/2
-					nbounds = getBounds({x: nx, y: ny, width, height, cutTop, cutBottom, cutLeft, cutRight})
-				}
-			}
-		}
-		
-
-	}*/
 	
 	self.nextdy += UPDATE_MOVER_GRAVITY
 	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
