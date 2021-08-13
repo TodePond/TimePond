@@ -115,8 +115,12 @@ const updateCursor = (multiverse, context) => {
 		hand.atom.x = x + hand.offset.x
 		hand.atom.y = y + hand.offset.y
 		if (hand.atom.flipX !== undefined) {
-			if (!hand.atom.flipX) hand.atom.flipX = (mx - hand.previous.x) > 1
-			else hand.atom.flipX = (mx - hand.previous.x) > -1
+			const mdx = mx - hand.previous.x
+			const oldX = hand.atom.x
+			if (!hand.atom.flipX && mdx > 1) flipAtom(hand.atom)
+			else if (hand.atom.flipX && mdx < -1) flipAtom(hand.atom)
+			const newX = hand.atom.x
+			hand.offset.x += newX-oldX
 		}
 		hand.atom.dx = (mx - hand.previous.x)
 		hand.atom.dy = (my - hand.previous.y)

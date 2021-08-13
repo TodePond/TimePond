@@ -40,6 +40,7 @@ const DRAW_IMAGE = (self, context) => {
 	// Cuts
 	let {cutRight, cutLeft, cutBottom, cutTop} = self
 	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+
 	const cutWidth = cutRight + cutLeft
 	const cutHeight = cutBottom + cutTop
 
@@ -91,11 +92,11 @@ const UPDATE_MOVER_AIR_RESISTANCE = 0.99
 const UPDATE_MOVER_FRICTION = 0.8
 const UPDATE_MOVER_BEING = (self, world) => {
 	UPDATE_MOVER(self, world)
-	if (self.flipX) {
-		self.flipX = self.dx > -0.1
+	if (self.flipX && self.dx < -0.1) {
+		flipAtom(self)
 	}
-	else {
-		self.flipX = self.dx > 0.1
+	else if (!self.flipX && self.dx > 0.1) {
+		flipAtom(self)
 	}
 	if (self.nextdx < 0.1 && self.nextdx > -0.1 && self.grounded) {
 		if (self.jumpTick > 60) {
@@ -433,7 +434,6 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 //==========//
 const ELEMENT_FROG = {
 	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
-	flipX: false,
 	draw: DRAW_IMAGE,
 	update: UPDATE_MOVER_BEING,
 	grab: GRAB_DRAG,
@@ -443,9 +443,9 @@ const ELEMENT_FROG = {
 	isMover: true,
 	//cutBottom: (254/6)/2,
 	//cutRight: 5,
-	//cutLeft: 10,
+	cutLeft: 10,
 	//cutTop: 10,
-	//showBounds: true,
+	showBounds: true,
 }
 
 const ELEMENT_BOX = {

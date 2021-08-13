@@ -36,6 +36,7 @@ const makeAtom = ({
 		draw,
 		update,
 		grab,
+		flipX: false,
 		...args
 	}
 	turnAtom(atom, turns)
@@ -59,6 +60,15 @@ const drawAtom = (atom, context) => {
 //=========//
 // Usefuls //
 //=========//
+const flipAtom = (atom) => {
+	atom.flipX = !atom.flipX
+	const [cutLeft, cutRight] = [atom.cutRight, atom.cutLeft]
+	const cutDiff = cutLeft - cutRight
+	atom.cutLeft = cutLeft
+	atom.cutRight = cutRight
+	atom.x -= cutDiff
+}
+
 const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
 	if (atom.turns === undefined) atom.turns = 0
 	if (turns === 0) return
