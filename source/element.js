@@ -273,12 +273,17 @@ const UPDATE_MOVER = (self, world) => {
 
 	}
 	
+	// Apply natural forces
 	self.nextdy += UPDATE_MOVER_GRAVITY
 	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
 
+	// Now that I've checked all potential collisions, and corrected myself...
+	// MOVE to the new position!
 	self.x = axes.dx.new
 	self.y = axes.dy.new
 	
+	// Now that I've moved, I can safely rotate without messing anything else up!
+	// ROTATE! (if there is enough room)
 	if (self.nextturns !== 0) {
 		turnAtom(self, self.nextturns, true, true, world)
 		self.nextturns = 0
