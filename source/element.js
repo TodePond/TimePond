@@ -444,7 +444,7 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 
 		// Collide with the edges of the portal
 		if (sideBumps.small || sideBumps.big) {
-			self.slip = 0.975
+			//self.slip = 0.975
 			return true
 		}
 	}
@@ -453,20 +453,10 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 
 	// TODO
 	//
-	// IGNORE THIS PART, do it later...
-	// here, keep track of this portaling within atom.portals[axis.front] or something
-	// the portal could have an array of portaling atoms maybe?
-	// but why? not sure, therefore DONT DO IT yet
-	//
-	// DO THIS FIRST
-	// prevent bumping if mid cut yo - OK I got an idea
-	// use the children system
-	// make portals just 3 atoms - the middle, and two 0 width children
-	// so first i gotta make the children system actually
-	// brb
-	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
+	// 
+	// OK but first i gotta make movers check their children for collisions too
 
 	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
