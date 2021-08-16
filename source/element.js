@@ -178,8 +178,16 @@ const UPDATE_MOVER = (self, world) => {
 
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
-	const bounds = getBounds(self)
-	const nbounds = getBounds({x: axes.dx.new, y: axes.dy.new, width, height, cutTop, cutBottom, cutLeft, cutRight})
+	const sbounds = getBounds(self)
+	const snbounds = getBounds({x: axes.dx.new, y: axes.dy.new, width, height, cutTop, cutBottom, cutLeft, cutRight})
+	const lsbounds = self.links.map(link => getBounds(link.atom))
+	const lnsbounds = self.links.map(link => getBounds({...link.atom, x: link.atom.x+dx, y: link.atom.y+dy}))
+
+	const candidates = []
+	candidates.push({atom: self, bounds: sbounds, nbounds: snbounds})
+	for (let i = 0; i < self.links.length; i++) {
+		candidates.push({atom: self.links[i].atom, bounds: lsbounds[i], nbounds: lnsbounds[i]})
+	}
 
 	//================================//
 	// Process the EXITING of portals // TODO: Come back to this after I make basic children collisions!!!!!!!!!!!!!!!!!
@@ -192,7 +200,7 @@ const UPDATE_MOVER = (self, world) => {
 			if (axis.back !== key) continue
 			
 			// Re-cut myself so that I slightly leave portal! Yikes
-			const gapToPortal = axis.direction * (nbounds[axis.back] - pbounds[axis.front])
+			const gapToPortal = axis.direction * (snbounds[axis.back] - pbounds[axis.front])
 			self[axis.cutBackName] -= gapToPortal
 
 			if (portal.portal.move !== undefined) portal.portal.move()
@@ -222,30 +230,34 @@ const UPDATE_MOVER = (self, world) => {
 
 		for (const axis of axes) {
 
-			// TODO: HERE! Maybe it should split to include children here.
-			
-			// Do I go PAST this atom?
-			const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
-			const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
-			if (!startsInFront || !endsThrough) continue
+			for (const candidate of candidates) {
+				// TODO: HERE! Maybe it should split to include children here.
+				const bounds = candidate.bounds
+				const nbounds = candidate.nbounds
+				
+				// Do I go PAST this atom?
+				const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
+				const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
+				if (!startsInFront || !endsThrough) continue
 
-			// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
-			let bumps = true
-			const otherAxes = axes.values().filter(a => a !== axis)
-			for (const other of otherAxes) {
-				const reach = [bounds[other.small], bounds[other.big]]
-				const nreach = [nbounds[other.small], nbounds[other.big]]
-				const areach = [abounds[other.small], abounds[other.big]]
-				if (!aligns(reach, nreach, areach)) bumps = false
+				// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
+				let bumps = true
+				const otherAxes = axes.values().filter(a => a !== axis)
+				for (const other of otherAxes) {
+					const reach = [bounds[other.small], bounds[other.big]]
+					const nreach = [nbounds[other.small], nbounds[other.big]]
+					const areach = [abounds[other.small], abounds[other.big]]
+					if (!aligns(reach, nreach, areach)) bumps = false
+				}
+				if (!bumps) continue
+				
+				// Work out the distance to this atom we would crash into
+				// We don't care about it if we already found a NEARER one to crash into :)
+				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
+				if (distance < 0) continue
+				if (distance >= axis.blocker.distance) continue
+				axis.blocker = {atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds}
 			}
-			if (!bumps) continue
-			
-			// Work out the distance to this atom we would crash into
-			// We don't care about it if we already found a NEARER one to crash into :)
-			const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
-			if (distance < 0) continue
-			if (distance >= axis.blocker.distance) continue
-			axis.blocker = {atom, bounds: abounds, distance}
 		}
 	}
 
@@ -260,11 +272,11 @@ const UPDATE_MOVER = (self, world) => {
 
 		// Allow MODs by elements/atoms
 		if (self.preCollide !== undefined) {
-			const result = self.preCollide({self, atom, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
+			const result = self.preCollide({self, atom, axis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
 			if (result === false) continue
 		}
 		if (atom.preCollided !== undefined) {
-			const result = atom.preCollided({self, atom, axis, world, bounds, nbounds, abounds: axis.blocker.bounds})
+			const result = atom.preCollided({self, atom, axis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
 			if (result === false) continue
 		}
 		
