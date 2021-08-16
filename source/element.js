@@ -265,9 +265,10 @@ const UPDATE_MOVER = (self, world) => {
 		// Moving right or left
 		if (axis === axes.dx) {
 
-			// 2-way BOUNCE!
+			// 2-way BOUNCE! I think this is the only 2-way collision resolution. I think...
 			atom.nextdx *= 0.5
 			atom.nextdx += self.dx/2
+			transferToParent(atom, "nextdx", atom.nextdx)
 			self.nextdx *= -0.5
 			self.nextdx += atom.dx/2
 			
@@ -394,8 +395,10 @@ const PORTAL_MOVE = {
 //===========//
 // Colliders //
 //===========//
+// TODO: stop the rotate potion from rotating portals/frogs that are currently portaling because it would tear atoms in half
 const COLLIDE_POTION_ROTATE = ({self, atom, axis, world}) => {
 	if (self.used) return
+	atom = getAtomAncestor(atom)
 	if (!atom.isVoid && !atom.isPotion) {
 		world.atoms = world.atoms.filter(a => a !== self)
 		if (!atom.isMover) turnAtom(atom, 1, true, true, world, [self])
@@ -408,8 +411,10 @@ const COLLIDE_POTION_ROTATE = ({self, atom, axis, world}) => {
 	}
 }
 
+// TODO: stop the rotate potion from rotating portals/frogs that are currently portaling because it would tear atoms in half
 const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 	if (atom.used) return
+	atom = getAtomAncestor(atom)
 	if (!self.isVoid && !self.isPotion) {
 		world.atoms = world.atoms.filter(a => a !== atom)
 		if (!self.isMover) turnAtom(self, 1, true, true, world, [atom])
@@ -648,14 +653,13 @@ const ELEMENT_BOX_DOUBLE = {
 			element: {...ELEMENT_BOX, update: UPDATE_NONE, grab: GRAB_LINKEE},
 			offset: {
 				y: (y) => y + 50,
-				dy: () => 0,
-				dx: () => 0,
-				nextdy: () => 0,
-				nextdx: () => 0,
+				//dy: () => 0,
+				//dx: () => 0,
+				//nextdy: () => 0,
+				//nextdx: () => 0,
 			},
 			transfer: {
-				nextdx: (them, me) => them + me,
-				nextdy: (them, me) => them + me,
+
 			},
 		},
 	]

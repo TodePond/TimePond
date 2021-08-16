@@ -62,11 +62,16 @@ const updateAtom = (atom, world) => {
 const updateAtomLinks = (atom) => {
 	for (const link of atom.links) {
 		for (const key of LINKED_PROPERTIES) {
-			if (link.transfer[key] !== undefined) {
+
+			// NOTE: I used to transfer stuff every frame here
+			// but now I've just left it as a useful function
+			// that modded elements can use if they choose to
+			// for example, UPDATE_MOVER uses transfer to transfer acceleration to parents and stuff
+			/*if (link.transfer[key] !== undefined) {
 				const them = atom[key]
 				const me = link.atom[key]
-				atom[key] = link.transfer[key](them, me)
-			}
+				link.transfer[key](them, me)
+			}*/
 
 			if (link.offset[key] !== undefined) {
 				const them = atom[key]
@@ -90,8 +95,30 @@ const drawAtom = (atom, context) => {
 // Usefuls //
 //=========//
 const linkAtom = (atom, latom, offset={}, transfer={}) => {
-	atom.links.push({atom: latom, offset, transfer})
+	const trans = {...transfer}
+	for (const key of LINKED_PROPERTIES) {
+		if (trans[key] === undefined) {
+			trans[key] = (parent, child, key, value=child[key]) => parent[key] = value
+		}
+	}
+	atom.links.push({atom: latom, offset, transfer: trans})
 	latom.parent = atom
+}
+
+const transferToParent = (child, key, value) => {
+	const parent = child.parent
+	if (parent === undefined) return
+	const link = getLink(child)
+	link.transfer[key](parent, child, key, value)
+	if (parent.parent !== undefined) transferToParent(parent, key, parent[key])
+}
+
+const getLink = (child) => {
+	const parent = child.parent
+	if (parent === undefined) return
+	for (const link of parent.links) {
+		if (link.atom === child) return link
+	}
 }
 
 const moveAtom = (atom, x, y) => {
@@ -111,12 +138,12 @@ const flipAtom = (atom) => {
 
 const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
 	if (atom.turns === undefined) atom.turns = 0
-	if (turns === 0) return
+	if (turns === 0) return true
 	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world, exceptions=[])
 	if (turns > 1) {
-		turnAtom(atom, 1, fallSafe, rejectIfOverlap, world, exceptions=[])
-		turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world, exceptions=[])
-		return
+		const result = turnAtom(atom, 1, fallSafe, rejectIfOverlap, world, exceptions=[])
+		if (!result) return false
+		return turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world, exceptions=[])
 	}
 	const old = {}
 	const obounds = getBounds(atom)
@@ -127,6 +154,9 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	old.cutBottom = cutBottom
 	old.cutLeft = cutLeft
 	old.cutRight = cutRight
+	
+	old.y = atom.y
+	old.x = atom.x
 	atom.height = width
 	atom.width = height
 	atom.cutBottom = cutRight
@@ -136,11 +166,50 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 
 	// TODO: rotate the link offsets and transfers!
 	// but make sure you make a copy of it first in case the rotation is not possible and u gotta reverse
+	const oldLinks = new Map()
+	for (const link of atom.links) {
+		const oldLink = {}
+		oldLinks.set(link, oldLink)
+		oldLink.height = link.atom.height
+		oldLink.width = link.atom.width
+		oldLink.cutTop = link.atom.cutTop
+		oldLink.cutBottom = link.atom.cutBottom
+		oldLink.cutLeft = link.atom.cutLeft
+		oldLink.cutRight = link.atom.cutRight
+
+		oldLink.y = link.atom.y
+		oldLink.x = link.atom.x
+
+		oldLink.offset = {}
+		oldLink.transfer = {}
+
+		for (const key of LINKED_PROPERTIES) {
+			oldLink.offset[key] = link.offset[key]
+			oldLink.transfer[key] = link.transfer[key]
+		}
+
+		for (const linkType of ["offset", "transfer"]) {
+			link[linkType].width = oldLink[linkType].height
+			link[linkType].height = oldLink[linkType].width
+			link[linkType].cutBottom = oldLink[linkType].cutRight
+			link[linkType].cutLeft = oldLink[linkType].cutBottom
+			link[linkType].cutTop = oldLink[linkType].cutLeft
+			link[linkType].cutRight = oldLink[linkType].cutTop
+			link[linkType].cutRight = oldLink[linkType].cutTop
+			link[linkType].x = oldLink[linkType].y
+			link[linkType].y = oldLink[linkType].x
+			link[linkType].dx = oldLink[linkType].dy
+			link[linkType].dy = oldLink[linkType].dx
+			link[linkType].nextdx = oldLink[linkType].nextdy
+			link[linkType].nextdy = oldLink[linkType].nextdx
+		}
+
+		turnAtom(link.atom, turns, fallSafe, false, world, exceptions)
+
+	}
 
 	if (rejectIfOverlap) {
 		
-		old.y = atom.y
-		old.x = atom.x
 		const nbounds = getBounds(atom)
 		atom.y -= nbounds.bottom-obounds.bottom + 1
 		atom.x -= (atom.width-atom.height)/2
@@ -154,6 +223,18 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 				for (const key in old) {
 					atom[key] = old[key]
 				}
+				for (const [link, oldLink] of oldLinks) {
+					for (const key in oldLink) {
+						if (key === "offset" || key === "transfer") continue
+						link.atom[key] = oldLink[key]
+					}
+					for (const key in oldLink.offset) {
+						link.offset[key] = oldLink.offset[key]
+					}
+					for (const key in oldLink.transfer) {
+						link.transfer[key] = oldLink.transfer[key]
+					}
+				}
 				return false
 			}
 		}
@@ -161,6 +242,8 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	}
 	atom.turns++
 	if (atom.turns >= 4) atom.turns = 0
+
+	return true
 }
 
 const getBounds = ({x, y, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRight=0}) => {
@@ -174,6 +257,11 @@ const getBounds = ({x, y, width, height, cutTop=0, cutBottom=0, cutLeft=0, cutRi
 const pointOverlaps = ({x, y}, atom) => {
 	const {left, right, top, bottom} = getBounds(atom)
 	return x >= left && x <= right && y >= top && y <= bottom
+}
+
+const getAtomAncestor = (atom) => {
+	if (atom.parent === undefined) return atom
+	return getAtomAncestor(atom.parent)
 }
 
 const atomIsDescendant = (kid, parent) => {
