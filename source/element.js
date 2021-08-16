@@ -170,14 +170,20 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dx.cutFrontName = "cut" + axes.dx.front.as(Capitalised)
 	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
 
+	// TODO: Ok here is when it should diverge into self and children I think... NO!!!!
+	// NOOOOO! It shouldn't actually. because then I'd have that same problem as before.
+	// Like, it would be processing multiple collisions wouldn't it.
+	// I think we want the CLOSEST potential collision to ANY atom in this molecule.
+	// Sooo... let's go down to where it does that bit...
+
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
 	const bounds = getBounds(self)
 	const nbounds = getBounds({x: axes.dx.new, y: axes.dy.new, width, height, cutTop, cutBottom, cutLeft, cutRight})
 
 	//================================//
-	// Process the EXITING of portals //
-	//================================//
+	// Process the EXITING of portals // TODO: Come back to this after I make basic children collisions!!!!!!!!!!!!!!!!!
+	//================================//       to implement children moving out of portals
 	for (const key in self.portals) {
 		const portal = self.portals[key]
 		if (portal === undefined) continue
@@ -200,6 +206,9 @@ const UPDATE_MOVER = (self, world) => {
 		}
 	}
 
+	// HERE!
+	// It needs to find the first atom for me AND ALL MY CHILDREN included
+	// So like, the ONE culprit for each axis, no matter what atom of the molecule we are looking at.
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
@@ -213,6 +222,8 @@ const UPDATE_MOVER = (self, world) => {
 
 		for (const axis of axes) {
 
+			// TODO: HERE! Maybe it should split to include children here.
+			
 			// Do I go PAST this atom?
 			const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
 			const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
@@ -284,7 +295,7 @@ const UPDATE_MOVER = (self, world) => {
 
 				// I'm on the ground!
 				self.nextdy = atom.dy
-				if (self.slip !== undefined) self.nextdx * self.slip
+				if (self.slip !== undefined) self.nextdx *= self.slip
 				else self.nextdx *= UPDATE_MOVER_FRICTION
 				self.grounded = true
 				atom.jumpTick = 0
@@ -444,7 +455,7 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 
 		// Collide with the edges of the portal
 		if (sideBumps.small || sideBumps.big) {
-			//self.slip = 0.975
+			self.slip = 0.95
 			return true
 		}
 	}
