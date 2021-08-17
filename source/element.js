@@ -142,51 +142,78 @@ const UPDATE_MOVER = (self, world) => {
 		dx: {},
 	}
 
+	axes.dy.name = "y"
+	axes.dy.new = y + dy
 	axes.dy.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
 	axes.dy.small = "top"
 	axes.dy.big = "bottom"
 	axes.dy.direction = dy >= 0? 1 : -1
 	axes.dy.front = axes.dy.direction === 1? axes.dy.big : axes.dy.small
 	axes.dy.back = axes.dy.front === axes.dy.small? axes.dy.big : axes.dy.small
-	axes.dy.new = y + dy
-	axes.dy.size = height
-	axes.dy.cutSmall = cutTop
-	axes.dy.cutBig = cutBottom
 	axes.dy.other = axes.dx
 	axes.dy.cutFrontName = "cut" + axes.dy.front.as(Capitalised)
 	axes.dy.cutBackName = "cut" + axes.dy.back.as(Capitalised)
-
+	
+	axes.dx.name = "x"
+	axes.dx.new = x + dx
 	axes.dx.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
 	axes.dx.small = "left"
 	axes.dx.big = "right"
 	axes.dx.direction = dx >= 0? 1 : -1
 	axes.dx.front = axes.dx.direction === 1? axes.dx.big : axes.dx.small
 	axes.dx.back = axes.dx.front === axes.dx.big? axes.dx.small : axes.dx.big
-	axes.dx.new = x + dx
-	axes.dx.size = width
-	axes.dx.cutSmall = cutLeft
-	axes.dx.cutBig = cutRight
 	axes.dx.other = axes.dy
 	axes.dx.cutFrontName = "cut" + axes.dx.front.as(Capitalised)
 	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
-
-	// TODO: Ok here is when it should diverge into self and children I think... NO!!!!
-	// NOOOOO! It shouldn't actually. because then I'd have that same problem as before.
-	// Like, it would be processing multiple collisions wouldn't it.
-	// I think we want the CLOSEST potential collision to ANY atom in this molecule.
-	// Sooo... let's go down to where it does that bit...
+	
+	// TODO: Oh, I just realised that this should ALSO include my children's children!!!
+	// I should write a function that like... gets an atom and its children as an array or something
+	// Then I could use that to like... um... yeah I could just use that. ez
+	// I WILL COME BACK TO THIS IN A SECOND I PROMISE
 
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
+	// ALSO, let's get the bounding boxes of each of my children
 	const sbounds = getBounds(self)
 	const snbounds = getBounds({x: axes.dx.new, y: axes.dy.new, width, height, cutTop, cutBottom, cutLeft, cutRight})
 	const lsbounds = self.links.map(link => getBounds(link.atom))
 	const lnsbounds = self.links.map(link => getBounds({...link.atom, x: link.atom.x+dx, y: link.atom.y+dy}))
 
+	// Get a list going of all atoms in this molecule
+	// They are 'candidates' for being the atom that hits something first in each axis
+	// For each candidate, let's note down their current bounding box, and their POTENTIAL new bounding box
 	const candidates = []
-	candidates.push({atom: self, bounds: sbounds, nbounds: snbounds})
+	candidates.push({
+		atom: self,
+		bounds: sbounds,
+		nbounds: snbounds,
+		axes: {dx: {}, dy: {}}
+	})
 	for (let i = 0; i < self.links.length; i++) {
-		candidates.push({atom: self.links[i].atom, bounds: lsbounds[i], nbounds: lnsbounds[i]})
+		const candidate = {
+			atom: self.links[i].atom,
+			bounds: lsbounds[i],
+			nbounds: lnsbounds[i],
+			axes: {dx: {}, dy: {}},
+		}
+		candidates.push(candidate)
+	}
+
+	// Also, let's get some useful dimension info for each candidate
+	for (const candidate of candidates) {
+
+		candidate.axes.dy.old = candidate.atom.y
+		candidate.axes.dx.old = candidate.atom.x
+		candidate.axes.dy.new = candidate.atom.y + dy //WARNING: this is repeated code from above. kinda dodgy TBH
+		candidate.axes.dx.new = candidate.atom.x + dx //WARNING: this is repeated code from above. kinda dodgy TBH
+
+		candidate.axes.dy.size = height
+		candidate.axes.dy.cutSmall = cutTop
+		candidate.axes.dy.cutBig = cutBottom
+
+		candidate.axes.dx.size = width
+		candidate.axes.dx.cutSmall = cutLeft
+		candidate.axes.dx.cutBig = cutRight
 	}
 
 	//================================//
@@ -213,10 +240,6 @@ const UPDATE_MOVER = (self, world) => {
 
 		}
 	}
-
-	// HERE!
-	// It needs to find the first atom for me AND ALL MY CHILDREN included
-	// So like, the ONE culprit for each axis, no matter what atom of the molecule we are looking at.
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
@@ -231,7 +254,7 @@ const UPDATE_MOVER = (self, world) => {
 		for (const axis of axes) {
 
 			for (const candidate of candidates) {
-				// TODO: HERE! Maybe it should split to include children here.
+
 				const bounds = candidate.bounds
 				const nbounds = candidate.nbounds
 				
@@ -256,7 +279,7 @@ const UPDATE_MOVER = (self, world) => {
 				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
 				if (distance < 0) continue
 				if (distance >= axis.blocker.distance) continue
-				axis.blocker = {atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds}
+				axis.blocker = {atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate}
 			}
 		}
 	}
@@ -268,8 +291,8 @@ const UPDATE_MOVER = (self, world) => {
 		const {atom} = axis.blocker
 		if (atom === undefined) continue
 		const bbounds = axis.blocker.bounds
+		const baxis = axis.blocker.candidate.axes["d"+axis.name]
 		
-
 		// Allow MODs by elements/atoms
 		if (self.preCollide !== undefined) {
 			const result = self.preCollide({self, atom, axis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
@@ -281,8 +304,10 @@ const UPDATE_MOVER = (self, world) => {
 		}
 		
 		// SNAP to the surface!
-		const newOffset = axis.front === axis.small? -axis.cutSmall : -axis.size + axis.cutBig
-		axis.new = bbounds[axis.back] + newOffset
+		const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
+		baxis.new = bbounds[axis.back] + newOffset
+		const snapMovement = baxis.new - baxis.old
+		axis.new = self[axis.name] + snapMovement
 		
 		// Change ACCELERATIONS!
 		// Moving right or left
@@ -661,7 +686,7 @@ const ELEMENT_FROG = {
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	//showBounds: true,
+	showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
