@@ -518,7 +518,7 @@ const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nb
 	bself[axis.cutFrontName] += amountInPortal
 	const remainingSize = baxis.size - bself[axis.cutBackName]
 	if (bself[axis.cutFrontName] >= remainingSize) {
-		removeAtom(world, bself)
+		removeAtom(world, bself, {includeChildren: false, destroy: true})
 	}
 	
 	// Register (or re-register) that I am currently using this portal

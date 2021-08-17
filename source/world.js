@@ -47,16 +47,24 @@ const addAtom = (world, atom) => {
 	updateAtomLinks(atom)
 }
 
-const removeAtom = (world, atom, {onlyMe = false} = {}) => {
+const removeAtom = (world, atom, {includingChildren = true, destroy = false} = {}) => {
+
 	world.atoms = world.atoms.filter(a => a !== atom)
-	if (atom.parent !== undefined) {
-		atom.parent.links = atom.parent.links.filter(link => link.atom !== atom)
+
+	if (destroy) {
+		if (atom.parent !== undefined) {
+			atom.parent.links = atom.parent.links.filter(link => link.atom !== atom)
+		}
+
+		for (const link of atom.links) {
+			link.atom.parent = undefined
+		}
 	}
-	if (!onlyMe) for (const link of atom.links) {
-		removeAtom(world, link.atom)
-	}
-	else for (const link of atom.links) {
-		link.atom.parent = undefined
+
+	if (includingChildren) {
+		for (const link of atom.links) {
+			removeAtom(world, link.atom, {destroy})
+		}
 	}
 }
 
