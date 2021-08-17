@@ -345,6 +345,7 @@ const UPDATE_MOVER = (self, world) => {
 	// Now that I've moved, I can safely rotate without messing anything else up!
 	// ROTATE! (if there is enough room)
 	if (self.nextturns !== 0) {
+		"hi".d
 		turnAtom(self, self.nextturns, true, true, world)
 		self.nextturns = 0
 	}
@@ -660,19 +661,18 @@ const ELEMENT_FROG = {
 
 const ELEMENT_BOX_DOUBLE = {
 	...ELEMENT_BOX,
+	update: UPDATE_MOVER,
+	isMover: false,
 	autoLinks: [
 		//...ELEMENT_BOX.autoLinks,
 		{
-			element: {...ELEMENT_BOX, update: UPDATE_NONE, grab: GRAB_LINKEE},
+			element: {...ELEMENT_BOX, update: UPDATE_STATIC, grab: GRAB_LINKEE},
 			offset: {
 				y: (y) => y + 50,
 				//dy: () => 0,
 				//dx: () => 0,
 				//nextdy: () => 0,
 				//nextdx: () => 0,
-			},
-			transfer: {
-
 			},
 		},
 	]
