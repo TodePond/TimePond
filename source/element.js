@@ -337,6 +337,12 @@ const UPDATE_MOVER = (self, world) => {
 	self.nextdy += UPDATE_MOVER_GRAVITY
 	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
 
+	// TODO: Fix this!
+	// currently, it is moving the Ancestor to where the Candidate makes contact.
+	// But it should like, move the Ancestor just a little bit or something/
+	// Can I hardcode this here, ignoring 'offset' and 'trigger'??
+	// Yeahhhhh >:)
+
 	// Now that I've checked all potential collisions, and corrected myself...
 	// MOVE to the new position!
 	self.x = axes.dx.new
@@ -345,7 +351,6 @@ const UPDATE_MOVER = (self, world) => {
 	// Now that I've moved, I can safely rotate without messing anything else up!
 	// ROTATE! (if there is enough room)
 	if (self.nextturns !== 0) {
-		"hi".d
 		turnAtom(self, self.nextturns, true, true, world)
 		self.nextturns = 0
 	}
@@ -479,8 +484,8 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
-	// 
-	// OK but first i gotta make movers check their children for collisions too
+	//
+	// still fixing children collisions (see above)
 
 	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
