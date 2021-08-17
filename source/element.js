@@ -217,27 +217,33 @@ const UPDATE_MOVER = (self, world) => {
 	}
 
 	//================================//
-	// Process the EXITING of portals // TODO: Come back to this after I make basic children collisions!!!!!!!!!!!!!!!!!
-	//================================//       to implement children moving out of portals
-	for (const key in self.portals) {
-		const portal = self.portals[key]
-		if (portal === undefined) continue
-		const pbounds = getBounds(portal)
-		for (const axis of axes) {
-			if (axis.back !== key) continue
-			
-			// Re-cut myself so that I slightly leave portal! Yikes
-			const gapToPortal = axis.direction * (snbounds[axis.back] - pbounds[axis.front])
-			self[axis.cutBackName] -= gapToPortal
+	// Process the EXITING of portals //
+	//================================//
+	for (const candidate of candidates) {
+		
+		const nbounds = candidate.nbounds
 
-			if (portal.portal.move !== undefined) portal.portal.move()
-			if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
+		const cself = candidate.atom
+		for (const key in cself.portals) {
+			const portal = cself.portals[key]
+			if (portal === undefined) continue
+			const pbounds = getBounds(portal)
+			for (const axis of axes) {
+				if (axis.back !== key) continue
+				
+				// Re-cut myself so that I slightly leave portal! Yikes
+				const gapToPortal = axis.direction * (nbounds[axis.back] - pbounds[axis.front])
+				cself[axis.cutBackName] -= gapToPortal
 
-			if (self[axis.cutBackName] <= 0) {
-				self.portals[axis.back] = undefined
-				if (portal.portal.exit !== undefined) portal.portal.exit()
+				if (portal.portal.move !== undefined) portal.portal.move()
+				if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
+
+				if (cself[axis.cutBackName] <= 0) {
+					cself.portals[axis.back] = undefined
+					if (portal.portal.exit !== undefined) portal.portal.exit()
+				}
+
 			}
-
 		}
 	}
 	//==================================================================//
@@ -292,14 +298,15 @@ const UPDATE_MOVER = (self, world) => {
 		if (atom === undefined) continue
 		const bbounds = axis.blocker.bounds
 		const baxis = axis.blocker.candidate.axes["d"+axis.name]
+		const bself = axis.blocker.candidate.atom
 		
 		// Allow MODs by elements/atoms
 		if (self.preCollide !== undefined) {
-			const result = self.preCollide({self, atom, axis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
+			const result = self.preCollide({self, bself, atom, axis, baxis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
 			if (result === false) continue
 		}
 		if (atom.preCollided !== undefined) {
-			const result = atom.preCollided({self, atom, axis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
+			const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
 			if (result === false) continue
 		}
 		
@@ -361,12 +368,6 @@ const UPDATE_MOVER = (self, world) => {
 	// Apply natural forces
 	self.nextdy += UPDATE_MOVER_GRAVITY
 	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
-
-	// TODO: Fix this!
-	// currently, it is moving the Ancestor to where the Candidate makes contact.
-	// But it should like, move the Ancestor just a little bit or something/
-	// Can I hardcode this here, ignoring 'offset' and 'trigger'??
-	// Yeahhhhh >:)
 
 	// Now that I've checked all potential collisions, and corrected myself...
 	// MOVE to the new position!
@@ -481,12 +482,12 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 	}
 }
 
-const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds}) => {
+const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nbounds, abounds}) => {
 	
 	//==================================================//
 	// BUMP edges of portal if I'm NOT going through it //
 	//==================================================//
-	if (self.portals[axis.front] !== atom) {
+	if (bself.portals[axis.front] !== atom) {
 
 		const reach = [bounds[axis.other.small], bounds[axis.other.big]]
 		const nreach = [nbounds[axis.other.small], nbounds[axis.other.big]]
@@ -509,27 +510,27 @@ const COLLIDED_PORTAL_VOID = ({self, atom, axis, world, bounds, nbounds, abounds
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
-	//
-	// still fixing children collisions (see above)
+	// 
+	// NEED TO FIX PORTALS NOW SO THAT CHILDREN GO THROUGH NOT PARENT, COOL
 
 	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
-	self[axis.cutFrontName] += amountInPortal
-	const remainingSize = axis.size - self[axis.cutBackName]
-	if (self[axis.cutFrontName] >= remainingSize) {
-		removeAtom(world, self)
+	bself[axis.cutFrontName] += amountInPortal
+	const remainingSize = baxis.size - bself[axis.cutBackName]
+	if (bself[axis.cutFrontName] >= remainingSize) {
+		removeAtom(world, bself)
 	}
 	
 	// Register (or re-register) that I am currently using this portal
-	if (self.portals[axis.front] === undefined) {
-		self.portals[axis.front] = atom
+	if (bself.portals[axis.front] === undefined) {
+		bself.portals[axis.front] = atom
 		if (atom.portal.enter !== undefined) atom.portal.enter()
 	}
 	
 	if (atom.portal.move !== undefined) atom.portal.move()
 	if (atom.portal.moveIn !== undefined) atom.portal.moveIn()
 
-	if (self.portals[axis.front] !== atom) throw new Error(`[TimePond] An atom tried to go through two portals in the same direction.`)
+	if (bself.portals[axis.front] !== atom) throw new Error(`[TimePond] An atom tried to go through two portals in the same direction.`)
 	return false
 
 }
