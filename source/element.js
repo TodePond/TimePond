@@ -252,7 +252,6 @@ const UPDATE_MOVER = (self, world) => {
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
-	// TODO: sometimes, it's a tie! I need to find ALL the EQUAL-FIRST collisions. yikes.
 	// TODO: this should check only in THIS atom's world yo, not just the parent world!
 	for (const atom of world.atoms) {
 
