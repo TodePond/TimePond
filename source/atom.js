@@ -53,6 +53,33 @@ const makeAtom = ({
 	return atom
 }
 
+const cloneAtom = (atom) => {
+	const clone = {}
+	for (const key in atom) {
+		clone[key] = deepishClone(atom[key])
+	}
+	return makeAtom(clone)
+}
+
+const deepishClone = (value) => {
+	if (typeof value === "undefined") return value
+	if (typeof value === "string") return value
+	if (typeof value === "number") return value
+	if (typeof value === "boolean") return value
+	if (typeof value === "function") return value //not deepcloning but i promise i wont mess around with function properties
+	if (typeof value === "object") {
+		if (value instanceof Array)	return [...value]
+		if (value instanceof Object) {
+			const obj = {}
+			for (const key of value) {
+				obj[key] = value[key] //not a pure deep clone either cos we want the atom REFERENCES yo
+			}
+			return obj
+		}
+	}
+	console.error("Couldn't deepish-clone value", value)
+}
+
 //===========//
 // Game Loop //
 //===========//

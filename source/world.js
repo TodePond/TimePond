@@ -10,9 +10,10 @@ const makeWorld = () => {
 	world.atoms = [top, bottom, left, right]
 
 	// Debug
-	addAtom(world, makeAtom({...ELEMENT_FROG, y: 200}))
+	addAtom(world, makeAtom({...ELEMENT_FROG, x: 140, y: 200}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 180, y: 360}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
 	//addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 180, y: 360}))
 	//addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 120, y: 385}))
 	//addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 120, y: 400}))
@@ -45,6 +46,7 @@ const LINKED_PROPERTIES = [
 // TODO!!! These should allow you to NOT bring over specific links. Add a parameter and/or special link properties to cater to this.
 const addAtom = (world, atom) => {
 	world.atoms.push(atom)
+	atom.world = world // I give up. Lets use state... :(
 	for (const link of atom.links) {
 		addAtom(world, link.atom)
 	}

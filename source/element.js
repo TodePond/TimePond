@@ -252,18 +252,20 @@ const UPDATE_MOVER = (self, world) => {
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
-	// TODO: this should check only in THIS atom's world yo, not just the parent world!
-	for (const atom of world.atoms) {
+	for (const axis of axes) {
 
-		if (self.parent === atom) continue
-		if (atom.parent === self) continue
-		if (atom.isVisual) continue
-		if (atom === self) continue
-		const abounds = getBounds(atom)
-
-		for (const axis of axes) {
-
-			for (const candidate of candidates) {
+		for (const candidate of candidates) {
+			
+			if (candidate.atom.world === undefined) continue
+			if (candidate.atom.world.atoms === undefined) continue
+			
+			for (const atom of candidate.atom.world.atoms) {
+				
+				if (self.parent === atom) continue
+				if (atom.parent === self) continue
+				if (atom.isVisual) continue
+				if (atom === self) continue
+				const abounds = getBounds(atom)
 
 				const bounds = candidate.bounds
 				const nbounds = candidate.nbounds
@@ -489,8 +491,15 @@ const PORTAL_VOID = {
 }
 
 const PORTAL_MOVE = {
-	enter: () => {
-		print("Enter portal")
+	enter: (portal, froggy, world, axis) => {
+		print("enter portal")
+		if (portal.target !== undefined) {
+			const variant = cloneAtom(froggy)
+			//variant[axis.cutFrontName] = 0
+			linkAtom(froggy, variant, {x: v=>v+100})
+			//variant.links.d
+			//addAtom(world, variant)
+		}
 	},
 	end: () => {},
 	moveIn: () => {},
@@ -573,7 +582,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 	// Register (or re-register) that I am currently using this portal
 	if (bself.portals[axis.front] === undefined) {
 		bself.portals[axis.front] = atom
-		if (atom.portal.enter !== undefined) atom.portal.enter()
+		if (atom.portal.enter !== undefined) atom.portal.enter(atom, self, world, axis)
 	}
 	
 	if (atom.portal.move !== undefined) atom.portal.move()
@@ -707,9 +716,9 @@ const makePortalTargeter = () => {
 			lonelyPortal = portal
 			return
 		}
-		
+
 		lonelyPortal.target = portal
-		portal.source = lonelyPortal
+		portal.target = lonelyPortal
 		lonelyPortal = undefined
 	}
 }
