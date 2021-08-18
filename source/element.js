@@ -323,7 +323,9 @@ const UPDATE_MOVER = (self, world) => {
 	// COLLIDE with the closest atoms to me in each axis //
 	//===================================================//
 	let iveHitSomething = false
+	
 	for (const axis of axes) {
+		const oldNew = axis.new //haha 'oldNew'
 		for (const blocker of axis.blockers) {
 			const {atom} = blocker
 			if (atom === undefined) continue
@@ -332,7 +334,13 @@ const UPDATE_MOVER = (self, world) => {
 			const baxis = blocker.candidate.axes["d"+axis.name]
 			const bself = blocker.candidate.atom
 			
-			if (iveHitSomething === true) continue
+			// Update blocker bounds based on the decided Hit
+			if (iveHitSomething) {
+				const correction = oldNew - axis.new
+				baxis.new -= correction
+				blocker.candidate.nbounds[axis.front] -= correction
+				blocker.candidate.nbounds[axis.back] -= correction
+			}
 
 			// Allow MODs by elements/atoms
 			if (self.preCollide !== undefined) {
@@ -343,6 +351,8 @@ const UPDATE_MOVER = (self, world) => {
 				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds})
 				if (result === false) continue
 			}
+
+			if (iveHitSomething === true) continue
 			
 			// SNAP to the surface!
 			const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
@@ -394,7 +404,8 @@ const UPDATE_MOVER = (self, world) => {
 					self.jumpTick = 0
 
 				}
-
+			
+			// Update other blocker infos maybe? nah they can do it!
 			iveHitSomething = true
 
 			}
@@ -718,11 +729,11 @@ const ELEMENT_FROG = {
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
 	isMover: true,
-	cutBottom: 10,
+	//cutBottom: 10,
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	showBounds: true,
+	//showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
