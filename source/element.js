@@ -323,10 +323,11 @@ const UPDATE_MOVER = (self, world) => {
 	//===================================================//
 	// COLLIDE with the closest atoms to me in each axis //
 	//===================================================//
-	let iveHitSomething = false
-	
 	for (const axis of axes) {
+
+		let iveHitSomething = false
 		const oldNew = axis.new //haha 'oldNew'
+		
 		for (const blocker of axis.blockers) {
 			const {atom} = blocker
 			if (atom === undefined) continue
@@ -345,11 +346,11 @@ const UPDATE_MOVER = (self, world) => {
 
 			// Allow MODs by elements/atoms
 			if (self.preCollide !== undefined) {
-				const result = self.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds})
+				const result = self.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething})
 				if (result === false) continue
 			}
 			if (atom.preCollided !== undefined) {
-				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds})
+				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething})
 				if (result === false) continue
 			}
 
@@ -554,13 +555,11 @@ const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nb
 	}*/
 
 	// Otherwise, go through...
-3
+
 	// TODO
 	//
 	// MUCH LATER... after implementing children
 	// It should make a child and connect it at the other portal
-	// 
-	// NEED TO FIX PORTALS NOW SO THAT CHILDREN GO THROUGH NOT PARENT, COOL
 
 	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])

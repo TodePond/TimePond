@@ -12,7 +12,7 @@ const makeWorld = () => {
 	// Debug
 	addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 180, y: 360}))
-	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 120, y: 390}))
+	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 120, y: 385}))
 	//addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 120, y: 400}))
 	addAtom(world, makeAtom({...ELEMENT_BOX_DOUBLE, x: 135, y: 160}))
 
