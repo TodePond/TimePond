@@ -12,7 +12,9 @@ const makeWorld = () => {
 	// Debug
 	addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 180, y: 360}))
-	addAtom(world, makeAtom({...ELEMENT_BOX_DOUBLE, x: 150, y: 160}))
+	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 120, y: 390}))
+	//addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 120, y: 400}))
+	addAtom(world, makeAtom({...ELEMENT_BOX_DOUBLE, x: 135, y: 160}))
 
 	return world
 }
@@ -58,6 +60,7 @@ const removeAtom = (world, atom, {includingChildren = true, destroy = false} = {
 
 		for (const link of atom.links) {
 			link.atom.parent = undefined
+			if (link.atom.onPromote !== undefined) link.atom.onPromote(link.atom)
 		}
 	}
 

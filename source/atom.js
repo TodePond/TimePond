@@ -164,8 +164,6 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	atom.cutTop = cutLeft
 	atom.cutRight = cutTop
 
-	// TODO: rotate the link offsets and transfers!
-	// but make sure you make a copy of it first in case the rotation is not possible and u gotta reverse
 	const oldLinks = new Map()
 	for (const link of atom.links) {
 		const oldLink = {}

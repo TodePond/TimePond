@@ -144,7 +144,8 @@ const UPDATE_MOVER = (self, world) => {
 
 	axes.dy.name = "y"
 	axes.dy.new = y + dy
-	axes.dy.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
+	axes.dy.blockers = []
+	axes.dy.blockerWinner = Infinity
 	axes.dy.small = "top"
 	axes.dy.big = "bottom"
 	axes.dy.direction = dy >= 0? 1 : -1
@@ -156,7 +157,8 @@ const UPDATE_MOVER = (self, world) => {
 	
 	axes.dx.name = "x"
 	axes.dx.new = x + dx
-	axes.dx.blocker = {atom: undefined, bounds: undefined, distance: Infinity}
+	axes.dx.blockers = []
+	axes.dx.blockerWinner = Infinity
 	axes.dx.small = "left"
 	axes.dx.big = "right"
 	axes.dx.direction = dx >= 0? 1 : -1
@@ -207,13 +209,13 @@ const UPDATE_MOVER = (self, world) => {
 		candidate.axes.dy.new = candidate.atom.y + dy //WARNING: this is repeated code from above. kinda dodgy TBH
 		candidate.axes.dx.new = candidate.atom.x + dx //WARNING: this is repeated code from above. kinda dodgy TBH
 
-		candidate.axes.dy.size = height
-		candidate.axes.dy.cutSmall = cutTop
-		candidate.axes.dy.cutBig = cutBottom
+		candidate.axes.dy.size = candidate.atom.height
+		candidate.axes.dy.cutSmall = candidate.atom.cutTop
+		candidate.axes.dy.cutBig = candidate.atom.cutBottom
 
-		candidate.axes.dx.size = width
-		candidate.axes.dx.cutSmall = cutLeft
-		candidate.axes.dx.cutBig = cutRight
+		candidate.axes.dx.size = candidate.atom.width
+		candidate.axes.dx.cutSmall = candidate.atom.cutLeft
+		candidate.axes.dx.cutBig = candidate.atom.cutRight
 	}
 
 	//================================//
@@ -249,6 +251,8 @@ const UPDATE_MOVER = (self, world) => {
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
+	// TODO: sometimes, it's a tie! I need to find ALL the EQUAL-FIRST collisions. yikes.
+	// TODO: this should check only in THIS atom's world yo, not just the parent world!
 	for (const atom of world.atoms) {
 
 		if (self.parent === atom) continue
@@ -284,84 +288,117 @@ const UPDATE_MOVER = (self, world) => {
 				// We don't care about it if we already found a NEARER one to crash into :)
 				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
 				if (distance < 0) continue
-				if (distance >= axis.blocker.distance) continue
-				axis.blocker = {atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate}
+				//if (distance > axis.blockerWinner) continue
+				if (distance >= axis.blockerWinner) {
+					axis.blockers.push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
+					continue
+				}
+				axis.blockerWinner = distance
+				axis.blockers.unshift({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 			}
 		}
+	}
+
+	// Order the blockers so that portals gets processed LAST
+	// (because they don't really block, do they)
+	for (const axis of axes) {
+		const nonPortalBlockers = []
+		const portalBlockers = []
+		for (const blocker of axis.blockers) {
+			//if (blocker.atom.foo !== undefined) print(blocker.atom.foo)
+			if (blocker.atom.isPortal) {
+				//"portal".d
+				portalBlockers.push(blocker)
+			}
+			else {
+				//"nonportal".d
+				nonPortalBlockers.push(blocker)
+			}
+		}
+
+		axis.blockers = [...nonPortalBlockers, ...portalBlockers]
 	}
 
 	//===================================================//
 	// COLLIDE with the closest atoms to me in each axis //
 	//===================================================//
+	let iveHitSomething = false
 	for (const axis of axes) {
-		const {atom} = axis.blocker
-		if (atom === undefined) continue
-		const bbounds = axis.blocker.bounds
-		const baxis = axis.blocker.candidate.axes["d"+axis.name]
-		const bself = axis.blocker.candidate.atom
-		
-		// Allow MODs by elements/atoms
-		if (self.preCollide !== undefined) {
-			const result = self.preCollide({self, bself, atom, axis, baxis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
-			if (result === false) continue
-		}
-		if (atom.preCollided !== undefined) {
-			const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: axis.blocker.cbounds, nbounds: axis.blocker.cnbounds, abounds: axis.blocker.bounds})
-			if (result === false) continue
-		}
-		
-		// SNAP to the surface!
-		const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
-		baxis.new = bbounds[axis.back] + newOffset
-		const snapMovement = baxis.new - baxis.old
-		axis.new = self[axis.name] + snapMovement
-		
-		// Change ACCELERATIONS!
-		// Moving right or left
-		if (axis === axes.dx) {
+		for (const blocker of axis.blockers) {
+			const {atom} = blocker
+			if (atom === undefined) continue
 
-			// 2-way BOUNCE! I think this is the only 2-way collision resolution. I think...
-			atom.nextdx *= 0.5
-			atom.nextdx += self.dx/2
-			transferToParent(atom, "nextdx", atom.nextdx)
-			self.nextdx *= -0.5
-			self.nextdx += atom.dx/2
+			const bbounds = blocker.bounds
+			const baxis = blocker.candidate.axes["d"+axis.name]
+			const bself = blocker.candidate.atom
 			
-			// Hardcoded trampoline override
-			if (atom.bounce !== undefined && atom.turns % 2 !== 0) {
-				self.nextdx = atom.bounce * -axis.direction/2
+			if (iveHitSomething === true) continue
+
+			// Allow MODs by elements/atoms
+			if (self.preCollide !== undefined) {
+				const result = self.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds})
+				if (result === false) continue
 			}
-		}
-		else if (axis === axes.dy) {
+			if (atom.preCollided !== undefined) {
+				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds})
+				if (result === false) continue
+			}
+			
+			// SNAP to the surface!
+			const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
+			baxis.new = bbounds[axis.back] + newOffset
+			const snapMovement = baxis.new - baxis.old
+			axis.new = self[axis.name] + snapMovement
+			
+			// Change ACCELERATIONS!
+			// Moving right or left
+			if (axis === axes.dx) {
 
-			// Moving down
-			if (axis.direction === 1) {
-
-				// I'm on the ground!
-				self.nextdy = atom.dy
-				if (self.slip !== undefined) self.nextdx *= self.slip
-				else self.nextdx *= UPDATE_MOVER_FRICTION
-				self.grounded = true
-				atom.jumpTick = 0
-
+				// 2-way BOUNCE! I think this is the only 2-way collision resolution. I think...
+				atom.nextdx *= 0.5
+				atom.nextdx += self.dx/2
+				transferToParent(atom, "nextdx", atom.nextdx)
+				self.nextdx *= -0.5
+				self.nextdx += atom.dx/2
+				
 				// Hardcoded trampoline override
-				if (atom.bounce !== undefined && atom.turns % 2 === 0) {
-					self.nextdy = -atom.bounce
-					self.nextdx *= 1.8
+				if (atom.bounce !== undefined && atom.turns % 2 !== 0) {
+					self.nextdx = atom.bounce * -axis.direction/2
 				}
-				
 			}
+			else if (axis === axes.dy) {
 
-			// Moving up
-			else {
-				
-				// Hit my head on something...
-				self.nextdy = 0
-				self.jumpTick = 0
+				// Moving down
+				if (axis.direction === 1) {
+
+					// I'm on the ground!
+					self.nextdy = atom.dy
+					if (self.slip !== undefined) self.nextdx *= self.slip
+					else self.nextdx *= UPDATE_MOVER_FRICTION
+					self.grounded = true
+					atom.jumpTick = 0
+
+					// Hardcoded trampoline override
+					if (atom.bounce !== undefined && atom.turns % 2 === 0) {
+						self.nextdy = -atom.bounce
+						self.nextdx *= 1.8
+					}
+					
+				}
+
+				// Moving up
+				else {
+					
+					// Hit my head on something...
+					self.nextdy = 0
+					self.jumpTick = 0
+
+				}
+
+			iveHitSomething = true
 
 			}
 		}
-
 
 	}
 	
@@ -487,7 +524,7 @@ const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nb
 	//==================================================//
 	// BUMP edges of portal if I'm NOT going through it //
 	//==================================================//
-	if (bself.portals[axis.front] !== atom) {
+	/*if (bself.portals[axis.front] !== atom) {
 
 		const reach = [bounds[axis.other.small], bounds[axis.other.big]]
 		const nreach = [nbounds[axis.other.small], nbounds[axis.other.big]]
@@ -502,10 +539,10 @@ const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nb
 			self.slip = 0.95
 			return true
 		}
-	}
+	}*/
 
 	// Otherwise, go through...
-
+3
 	// TODO
 	//
 	// MUCH LATER... after implementing children
@@ -518,7 +555,7 @@ const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nb
 	bself[axis.cutFrontName] += amountInPortal
 	const remainingSize = baxis.size - bself[axis.cutBackName]
 	if (bself[axis.cutFrontName] >= remainingSize) {
-		removeAtom(world, bself, {includeChildren: false, destroy: true})
+		removeAtom(world, bself, {includingChildren: false, destroy: true})
 	}
 	
 	// Register (or re-register) that I am currently using this portal
@@ -618,11 +655,11 @@ const ELEMENT_PORTAL = {
 			offset: {width: (w) => w, y: (y) => y-2, x: (x) => x, height: () => 2,},
 		},*/
 		{
-			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black, foo: "hi"},
 			offset: {width: () => 2, x: (x) => x-2},
 		},
 		{
-			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black, foo: "hi"},
 			offset: {width: () => 2, x: (x) => x+125},
 		},
 		/*{
@@ -641,8 +678,6 @@ const ELEMENT_LILYPAD = {
 	height: 8,
 	width: 80,
 	colour: Colour.Green,
-	isPortal: true,
-	isPortalActive: false,
 }
 
 const ELEMENT_PORTAL_VOID = {
@@ -683,11 +718,11 @@ const ELEMENT_FROG = {
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
 	isMover: true,
-	//cutBottom: (254/6)/2,
+	cutBottom: 10,
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	//showBounds: true,
+	showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
@@ -697,13 +732,22 @@ const ELEMENT_BOX_DOUBLE = {
 	autoLinks: [
 		//...ELEMENT_BOX.autoLinks,
 		{
-			element: {...ELEMENT_BOX, update: UPDATE_STATIC, grab: GRAB_LINKEE},
+			element: {...ELEMENT_BOX, update: UPDATE_STATIC, grab: GRAB_LINKEE, onPromote: (self) => {
+				self.update = UPDATE_MOVER
+				self.grab = GRAB_DRAG
+			}},
 			offset: {
-				y: (y) => y + 50,
-				//dy: () => 0,
-				//dx: () => 0,
-				//nextdy: () => 0,
-				//nextdx: () => 0,
+				x: (v) => v + 50,
+			},
+		},
+		{
+			element: {...ELEMENT_BOX, update: UPDATE_STATIC, grab: GRAB_LINKEE, onPromote: (self) => {
+				self.update = UPDATE_MOVER
+				self.grab = GRAB_DRAG
+			}},
+			offset: {
+				x: (v) => v + 100,
+				y: (v) => v + 10,
 			},
 		},
 	]
