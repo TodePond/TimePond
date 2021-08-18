@@ -600,6 +600,8 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 	if (bself[axis.cutFrontName] >= remainingSize) {
 		removeAtom(world, bself, {includingChildren: false, destroy: true})
 	}
+
+	if (bself[axis.cutFrontName] <= 0) return false
 	
 	// Register (or re-register) that I am currently using this portal
 	if (bself.portals[axis.front] === undefined) {
@@ -781,7 +783,7 @@ const ELEMENT_FROG = {
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	showBounds: true,
+	//showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
