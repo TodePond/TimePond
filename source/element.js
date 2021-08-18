@@ -242,6 +242,7 @@ const UPDATE_MOVER = (self, world) => {
 
 				if (cself[axis.cutBackName] <= 0) {
 					cself.portals[axis.back] = undefined
+					cself[axis.cutBackName] = 0
 					if (portal.portal.exit !== undefined) portal.portal.exit()
 				}
 
