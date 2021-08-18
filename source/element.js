@@ -489,7 +489,9 @@ const PORTAL_VOID = {
 }
 
 const PORTAL_MOVE = {
-	enter: () => {},
+	enter: () => {
+		print("Enter portal")
+	},
 	end: () => {},
 	moveIn: () => {},
 	moveOut: () => {},
@@ -531,7 +533,7 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 	}
 }
 
-const COLLIDED_PORTAL_VOID = ({self, bself, atom, axis, baxis, world, bounds, nbounds, abounds}) => {
+const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds, abounds}) => {
 	
 	//==================================================//
 	// BUMP edges of portal if I'm NOT going through it //
@@ -658,7 +660,8 @@ const ELEMENT_PORTAL = {
 	width: 125,
 	colour: Colour.Purple,
 	isPortal: true,
-	isPortalActive: false,
+	isPortalActive: true,
+	preCollided: COLLIDED_PORTAL,
 	autoLinks: [
 		/*{
 			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black},
@@ -693,13 +696,28 @@ const ELEMENT_LILYPAD = {
 const ELEMENT_PORTAL_VOID = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_VOID,
-	isPortalActive: true,
-	preCollided: COLLIDED_PORTAL_VOID,
+	colour: Colour.Purple,
 }
 
+const makePortalTargeter = () => {
+	let lonelyPortal = undefined
+	return (portal) => {
+		if (portal.isMenuItem) return
+		if (lonelyPortal === undefined) {
+			lonelyPortal = portal
+			return
+		}
+		
+		lonelyPortal.target = portal
+		portal.source = lonelyPortal
+		lonelyPortal = undefined
+	}
+}
 const ELEMENT_PORTAL_MOVE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_MOVE,
+	colour: Colour.Orange,
+	construct: makePortalTargeter(),
 }
 
 const ELEMENT_POTION = {

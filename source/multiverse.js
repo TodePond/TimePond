@@ -11,9 +11,10 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_BOX, multiverse)
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
 	addMenuElement(ELEMENT_LILYPAD, multiverse)
-	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
 	addMenuElement(ELEMENT_POTION_ROTATE, multiverse)
-	addMenuElement(ELEMENT_BOX_DOUBLE, multiverse)
+	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
+	addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
+	//addMenuElement(ELEMENT_BOX_DOUBLE, multiverse)
 
 	return multiverse
 }
@@ -26,6 +27,7 @@ const addMenuElement = (element, multiverse, menuElement = ELEMENT_SPAWNER) => {
 		...menuElement,
 		spawn: element,
 		x: menu.x,
+		isMenuItem: true,
 	})
 
 	const remainingY = MENU_HEIGHT - atom.height

@@ -17,6 +17,7 @@ const makeAtom = ({
 	cutRight = 0,
 	cutLeft = 0,
 	autoLinks = [],
+	construct = () => {},
 	...args
 } = {}) => {
 	const atom = {
@@ -48,6 +49,7 @@ const makeAtom = ({
 		linkAtom(atom, latom, autoLink.offset, autoLink.transfer)
 	}
 	turnAtom(atom, turns)
+	construct(atom)
 	return atom
 }
 
