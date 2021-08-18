@@ -263,8 +263,8 @@ const UPDATE_MOVER = (self, world) => {
 			
 			for (const atom of candidate.atom.world.atoms) {
 				
-				if (self.parent === atom) continue
-				if (atom.parent === self) continue
+				if (atomIsDescendant(self, atom)) continue
+				if (atomIsDescendant(atom, self)) continue
 				if (atom.isVisual) continue
 				if (atom === self) continue
 				const abounds = getBounds(atom)
@@ -506,7 +506,7 @@ const PORTAL_MOVE = {
 			variant.portals[axis.front] = undefined
 			variant.portals[axis.back] = portal.target
 			variant.links = []
-			variant.update = UPDATE_NONE
+			variant.update = froggy.world.atoms.includes(froggy)? UPDATE_NONE : froggy.update
 			variant.onPromote = (self) => {
 				self.update = froggy.update
 			}
