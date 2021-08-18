@@ -148,6 +148,7 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dy.blockerWinner = Infinity
 	axes.dy.small = "top"
 	axes.dy.big = "bottom"
+	axes.dy.sizeName = "height"
 	axes.dy.direction = dy >= 0? 1 : -1
 	axes.dy.front = axes.dy.direction === 1? axes.dy.big : axes.dy.small
 	axes.dy.back = axes.dy.front === axes.dy.small? axes.dy.big : axes.dy.small
@@ -161,6 +162,7 @@ const UPDATE_MOVER = (self, world) => {
 	axes.dx.blockerWinner = Infinity
 	axes.dx.small = "left"
 	axes.dx.big = "right"
+	axes.dx.sizeName = "width"
 	axes.dx.direction = dx >= 0? 1 : -1
 	axes.dx.front = axes.dx.direction === 1? axes.dx.big : axes.dx.small
 	axes.dx.back = axes.dx.front === axes.dx.big? axes.dx.small : axes.dx.big
@@ -491,14 +493,34 @@ const PORTAL_VOID = {
 }
 
 const PORTAL_MOVE = {
-	enter: (portal, froggy, world, axis) => {
-		print("enter portal")
+	enter: ({portal, pbounds, froggy, world, axis}) => {
 		if (portal.target !== undefined) {
+
 			const variant = cloneAtom(froggy)
-			//variant[axis.cutFrontName] = 0
-			linkAtom(froggy, variant, {x: v=>v+100})
+			
+			
+
+			variant[axis.cutBackName] = variant[axis.sizeName] - variant[axis.cutFrontName]
+			variant[axis.cutFrontName] = 0
+
+			variant.portals[axis.front] = undefined
+			variant.portals[axis.back] = portal.target
+			variant.links = []
+			variant.update = UPDATE_NONE
+			variant.onPromote = (self) => {
+				self.update = froggy.update
+			}
+
+			const displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
+			let displacement = portal.target[axis.name] - portal[axis.name]
+			if (axis.direction === 1) displacement += portal.target[axis.sizeName]
+
+			linkAtom(froggy, variant, {
+				[axis.other.name]: v => v + displacementOther,
+				[axis.name]: v => v + displacement,
+			})
 			//variant.links.d
-			//addAtom(world, variant)
+			addAtom(world, variant)
 		}
 	},
 	end: () => {},
@@ -582,7 +604,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 	// Register (or re-register) that I am currently using this portal
 	if (bself.portals[axis.front] === undefined) {
 		bself.portals[axis.front] = atom
-		if (atom.portal.enter !== undefined) atom.portal.enter(atom, self, world, axis)
+		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
 	}
 	
 	if (atom.portal.move !== undefined) atom.portal.move()
@@ -759,7 +781,7 @@ const ELEMENT_FROG = {
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	//showBounds: true,
+	showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
