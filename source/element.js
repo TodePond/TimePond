@@ -791,7 +791,7 @@ const ELEMENT_FROG = {
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	showBounds: true,
+	//showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
