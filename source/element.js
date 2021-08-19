@@ -304,14 +304,15 @@ const UPDATE_MOVER = (self, world) => {
 				// Work out the distance to this atom we would crash into
 				// We don't care about it if we already found a NEARER one to crash into :)
 				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
-				if (distance < 0) continue
+				//if (distance < 0) continue
 				//if (distance > axis.blockerWinner) continue
-				if (distance >= axis.blockerWinner) {
+				/*if (distance >= axis.blockerWinner) {
 					axis.blockers.push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 					continue
 				}
 				axis.blockerWinner = distance
-				axis.blockers.unshift({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
+				axis.blockers.unshift({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})*/
+				axis.blockers.push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 			}
 		}
 	}
@@ -319,21 +320,36 @@ const UPDATE_MOVER = (self, world) => {
 	// Order the blockers so that portals gets processed LAST
 	// (because they don't really block, do they)
 	for (const axis of axes) {
-		const nonPortalBlockers = []
-		const portalBlockers = []
+
+		const winningBlockers = new Map()
+
 		for (const blocker of axis.blockers) {
-			//if (blocker.atom.foo !== undefined) print(blocker.atom.foo)
-			if (blocker.atom.isPortal) {
-				//"portal".d
-				portalBlockers.push(blocker)
+			if (!winningBlockers.has(blocker.candidate)) {
+				winningBlockers.set(blocker.candidate, [blocker])
+				continue
 			}
-			else {
-				//"nonportal".d
-				nonPortalBlockers.push(blocker)
+			const winners = winningBlockers.get(blocker.candidate)
+			if (winners[0].distance > blocker.distance) {
+				winningBlockers.set(blocker.candidate, [blocker])
+			}
+			else if (winners[0].distance === blocker.distance) {
+				winners.push(blocker)
 			}
 		}
 
-		axis.blockers = [...nonPortalBlockers, ...portalBlockers]
+		axis.blockers = [...winningBlockers.values()].flat()
+		
+		axis.blockers.sort((a, b) => {
+			//if (a.distance < b.distance) return -1
+			//if (a.distance > b.distance) return 1
+			if (a.atom.isPortal && !b.atom.isPortal) return 1
+			if (!a.atom.isPortal && b.atom.isPortal) return -1
+			return 0
+		})
+
+		
+		//if (axis.blockers.length > 0) print(axis.blockers.map(b => b.distance))
+
 	}
 
 	//===================================================//
@@ -342,6 +358,7 @@ const UPDATE_MOVER = (self, world) => {
 	for (const axis of axes) {
 
 		let iveHitSomething = false
+		let iveHitSomethingWithThese = []
 		const oldNew = axis.new //haha 'oldNew'
 		
 		for (const blocker of axis.blockers) {
@@ -371,6 +388,8 @@ const UPDATE_MOVER = (self, world) => {
 			}
 
 			if (iveHitSomething === true) continue
+			//if (iveHitSomethingWithThese.includes(bself)) continue
+			iveHitSomethingWithThese.push(bself)
 			
 			// SNAP to the surface!
 			const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
