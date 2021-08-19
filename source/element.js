@@ -174,6 +174,7 @@ const UPDATE_MOVER = (self, world) => {
 	// I should write a function that like... gets an atom and its children as an array or something
 	// Then I could use that to like... um... yeah I could just use that. ez
 	// I WILL COME BACK TO THIS IN A SECOND I PROMISE
+	// ... i still havent come back to this yet
 
 	// Get my current bounding box
 	// And get my potential NEW bounding box (assuming I can complete the whole movement)
@@ -251,6 +252,9 @@ const UPDATE_MOVER = (self, world) => {
 			}
 		}
 	}
+
+	// TODO: this should ignore collisions for relative up/down on portal edges when im moving up/down through a portal
+	// so like, maybe it should ignore the portal's children (if its moving in that axis yknow)
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
@@ -260,15 +264,24 @@ const UPDATE_MOVER = (self, world) => {
 			
 			if (candidate.atom.world === undefined) continue
 			if (candidate.atom.world.atoms === undefined) continue
-			
-			for (const atom of candidate.atom.world.atoms) {
-				
-				if (atomIsDescendant(self, atom)) continue
-				if (atomIsDescendant(atom, self)) continue
-				if (atom.isVisual) continue
-				if (atom === self) continue
-				const abounds = getBounds(atom)
 
+			const cself = candidate.atom
+			for (const atom of cself.world.atoms) {
+				
+				if (atomIsDescendant(cself, atom)) continue
+				if (atomIsDescendant(atom, cself)) continue
+				if (atom.isVisual) continue
+				if (atom === cself) continue
+
+				// Check here for collisions with the inside edge of portals (the wrong way)
+				if (cself.portals[axis.front] !== undefined) {
+					const portal = cself.portals[axis.front]
+					if (atomIsDescendant(atom, portal)) {
+						continue
+					}
+				}
+
+				const abounds = getBounds(atom)
 				const bounds = candidate.bounds
 				const nbounds = candidate.nbounds
 				
@@ -348,8 +361,8 @@ const UPDATE_MOVER = (self, world) => {
 			}
 
 			// Allow MODs by elements/atoms
-			if (self.preCollide !== undefined) {
-				const result = self.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething})
+			if (bself.preCollide !== undefined) {
+				const result = bself.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething})
 				if (result === false) continue
 			}
 			if (atom.preCollided !== undefined) {
@@ -588,11 +601,6 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 
 	// Otherwise, go through...
 
-	// TODO
-	//
-	// MUCH LATER... after implementing children
-	// It should make a child and connect it at the other portal
-
 	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
 	bself[axis.cutFrontName] += amountInPortal
@@ -783,7 +791,7 @@ const ELEMENT_FROG = {
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	//showBounds: true,
+	showBounds: true,
 }
 
 const ELEMENT_BOX_DOUBLE = {
@@ -791,7 +799,7 @@ const ELEMENT_BOX_DOUBLE = {
 	update: UPDATE_MOVER,
 	isMover: false,
 	autoLinks: [
-		//...ELEMENT_BOX.autoLinks,
+		//...ELEMENT_aaBOX.autoLinks,
 		{
 			element: {...ELEMENT_BOX, update: UPDATE_STATIC, grab: GRAB_LINKEE, onPromote: (self) => {
 				self.update = UPDATE_MOVER
