@@ -3,56 +3,6 @@ const moverUpdate = (self, world) => {
 	moverMove(self, world, self.dx, self.dy)
 }
 
-const makeCandidate = (atom, axes) => {
-	
-	// This is what the new atom WOULD be after moving (if it doesn't hit anything)
-	const natom = {
-		...atom,
-		x: atom.x + axes.dx.value,
-		y: atom.y + axes.dy.value,
-	}
-
-	// Current bounds and new bounds
-	const bounds = getBounds(atom)
-	const nbounds = getBounds(natom)
-
-	// Some axis-independent info to help me write code that works for all directions/axes
-	const caxes = {dx: {}, dy: {}}
-
-	caxes.dx.old = atom.x
-	caxes.dy.old = atom.y
-	caxes.dx.new = natom.x
-	caxes.dy.new = natom.y
-
-	caxes.dy.size = atom.height
-	caxes.dy.cutSmall = atom.cutTop
-	caxes.dy.cutBig = atom.cutBottom
-
-	caxes.dx.size = atom.width
-	caxes.dx.cutSmall = atom.cutLeft
-	caxes.dx.cutBig = atom.cutRight
-
-	// Put it all together...
-	const candidate = {
-		atom,
-		bounds,
-		nbounds,
-		axes: caxes,
-	}
-
-	return candidate
-
-}
-
-const makeCandidates = (self, axes) => {
-
-	const descendents = getDescendentsAndMe(self)
-
-	const atoms = descendents
-	const candidates = atoms.map(atom => makeCandidate(atom, axes))
-	return candidates
-}
-
 const moverMove = (self, world, dx, dy) => {
 
 	// Make generalised axes info
@@ -341,28 +291,12 @@ const moverMove = (self, world, dx, dy) => {
 	}
 }
 
-
 const makeAxesInfo = (x, y, dx, dy) => {
 
 	const axes = {
-		dy: {},
 		dx: {},
+		dy: {},
 	}
-
-	axes.dy.name = "y"
-	axes.dy.new = y + dy
-	axes.dy.value = dy
-	axes.dy.blockers = []
-	axes.dy.blockerWinner = Infinity
-	axes.dy.small = "top"
-	axes.dy.big = "bottom"
-	axes.dy.sizeName = "height"
-	axes.dy.direction = dy >= 0? 1 : -1
-	axes.dy.front = axes.dy.direction === 1? axes.dy.big : axes.dy.small
-	axes.dy.back = axes.dy.front === axes.dy.small? axes.dy.big : axes.dy.small
-	axes.dy.other = axes.dx
-	axes.dy.cutFrontName = "cut" + axes.dy.front.as(Capitalised)
-	axes.dy.cutBackName = "cut" + axes.dy.back.as(Capitalised)
 	
 	axes.dx.name = "x"
 	axes.dx.new = x + dx
@@ -379,5 +313,74 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dx.cutFrontName = "cut" + axes.dx.front.as(Capitalised)
 	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
 
+	axes.dy.name = "y"
+	axes.dy.new = y + dy
+	axes.dy.value = dy
+	axes.dy.blockers = []
+	axes.dy.blockerWinner = Infinity
+	axes.dy.small = "top"
+	axes.dy.big = "bottom"
+	axes.dy.sizeName = "height"
+	axes.dy.direction = dy >= 0? 1 : -1
+	axes.dy.front = axes.dy.direction === 1? axes.dy.big : axes.dy.small
+	axes.dy.back = axes.dy.front === axes.dy.small? axes.dy.big : axes.dy.small
+	axes.dy.other = axes.dx
+	axes.dy.cutFrontName = "cut" + axes.dy.front.as(Capitalised)
+	axes.dy.cutBackName = "cut" + axes.dy.back.as(Capitalised)
+
 	return axes
+}
+
+
+const makeCandidates = (self, axes) => {
+
+	const descendents = getDescendentsAndMe(self)
+
+	const atoms = descendents
+	const candidates = atoms.map(atom => makeCandidate(atom, axes))
+	return candidates
+}
+
+// TODO: this should support changes in cuts over time!
+const makeCandidate = (atom, axes) => {
+	
+	// This is what the new atom WOULD be after moving (if it doesn't hit anything)
+	const natom = {
+		...atom,
+		x: atom.x + axes.dx.value,
+		y: atom.y + axes.dy.value,
+	}
+
+	// Current bounds and new bounds
+	const bounds = getBounds(atom)
+	const nbounds = getBounds(natom)
+
+	// Some axis-independent info to help me write code that works for all directions/axes
+	const caxes = {
+		dx: {},
+		dy: {},
+	}
+
+	caxes.dx.old = atom.x
+	caxes.dx.new = natom.x
+	caxes.dx.size = atom.width
+	caxes.dx.cutSmall = atom.cutLeft
+	caxes.dx.cutBig = atom.cutRight
+
+	caxes.dy.old = atom.y
+	caxes.dy.new = natom.y
+	caxes.dy.size = atom.height
+	caxes.dy.cutSmall = atom.cutTop
+	caxes.dy.cutBig = atom.cutBottom
+
+	// Put it all together...
+	const candidate = {
+		atom,
+		bounds,
+		nbounds,
+		axes: caxes,
+	}
+
+	return candidate
+
 }
