@@ -68,13 +68,19 @@ const deepishClone = (value) => {
 	if (typeof value === "boolean") return value
 	if (typeof value === "function") return value //not deepcloning but i promise i wont mess around with function properties
 	if (typeof value === "object") {
-		if (value instanceof Array)	return [...value]
-		if (value instanceof Object) {
-			const obj = {}
-			for (const key of value) {
-				obj[key] = value[key] //not a pure deep clone either cos we want the atom REFERENCES yo
+		/*if (value instanceof Array)	{
+			const array = []
+			for (const key in value) {
+				array[key] = value[key] //not a pure deep clone
 			}
-			return obj
+			return array.d
+		}*/
+		if (value instanceof Object) {
+			const object = {}
+			for (const key in value) {
+				object[key] = value[key] //not a pure deep clone either cos we want the atom REFERENCES yo
+			}
+			return object
 		}
 	}
 	console.error("Couldn't deepish-clone value", value)
