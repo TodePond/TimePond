@@ -140,6 +140,13 @@ const linkAtom = (atom, latom, offset={}, transfer={}) => {
 	latom.parent = atom
 }
 
+const getDescendentsAndMe = (self) => {
+	if (self.links.length === 0) return [self]
+	const atoms = self.links.map(link => link.atom)
+	const descendents = atoms.map(atom => getDescendentsAndMe(atom)).flat(1)
+	return [self, ...descendents]
+}
+
 const transferToParent = (child, key, value) => {
 	const parent = child.parent
 	if (parent === undefined) return
