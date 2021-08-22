@@ -3,41 +3,6 @@ const moverUpdate = (self, world) => {
 	moverMove(self, world, self.dx, self.dy)
 }
 
-const emergeCandidate = (candidate, axes) => {
-	const nbounds = candidate.nbounds
-	const atom = candidate.atom
-
-	// Go through each of my portals...
-	for (const key in atom.portals) {
-		const portal = atom.portals[key]
-		if (portal === undefined) continue
-		const pbounds = getBounds(portal)
-
-		// I'm only interested in my BACK because I'm EMERGING!
-		for (const axis of axes) {
-			if (axis.back !== key) continue
-			
-			// What's the distance between me and the portal?
-			const distanceToPortal = nbounds[axis.back] - pbounds[axis.front]
-
-			// Reduce my cut so that there isn't a gap anymore!
-			atom[axis.cutBackName] -= distanceToPortal * axis.direction
-
-			// Fire moddable events :)
-			if (portal.portal.move !== undefined) portal.portal.move()
-			if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
-
-			// If I'm fully emerged, then I'm finished with this portal!
-			if (atom[axis.cutBackName] <= 0) {
-				atom.portals[axis.back] = undefined
-				atom[axis.cutBackName] = 0
-				if (portal.portal.exit !== undefined) portal.portal.exit()
-			}
-
-		}
-	}
-}
-
 const moverMove = (self, world, dx, dy) => {
 
 	// Make generalised axes info
@@ -53,15 +18,17 @@ const moverMove = (self, world, dx, dy) => {
 	self.slip = undefined
 
 	// Make each collision candidate emerge from portals if needed
-	for (const candidate of candidates) {
-		emergeCandidate(candidate, axes)
-	}
-
+	candidates.forEach(candidate => emergeCandidate(candidate, axes))
 
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
 	for (const axis of axes) {
+		
+		// TODO: this shouldnt be done on the axis state
+		// instead make a new blockers object or something, that has keys for each axis
+		// this would confuse me less i think
+		if (axis.blockers === undefined) axis.blockers = []
 
 		for (const candidate of candidates) {
 			
@@ -295,11 +262,15 @@ const makeAxesInfo = (x, y, dx, dy) => {
 		dy: {},
 	}
 	
-	axes.dx.name = "x"
+	// Variable Stuff
 	axes.dx.new = x + dx
 	axes.dx.value = dx
-	axes.dx.blockers = []
-	axes.dx.blockerWinner = Infinity
+	
+	axes.dy.new = y + dy
+	axes.dy.value = dy
+
+	// Static Stuff
+	axes.dx.name = "x"
 	axes.dx.small = "left"
 	axes.dx.big = "right"
 	axes.dx.sizeName = "width"
@@ -311,10 +282,6 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
 
 	axes.dy.name = "y"
-	axes.dy.new = y + dy
-	axes.dy.value = dy
-	axes.dy.blockers = []
-	axes.dy.blockerWinner = Infinity
 	axes.dy.small = "top"
 	axes.dy.big = "bottom"
 	axes.dy.sizeName = "height"
@@ -330,15 +297,13 @@ const makeAxesInfo = (x, y, dx, dy) => {
 
 
 const makeCandidates = (self, axes) => {
-
-	const descendents = getDescendentsAndMe(self)
-
-	const atoms = descendents
+	const atoms = getDescendentsAndMe(self)
 	const candidates = atoms.map(atom => makeCandidate(atom, axes))
 	return candidates
 }
 
-// TODO: this should support changes in cuts over time!
+// TODO: should this support changes in cuts over time?
+// it can still be manually edited though! woo
 const makeCandidate = (atom, axes) => {
 	
 	// This is what the new atom WOULD be after moving (if it doesn't hit anything)
@@ -379,5 +344,50 @@ const makeCandidate = (atom, axes) => {
 	}
 
 	return candidate
+
+}
+
+const emergeCandidate = (candidate, axes) => {
+
+	const nbounds = candidate.nbounds
+	const atom = candidate.atom
+
+	// Go through each of my portals...
+	for (const key in atom.portals) {
+		const portal = atom.portals[key]
+		if (portal === undefined) continue
+		const pbounds = getBounds(portal)
+
+		// I'm only interested in my BACK because I'm EMERGING!
+		for (const axis of axes) {
+			if (axis.back !== key) continue
+			
+			// What's the distance between me and the portal?
+			const distanceToPortal = nbounds[axis.back] - pbounds[axis.front]
+
+			// Reduce my cut so that there isn't a gap anymore!
+			atom[axis.cutBackName] -= distanceToPortal * axis.direction
+
+			// Fire moddable events :)
+			if (portal.portal.move !== undefined) portal.portal.move()
+			if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
+
+			// If I'm fully emerged, then I'm finished with this portal!
+			if (atom[axis.cutBackName] <= 0) {
+				atom.portals[axis.back] = undefined
+				atom[axis.cutBackName] = 0
+				if (portal.portal.exit !== undefined) portal.portal.exit()
+			}
+
+		}
+	}
+	
+	// (manually) Update the candidate info (with the new cut)!!!
+	const natom = {
+		...atom,
+		x: candidate.axes.dx.new,
+		y: candidate.axes.dy.new,
+	}
+	candidate.nbounds = getBounds(natom)
 
 }
