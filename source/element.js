@@ -497,9 +497,22 @@ const getOppositeSideName = (side) => {
 // Grabbers //
 //==========//
 const GRAB_DRAG = (self) => {
-	// TODO: uncomment these two lines to prevent cutting froggies in half
-	//if (self.portals !== undefined && self.portals.size > 0) return undefined
-	//if (self.subjects !== undefined && self.subjects.size > 0) return undefined
+	if (self.portals !== undefined) {
+		if (self.portals.top !== undefined) return undefined
+		if (self.portals.bottom !== undefined) return undefined
+		if (self.portals.left !== undefined) return undefined
+		if (self.portals.right !== undefined) return undefined
+	}
+	if (self.isPortal) {
+		for (const atom of self.world.atoms) {
+			if (atom.portals !== undefined) {
+				if (atom.portals.top === self) return undefined
+				if (atom.portals.bottom === self) return undefined
+				if (atom.portals.left === self) return undefined
+				if (atom.portals.right === self) return undefined
+			}
+		}
+	}
 	return self
 }
 const GRAB_STATIC = () => {}
