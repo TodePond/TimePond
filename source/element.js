@@ -584,7 +584,9 @@ const PORTAL_MOVE = {
 
 			const displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
 			let displacement = portal.target[axis.name] - portal[axis.name]
-			if (axis.direction === 1) displacement += portal.target[axis.sizeName]
+
+			// Move it to the other side of the portal
+			displacement += portal.target[axis.sizeName] * axis.direction
 
 			linkAtom(froggy, variant, {
 				[axis.other.name]: v => v + displacementOther,

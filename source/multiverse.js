@@ -1,3 +1,6 @@
+const URL_QUERY = new URLSearchParams(window.location.search)
+const SPEED_MOD = URL_QUERY.has("speed")? parseFloat(URL_QUERY.get("speed")) : 1
+
 //=======//
 // Setup //
 //=======//
@@ -54,7 +57,7 @@ const makeMultiverseCanvas = (multiverse) => {
 		requestAnimationFrame(() => drawMultiverse(multiverse, context))
 	})
 	
-	setInterval(() => tickMultiverse(multiverse, context), 1000 / 60)
+	setInterval(() => tickMultiverse(multiverse, context), 1000/SPEED_MOD / 60)
 	return canvas
 }
 
