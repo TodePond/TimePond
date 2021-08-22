@@ -1,5 +1,7 @@
 const URL_QUERY = new URLSearchParams(window.location.search)
 const SPEED_MOD = URL_QUERY.has("speed")? parseFloat(URL_QUERY.get("speed")) : 1
+let PAUSED = URL_QUERY.has("paused")? URL_QUERY.has("paused").as(Boolean) : false
+let STEP = false
 
 //=======//
 // Setup //
@@ -73,6 +75,13 @@ const addWorld = (multiverse, world) => {
 // Game Loop //
 //===========//
 const tickMultiverse = (multiverse, context) => {
+	if (STEP) STEP = false
+	else if (PAUSED) {
+		updateCursor(multiverse, context)
+		drawMultiverse(multiverse, context)
+		return
+	}
+
 	updateCursor(multiverse, context)
 	updateMultiverse(multiverse)
 	drawMultiverse(multiverse, context)

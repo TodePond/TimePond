@@ -253,8 +253,6 @@ const UPDATE_MOVER = (self, world) => {
 		}
 	}
 
-	// TODO: this should ignore collisions for relative up/down on portal edges when im moving up/down through a portal
-	// so like, maybe it should ignore the portal's children (if its moving in that axis yknow)
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	//==================================================================//
@@ -569,8 +567,6 @@ const PORTAL_MOVE = {
 
 			const variant = cloneAtom(froggy)
 			
-			
-
 			variant[axis.cutBackName] = variant[axis.sizeName] - variant[axis.cutFrontName]
 			variant[axis.cutFrontName] = 0
 
@@ -592,7 +588,7 @@ const PORTAL_MOVE = {
 				[axis.other.name]: v => v + displacementOther,
 				[axis.name]: v => v + displacement,
 			})
-			//variant.links.d
+			
 			addAtom(world, variant)
 		}
 	},

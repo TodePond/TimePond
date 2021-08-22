@@ -11,3 +11,8 @@ on.load(() => {
 	document.body.appendChild(canvas)
 	trigger("resize")
 })
+
+on.keydown((e) => {
+	if (e.key === " ") PAUSED = !PAUSED
+	else if (e.key === "ArrowRight") STEP = true
+})
