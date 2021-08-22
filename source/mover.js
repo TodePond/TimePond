@@ -3,55 +3,60 @@ const moverUpdate = (self, world) => {
 	moverMove(self, world, self.dx, self.dy)
 }
 
+const emergeCandidate = (candidate, axes) => {
+	const nbounds = candidate.nbounds
+	const atom = candidate.atom
+
+	// Go through each of my portals...
+	for (const key in atom.portals) {
+		const portal = atom.portals[key]
+		if (portal === undefined) continue
+		const pbounds = getBounds(portal)
+
+		// I'm only interested in my BACK because I'm EMERGING!
+		for (const axis of axes) {
+			if (axis.back !== key) continue
+			
+			// What's the distance between me and the portal?
+			const distanceToPortal = nbounds[axis.back] - pbounds[axis.front]
+
+			// Reduce my cut so that there isn't a gap anymore!
+			atom[axis.cutBackName] -= distanceToPortal * axis.direction
+
+			// Fire moddable events :)
+			if (portal.portal.move !== undefined) portal.portal.move()
+			if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
+
+			// If I'm fully emerged, then I'm finished with this portal!
+			if (atom[axis.cutBackName] <= 0) {
+				atom.portals[axis.back] = undefined
+				atom[axis.cutBackName] = 0
+				if (portal.portal.exit !== undefined) portal.portal.exit()
+			}
+
+		}
+	}
+}
+
 const moverMove = (self, world, dx, dy) => {
 
 	// Make generalised axes info
 	// This help me write axis-independent and direction-independent code
 	const axes = makeAxesInfo(self.x, self.y, dx, dy)
 
+	// Make a list of atoms in this molecule that could POTENTIALLY hit something (ie: not a pure visual)
+	// With each atom, store info about their potential movement
+	const candidates = makeCandidates(self, axes)
+
 	// Reset some game state info
 	self.grounded = false
 	self.slip = undefined
 
-	// Make a list of atoms in this molecule that could POTENTIALLY hit something (ie: not a pure visual)
-	// With each atom, store info that we will need later, including:
-	// * current bounds
-	// * new bounds (assuming it hits nothing)
-	// * new position (assuming it hits nothing)
-	// * axis info (such as height/width)
-	const candidates = makeCandidates(self, axes)
-
-	//================================//
-	// Process the EXITING of portals //
-	//================================//
+	// Make each collision candidate emerge from portals if needed
 	for (const candidate of candidates) {
-		
-		const nbounds = candidate.nbounds
-
-		const cself = candidate.atom
-		for (const key in cself.portals) {
-			const portal = cself.portals[key]
-			if (portal === undefined) continue
-			const pbounds = getBounds(portal)
-			for (const axis of axes) {
-				if (axis.back !== key) continue
-				
-				// Re-cut myself so that I slightly leave portal! Yikes
-				const gapToPortal = axis.direction * (nbounds[axis.back] - pbounds[axis.front])
-				cself[axis.cutBackName] -= gapToPortal
-
-				if (portal.portal.move !== undefined) portal.portal.move()
-				if (portal.portal.moveIn !== undefined) portal.portal.moveIn()
-
-				if (cself[axis.cutBackName] <= 0) {
-					cself.portals[axis.back] = undefined
-					cself[axis.cutBackName] = 0
-					if (portal.portal.exit !== undefined) portal.portal.exit()
-				}
-
-			}
-		}
+		emergeCandidate(candidate, axes)
 	}
+
 
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
@@ -102,14 +107,6 @@ const moverMove = (self, world, dx, dy) => {
 				// Work out the distance to this atom we would crash into
 				// We don't care about it if we already found a NEARER one to crash into :)
 				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
-				//if (distance < 0) continue
-				//if (distance > axis.blockerWinner) continue
-				/*if (distance >= axis.blockerWinner) {
-					axis.blockers.push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
-					continue
-				}
-				axis.blockerWinner = distance
-				axis.blockers.unshift({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})*/
 				axis.blockers.push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 			}
 		}
