@@ -5,6 +5,10 @@ const moverUpdate = (self, world) => {
 
 const moverMove = (self, world, dx, dy) => {
 
+	// Reset some game state info
+	self.grounded = false
+	self.slip = undefined
+
 	// Make generalised axes info
 	// This help me write axis-independent and direction-independent code
 	const axes = makeAxesInfo(self.x, self.y, dx, dy)
@@ -13,12 +17,10 @@ const moverMove = (self, world, dx, dy) => {
 	// With each atom, store info about their potential movement
 	const candidates = makeCandidates(self, axes)
 
-	// Reset some game state info
-	self.grounded = false
-	self.slip = undefined
-
 	// Make each collision candidate emerge from portals if needed
 	candidates.forEach(candidate => emergeCandidate(candidate, axes))
+
+	const blockers = {dx: [], dy: []}
 
 	//==================================================================//
 	// Find the FIRST atom I would hit if I travel forever in each axis //
@@ -28,8 +30,6 @@ const moverMove = (self, world, dx, dy) => {
 		// TODO: this shouldnt be done on the axis state
 		// instead make a new blockers object or something, that has keys for each axis
 		// this would confuse me less i think
-		if (axis.blockers === undefined) axis.blockers = []
-
 		for (const candidate of candidates) {
 			
 			if (candidate.atom.world === undefined) continue
@@ -74,7 +74,7 @@ const moverMove = (self, world, dx, dy) => {
 				// Work out the distance to this atom we would crash into
 				// We don't care about it if we already found a NEARER one to crash into :)
 				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
-				axis.blockers.push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
+				blockers[axis.dname].push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 			}
 		}
 	}
@@ -85,7 +85,7 @@ const moverMove = (self, world, dx, dy) => {
 
 		const winningBlockers = new Map()
 
-		for (const blocker of axis.blockers) {
+		for (const blocker of blockers[axis.dname]) {
 			if (!winningBlockers.has(blocker.candidate)) {
 				winningBlockers.set(blocker.candidate, [blocker])
 				continue
@@ -99,9 +99,9 @@ const moverMove = (self, world, dx, dy) => {
 			}
 		}
 
-		axis.blockers = [...winningBlockers.values()].flat()
+		blockers[axis.dname] = [...winningBlockers.values()].flat()
 		
-		axis.blockers.sort((a, b) => {
+		blockers[axis.dname].sort((a, b) => {
 			//if (a.distance < b.distance) return -1
 			//if (a.distance > b.distance) return 1
 			if (a.atom.isPortal && !b.atom.isPortal) return 1
@@ -123,7 +123,7 @@ const moverMove = (self, world, dx, dy) => {
 		let iveHitSomethingWithThese = []
 		const oldNew = axis.new //haha 'oldNew'
 		
-		for (const blocker of axis.blockers) {
+		for (const blocker of blockers[axis.dname]) {
 			const {atom} = blocker
 			if (atom === undefined) continue
 
@@ -148,11 +148,11 @@ const moverMove = (self, world, dx, dy) => {
 			// WHO KNOWS
 			// But what I do know, is that itll be easier if I create more generalized functions of all the stuff Ive got here TBH
 			if (bself.preCollide !== undefined) {
-				const result = bself.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: axis.blockers})
+				const result = bself.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
 				if (result === false) continue
 			}
 			if (atom.preCollided !== undefined) {
-				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: axis.blockers})
+				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
 				if (result === false) continue
 			}
 
@@ -271,6 +271,7 @@ const makeAxesInfo = (x, y, dx, dy) => {
 
 	// Static Stuff
 	axes.dx.name = "x"
+	axes.dx.dname = "dx"
 	axes.dx.small = "left"
 	axes.dx.big = "right"
 	axes.dx.sizeName = "width"
@@ -282,6 +283,7 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
 
 	axes.dy.name = "y"
+	axes.dy.dname = "dy"
 	axes.dy.small = "top"
 	axes.dy.big = "bottom"
 	axes.dy.sizeName = "height"
