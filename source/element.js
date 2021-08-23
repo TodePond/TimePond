@@ -311,12 +311,12 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 	if (portalIsNew) {
 
 		if (iveHitSomething) return true
-		const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
-		bself[axis.cutFrontName] += amountInPortal
-		const remainingSize = baxis.size - bself[axis.cutBackName]
-		if (bself[axis.cutFrontName] >= remainingSize) {
+		//const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
+		//bself[axis.cutFrontName] += amountInPortal
+		//const remainingSize = baxis.size - bself[axis.cutBackName]
+		/*if (bself[axis.cutFrontName] >= remainingSize) {
 			removeAtom(world, bself, {includingChildren: false, destroy: true})
-		}
+		}*/
 
 		if (bself[axis.cutFrontName] < 0) {
 			bself[axis.cutFrontName] = 0
@@ -341,7 +341,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 			removeAtom(world, bself, {includingChildren: false, destroy: true})
 		}
 
-		if (bself[axis.cutFrontName] <= 0) {
+		if (bself[axis.cutFrontName] < 0) {
 			bself[axis.cutFrontName] = 0
 			return false
 		}
