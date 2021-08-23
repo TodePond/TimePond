@@ -98,16 +98,6 @@ const updateAtomLinks = (atom) => {
 	for (const link of atom.links) {
 		for (const key of LINKED_PROPERTIES) {
 
-			// NOTE: I used to transfer stuff every frame here
-			// but now I've just left it as a useful function
-			// that modded elements can use if they choose to
-			// for example, UPDATE_MOVER uses transfer to transfer acceleration to parents and stuff
-			/*if (link.transfer[key] !== undefined) {
-				const them = atom[key]
-				const me = link.atom[key]
-				link.transfer[key](them, me)
-			}*/
-
 			if (link.offset[key] !== undefined) {
 				const them = atom[key]
 				const me = link.atom[key]
@@ -116,6 +106,7 @@ const updateAtomLinks = (atom) => {
 			else {
 				link.atom[key] = atom[key]
 			}
+			
 		}
 		updateAtomLinks(link.atom)
 	}

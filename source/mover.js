@@ -141,6 +141,7 @@ const moverMove = (self, world, dx, dy) => {
 	self.x = axes.dx.new
 	self.y = axes.dy.new
 
+	// Update all children?
 	updateAtomLinks(self)
 
 	// DODGY FIX! Make sure everything is cut correctly by portals

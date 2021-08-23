@@ -305,6 +305,8 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 
 	// Otherwise, go through...
 
+	const portalIsNew = bself.portals[axis.front] === undefined
+
 	// Cut myself down to go into portal
 	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
 	bself[axis.cutFrontName] += amountInPortal
@@ -313,10 +315,13 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 		removeAtom(world, bself, {includingChildren: false, destroy: true})
 	}
 
-	if (bself[axis.cutFrontName] <= 0) return false
+	if (bself[axis.cutFrontName] <= 0) {
+		bself[axis.cutFrontName] = 0
+		return false
+	}
 	
 	// Register (or re-register) that I am currently using this portal
-	if (bself.portals[axis.front] === undefined) {
+	if (portalIsNew) {
 		bself.portals[axis.front] = atom
 		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
 	}
