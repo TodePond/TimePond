@@ -215,7 +215,7 @@ const PORTAL_MOVE = {
 
 			const variant = cloneAtom(froggy)
 			
-			variant[axis.cutBackName] = variant[axis.sizeName] - variant[axis.cutFrontName]
+			variant[axis.cutBackName] = variant[axis.sizeName]/* - variant[axis.cutFrontName]*/
 			variant[axis.cutFrontName] = 0
 
 			variant.portals[axis.front] = undefined
