@@ -43,7 +43,7 @@ const moverMove = (self, world, dx, dy) => {
 			if (atom === undefined) continue
 
 			const bbounds = blocker.bounds
-			const baxis = blocker.candidate.axes["d"+axis.name]
+			const baxis = blocker.candidate.axes[axis.dname]
 			const bself = blocker.candidate.atom
 			
 			// Update blocker bounds based on the decided Hit
@@ -62,26 +62,27 @@ const moverMove = (self, world, dx, dy) => {
 			// Maybe not I dunno
 			// WHO KNOWS
 			// But what I do know, is that itll be easier if I create more generalized functions of all the stuff Ive got here TBH
+			let modResult = true
 			if (bself.preCollide !== undefined) {
 				const result = bself.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
-				if (result === false) continue
+				if (result === false) modResult = false
 			}
 			if (atom.preCollided !== undefined) {
 				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
-				if (result === false) continue
+				if (result === false) modResult = false
 			}
 			
 			// SNAP to the surface!
-			const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
+			const newOffset = axis.front === axis.small? -bself[baxis.cutSmallName] : -baxis.size + bself[baxis.cutBigName]
 			baxis.new = bbounds[axis.back] + newOffset
 			const snapMovement = baxis.new - baxis.old
 			axis.new = self[axis.name] + snapMovement
 			
-			if (iveHitSomething === true) continue
+			if (iveHitSomething === true || modResult === false) continue
 
 			// Change ACCELERATIONS!
 			// Moving right or left
-			if (axis === axes.dx) { 
+			if (axis === axes.dx) {
 
 				// 2-way BOUNCE! I think this is the only 2-way collision resolution. I think...
 				atom.nextdx *= 0.5
@@ -247,12 +248,16 @@ const makeCandidate = (atom, axes) => {
 	caxes.dx.size = atom.width
 	caxes.dx.cutSmall = atom.cutLeft
 	caxes.dx.cutBig = atom.cutRight
+	caxes.dx.cutSmallName = "cutLeft"
+	caxes.dx.cutBigName = "cutRight"
 
 	caxes.dy.old = atom.y
 	caxes.dy.new = natom.y
 	caxes.dy.size = atom.height
 	caxes.dy.cutSmall = atom.cutTop
 	caxes.dy.cutBig = atom.cutBottom
+	caxes.dy.cutSmallName = "cutTop"
+	caxes.dy.cutBigName = "cutBottom"
 
 	// Put it all together...
 	const candidate = {
