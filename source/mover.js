@@ -3,102 +3,6 @@ const moverUpdate = (self, world) => {
 	moverMove(self, world, self.dx, self.dy)
 }
 
-const getBlockers = (candidate, axes) => {
-
-	const blockers =  {dx: [], dy: []}
-
-	for (const axis of axes) {
-		
-		if (candidate.atom.world === undefined) continue
-		if (candidate.atom.world.atoms === undefined) continue
-
-		const cself = candidate.atom
-		for (const atom of cself.world.atoms) {
-			
-			if (atomIsDescendant(cself, atom)) continue
-			if (atomIsDescendant(atom, cself)) continue
-			if (atom.isVisual) continue
-			if (atom === cself) continue
-
-			// Check here for collisions with the inside edge of portals (the wrong way)
-			if (cself.portals[axis.front] !== undefined) {
-				const portal = cself.portals[axis.front]
-				if (atomIsDescendant(atom, portal)) {
-					continue
-				}
-			}
-
-			const abounds = getBounds(atom)
-			const bounds = candidate.bounds
-			const nbounds = candidate.nbounds
-			
-			// Do I go PAST this atom?
-			const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
-			const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
-			if (!startsInFront || !endsThrough) continue
-
-			// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
-			let bumps = true
-			const otherAxes = axes.values().filter(a => a !== axis)
-			for (const other of otherAxes) {
-				const reach = [bounds[other.small], bounds[other.big]]
-				const nreach = [nbounds[other.small], nbounds[other.big]]
-				const areach = [abounds[other.small], abounds[other.big]]
-				if (!aligns(reach, nreach, areach)) bumps = false
-			}
-			if (!bumps) continue
-			
-			// Work out the distance to this atom we would crash into
-			// We don't care about it if we already found a NEARER one to crash into :)
-			const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
-			blockers[axis.dname].push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
-		}
-	}
-
-	return blockers
-}
-
-// Orders blockers in-place
-const orderBlockers = (blockers, axes) => {
-
-	// Order the blockers so that portals gets processed LAST
-	// (because they don't really block, do they)
-	for (const axis of axes) {
-
-		const winningBlockers = new Map()
-
-		for (const blocker of blockers[axis.dname]) {
-			if (!winningBlockers.has(blocker.candidate)) {
-				winningBlockers.set(blocker.candidate, [blocker])
-				continue
-			}
-			const winners = winningBlockers.get(blocker.candidate)
-			if (winners[0].distance > blocker.distance) {
-				winningBlockers.set(blocker.candidate, [blocker])
-			}
-			else if (winners[0].distance === blocker.distance) {
-				winners.push(blocker)
-			}
-		}
-
-		blockers[axis.dname] = [...winningBlockers.values()].flat()
-		
-		blockers[axis.dname].sort((a, b) => {
-			//if (a.distance < b.distance) return -1
-			//if (a.distance > b.distance) return 1
-			if (a.atom.isPortal && !b.atom.isPortal) return 1
-			if (!a.atom.isPortal && b.atom.isPortal) return -1
-			return 0
-		})
-
-		
-		//if (axis.blockers.length > 0) print(axis.blockers.map(b => b.distance))
-
-	}
-
-	return blockers
-}
-
 const moverMove = (self, world, dx, dy) => {
 
 	// Reset some game state info
@@ -122,6 +26,8 @@ const moverMove = (self, world, dx, dy) => {
 	const blockersY = candidateBlockers.map(blocker => blocker.dy).flat(1)
 	const blockers = {dx: blockersX, dy: blockersY}
 
+	// Order the things I would hit from nearest to furthest away
+	// If there are any draws, put portals last
 	orderBlockers(blockers, axes)
 
 	//===================================================//
@@ -402,4 +308,97 @@ const emergeCandidate = (candidate, axes) => {
 	}
 	candidate.nbounds = getBounds(natom)
 
+}
+
+const getBlockers = (candidate, axes) => {
+
+	const blockers =  {dx: [], dy: []}
+
+	for (const axis of axes) {
+		
+		if (candidate.atom.world === undefined) continue
+		if (candidate.atom.world.atoms === undefined) continue
+
+		const cself = candidate.atom
+		for (const atom of cself.world.atoms) {
+			
+			if (atomIsDescendant(cself, atom)) continue
+			if (atomIsDescendant(atom, cself)) continue
+			if (atom.isVisual) continue
+			if (atom === cself) continue
+
+			// Check here for collisions with the inside edge of portals (the wrong way)
+			if (cself.portals[axis.front] !== undefined) {
+				const portal = cself.portals[axis.front]
+				if (atomIsDescendant(atom, portal)) {
+					continue
+				}
+			}
+
+			const abounds = getBounds(atom)
+			const bounds = candidate.bounds
+			const nbounds = candidate.nbounds
+			
+			// Do I go PAST this atom?
+			const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
+			const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
+			if (!startsInFront || !endsThrough) continue
+
+			// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
+			let bumps = true
+			const otherAxes = axes.values().filter(a => a !== axis)
+			for (const other of otherAxes) {
+				const reach = [bounds[other.small], bounds[other.big]]
+				const nreach = [nbounds[other.small], nbounds[other.big]]
+				const areach = [abounds[other.small], abounds[other.big]]
+				if (!aligns(reach, nreach, areach)) bumps = false
+			}
+			if (!bumps) continue
+			
+			// Work out the distance to this atom we would crash into
+			// We don't care about it if we already found a NEARER one to crash into :)
+			const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
+			blockers[axis.dname].push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
+		}
+	}
+
+	return blockers
+}
+
+// Orders blockers in-place
+const orderBlockers = (blockers, axes) => {
+
+	// Order the blockers so that portals gets processed LAST
+	// (because they don't really block, do they)
+	for (const axis of axes) {
+
+		const winningBlockers = new Map()
+
+		for (const blocker of blockers[axis.dname]) {
+			if (!winningBlockers.has(blocker.candidate)) {
+				winningBlockers.set(blocker.candidate, [blocker])
+				continue
+			}
+			const winners = winningBlockers.get(blocker.candidate)
+			if (winners[0].distance > blocker.distance) {
+				winningBlockers.set(blocker.candidate, [blocker])
+			}
+			else if (winners[0].distance === blocker.distance) {
+				winners.push(blocker)
+			}
+		}
+
+		blockers[axis.dname] = [...winningBlockers.values()].flat()
+		
+		blockers[axis.dname].sort((a, b) => {
+			//if (a.distance < b.distance) return -1
+			//if (a.distance > b.distance) return 1
+			if (a.atom.isPortal && !b.atom.isPortal) return 1
+			if (!a.atom.isPortal && b.atom.isPortal) return -1
+			return 0
+		})
+
+	}
+
+	return blockers
 }
