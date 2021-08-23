@@ -281,7 +281,7 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 	}
 }
 
-const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds, abounds}) => {
+const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds, abounds, iveHitSomething}) => {
 	
 	//==================================================//
 	// BUMP edges of portal if I'm NOT going through it //
@@ -307,23 +307,44 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 
 	const portalIsNew = bself.portals[axis.front] === undefined
 
-	// Cut myself down to go into portal
-	const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
-	bself[axis.cutFrontName] += amountInPortal
-	const remainingSize = baxis.size - bself[axis.cutBackName]
-	if (bself[axis.cutFrontName] >= remainingSize) {
-		removeAtom(world, bself, {includingChildren: false, destroy: true})
+	// BEGIN to cut myself down to go into portal
+	if (portalIsNew) {
+
+		if (iveHitSomething) return true
+		const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
+		bself[axis.cutFrontName] += amountInPortal
+		const remainingSize = baxis.size - bself[axis.cutBackName]
+		if (bself[axis.cutFrontName] >= remainingSize) {
+			removeAtom(world, bself, {includingChildren: false, destroy: true})
+		}
+
+		if (bself[axis.cutFrontName] < 0) {
+			bself[axis.cutFrontName] = 0
+			return false
+		}
+
+		// Register (or re-register) that I am currently using this portal
+		if (portalIsNew) {
+			bself.portals[axis.front] = atom
+			if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
+		}
+
 	}
 
-	if (bself[axis.cutFrontName] <= 0) {
-		bself[axis.cutFrontName] = 0
-		return false
-	}
-	
-	// Register (or re-register) that I am currently using this portal
-	if (portalIsNew) {
-		bself.portals[axis.front] = atom
-		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
+	// CONTINUE to cut myself down to go into portal
+	else {
+		
+		const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
+		bself[axis.cutFrontName] += amountInPortal
+		const remainingSize = baxis.size - bself[axis.cutBackName]
+		if (bself[axis.cutFrontName] >= remainingSize) {
+			removeAtom(world, bself, {includingChildren: false, destroy: true})
+		}
+
+		if (bself[axis.cutFrontName] <= 0) {
+			bself[axis.cutFrontName] = 0
+			return false
+		}
 	}
 	
 	if (atom.portal.move !== undefined) atom.portal.move()

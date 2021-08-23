@@ -246,16 +246,12 @@ const makeCandidate = (atom, axes) => {
 	caxes.dx.old = atom.x
 	caxes.dx.new = natom.x
 	caxes.dx.size = atom.width
-	caxes.dx.cutSmall = atom.cutLeft
-	caxes.dx.cutBig = atom.cutRight
 	caxes.dx.cutSmallName = "cutLeft"
 	caxes.dx.cutBigName = "cutRight"
 
 	caxes.dy.old = atom.y
 	caxes.dy.new = natom.y
 	caxes.dy.size = atom.height
-	caxes.dy.cutSmall = atom.cutTop
-	caxes.dy.cutBig = atom.cutBottom
 	caxes.dy.cutSmallName = "cutTop"
 	caxes.dy.cutBigName = "cutBottom"
 
