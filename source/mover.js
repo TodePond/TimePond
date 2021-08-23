@@ -3,81 +3,63 @@ const moverUpdate = (self, world) => {
 	moverMove(self, world, self.dx, self.dy)
 }
 
-const moverMove = (self, world, dx, dy) => {
+const getBlockers = (candidate, axes) => {
 
-	// Reset some game state info
-	self.grounded = false
-	self.slip = undefined
+	const blockers =  {dx: [], dy: []}
 
-	// Make generalised axes info
-	// This help me write axis-independent and direction-independent code
-	const axes = makeAxesInfo(self.x, self.y, dx, dy)
-
-	// Make a list of atoms in this molecule that could POTENTIALLY hit something (ie: not a pure visual)
-	// With each atom, store info about their potential movement
-	const candidates = makeCandidates(self, axes)
-
-	// Make each collision candidate emerge from portals if needed
-	candidates.forEach(candidate => emergeCandidate(candidate, axes))
-
-	const blockers = {dx: [], dy: []}
-
-	//==================================================================//
-	// Find the FIRST atom I would hit if I travel forever in each axis //
-	//==================================================================//
 	for (const axis of axes) {
 		
-		// TODO: this shouldnt be done on the axis state
-		// instead make a new blockers object or something, that has keys for each axis
-		// this would confuse me less i think
-		for (const candidate of candidates) {
+		if (candidate.atom.world === undefined) continue
+		if (candidate.atom.world.atoms === undefined) continue
+
+		const cself = candidate.atom
+		for (const atom of cself.world.atoms) {
 			
-			if (candidate.atom.world === undefined) continue
-			if (candidate.atom.world.atoms === undefined) continue
+			if (atomIsDescendant(cself, atom)) continue
+			if (atomIsDescendant(atom, cself)) continue
+			if (atom.isVisual) continue
+			if (atom === cself) continue
 
-			const cself = candidate.atom
-			for (const atom of cself.world.atoms) {
-				
-				if (atomIsDescendant(cself, atom)) continue
-				if (atomIsDescendant(atom, cself)) continue
-				if (atom.isVisual) continue
-				if (atom === cself) continue
-
-				// Check here for collisions with the inside edge of portals (the wrong way)
-				if (cself.portals[axis.front] !== undefined) {
-					const portal = cself.portals[axis.front]
-					if (atomIsDescendant(atom, portal)) {
-						continue
-					}
+			// Check here for collisions with the inside edge of portals (the wrong way)
+			if (cself.portals[axis.front] !== undefined) {
+				const portal = cself.portals[axis.front]
+				if (atomIsDescendant(atom, portal)) {
+					continue
 				}
-
-				const abounds = getBounds(atom)
-				const bounds = candidate.bounds
-				const nbounds = candidate.nbounds
-				
-				// Do I go PAST this atom?
-				const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
-				const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
-				if (!startsInFront || !endsThrough) continue
-
-				// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
-				let bumps = true
-				const otherAxes = axes.values().filter(a => a !== axis)
-				for (const other of otherAxes) {
-					const reach = [bounds[other.small], bounds[other.big]]
-					const nreach = [nbounds[other.small], nbounds[other.big]]
-					const areach = [abounds[other.small], abounds[other.big]]
-					if (!aligns(reach, nreach, areach)) bumps = false
-				}
-				if (!bumps) continue
-				
-				// Work out the distance to this atom we would crash into
-				// We don't care about it if we already found a NEARER one to crash into :)
-				const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
-				blockers[axis.dname].push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 			}
+
+			const abounds = getBounds(atom)
+			const bounds = candidate.bounds
+			const nbounds = candidate.nbounds
+			
+			// Do I go PAST this atom?
+			const startsInFront = bounds[axis.front]*axis.direction <= abounds[axis.back]*axis.direction
+			const endsThrough = nbounds[axis.front]*axis.direction >= abounds[axis.back]*axis.direction
+			if (!startsInFront || !endsThrough) continue
+
+			// Do I actually BUMP into this atom? (ie: I don't go to the side of it)
+			let bumps = true
+			const otherAxes = axes.values().filter(a => a !== axis)
+			for (const other of otherAxes) {
+				const reach = [bounds[other.small], bounds[other.big]]
+				const nreach = [nbounds[other.small], nbounds[other.big]]
+				const areach = [abounds[other.small], abounds[other.big]]
+				if (!aligns(reach, nreach, areach)) bumps = false
+			}
+			if (!bumps) continue
+			
+			// Work out the distance to this atom we would crash into
+			// We don't care about it if we already found a NEARER one to crash into :)
+			const distance = (abounds[axis.back] - bounds[axis.front]) * axis.direction
+			blockers[axis.dname].push({atom, bounds: abounds, distance, cbounds: bounds, cnbounds: nbounds, candidate})
 		}
 	}
+
+	return blockers
+}
+
+// Orders blockers in-place
+const orderBlockers = (blockers, axes) => {
 
 	// Order the blockers so that portals gets processed LAST
 	// (because they don't really block, do they)
@@ -113,6 +95,34 @@ const moverMove = (self, world, dx, dy) => {
 		//if (axis.blockers.length > 0) print(axis.blockers.map(b => b.distance))
 
 	}
+
+	return blockers
+}
+
+const moverMove = (self, world, dx, dy) => {
+
+	// Reset some game state info
+	self.grounded = false
+	self.slip = undefined
+
+	// Make generalised axes info
+	// This help me write axis-independent and direction-independent code
+	const axes = makeAxesInfo(self.x, self.y, dx, dy)
+
+	// Make a list of atoms in this molecule that could POTENTIALLY hit something (ie: not a pure visual)
+	// With each atom, store info about their potential movement
+	const candidates = makeCandidates(self, axes)
+
+	// Make each collision candidate emerge from portals if needed
+	candidates.forEach(candidate => emergeCandidate(candidate, axes))
+
+	// Find the FIRST atom I would hit if I travel forever in each axis //
+	const candidateBlockers = candidates.map(candidate => getBlockers(candidate, axes))
+	const blockersX = candidateBlockers.map(blocker => blocker.dx).flat(1)
+	const blockersY = candidateBlockers.map(blocker => blocker.dy).flat(1)
+	const blockers = {dx: blockersX, dy: blockersY}
+
+	orderBlockers(blockers, axes)
 
 	//===================================================//
 	// COLLIDE with the closest atoms to me in each axis //
