@@ -12,6 +12,7 @@ const makeWorld = () => {
 	// Debug
 	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200}))
 	addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
+	addAtom(world, makeAtom({...ELEMENT_FROG, y: 50, x: 340}))
 	addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
 
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))

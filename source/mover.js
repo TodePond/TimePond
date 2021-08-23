@@ -140,31 +140,34 @@ const moverMove = (self, world, dx, dy) => {
 	// MOVE to the new position!
 	self.x = axes.dx.new
 	self.y = axes.dy.new
+
 	updateAtomLinks(self)
 
-	//==============================================================//
-	// Handle something getting stopped and moved back into portal! //
-	//==============================================================//
-	for (const candidate of candidates) {
-		const catom = candidate.atom
-		for (const key in catom.portals) {
-			const portal = catom.portals[key]
-			if (portal === undefined) continue
-			const cutName = "cut" + key.as(Capitalised)
-			const back = key
-			const front = getOppositeSideName(back)
-			const cbounds = getBounds(catom)
-			const pbounds = getBounds(portal)
-			if (cbounds[back] === pbounds[front]) continue
-			catom[cutName] -= cbounds[back] - pbounds[front]
-		}
-	}
+	// DODGY FIX! Make sure everything is cut correctly by portals
+	// Comment out these to uncover lots of bugs
+	candidates.forEach(candidate => emergeCandidate(candidate, axes, getBounds(candidate.atom)))
+	candidates.forEach(candidate => remergeCandidate(candidate))
 
 	// Now that I've moved, I can safely rotate without messing anything else up!
 	// ROTATE! (if there is enough room)
 	if (self.nextturns !== 0) {
 		turnAtom(self, self.nextturns, true, true, world)
 		self.nextturns = 0
+	}
+}
+
+const remergeCandidate = (candidate) => {
+	const catom = candidate.atom
+	for (const key in catom.portals) {
+		const portal = catom.portals[key]
+		if (portal === undefined) continue
+		const cutName = "cut" + key.as(Capitalised)
+		const back = key
+		const front = getOppositeSideName(back)
+		const cbounds = getBounds(catom)
+		const pbounds = getBounds(portal)
+		if (cbounds[back] === pbounds[front]) continue
+		catom[cutName] -= cbounds[back] - pbounds[front]
 	}
 }
 
@@ -262,9 +265,8 @@ const makeCandidate = (atom, axes) => {
 
 }
 
-const emergeCandidate = (candidate, axes) => {
+const emergeCandidate = (candidate, axes, nbounds = candidate.bounds) => {
 
-	const nbounds = candidate.nbounds
 	const atom = candidate.atom
 
 	// Go through each of my portals...
