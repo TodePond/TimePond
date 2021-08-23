@@ -36,7 +36,6 @@ const moverMove = (self, world, dx, dy) => {
 	for (const axis of axes) {
 
 		let iveHitSomething = false
-		let iveHitSomethingWithThese = []
 		const oldNew = axis.new //haha 'oldNew'
 		
 		for (const blocker of blockers[axis.dname]) {
@@ -73,8 +72,6 @@ const moverMove = (self, world, dx, dy) => {
 			}
 
 			if (iveHitSomething === true) continue
-			//if (iveHitSomethingWithThese.includes(bself)) continue
-			iveHitSomethingWithThese.push(bself)
 			
 			// SNAP to the surface!
 			const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
@@ -126,11 +123,11 @@ const moverMove = (self, world, dx, dy) => {
 					self.jumpTick = 0
 
 				}
+
+			}
 			
 			// Update other blocker infos maybe? nah they can do it!
 			iveHitSomething = true
-
-			}
 		}
 
 	}
