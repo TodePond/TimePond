@@ -70,8 +70,6 @@ const moverMove = (self, world, dx, dy) => {
 				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
 				if (result === false) continue
 			}
-
-			if (iveHitSomething === true) continue
 			
 			// SNAP to the surface!
 			const newOffset = axis.front === axis.small? -baxis.cutSmall : -baxis.size + baxis.cutBig
@@ -79,9 +77,11 @@ const moverMove = (self, world, dx, dy) => {
 			const snapMovement = baxis.new - baxis.old
 			axis.new = self[axis.name] + snapMovement
 			
+			if (iveHitSomething === true) continue
+
 			// Change ACCELERATIONS!
 			// Moving right or left
-			if (axis === axes.dx) {
+			if (axis === axes.dx) { 
 
 				// 2-way BOUNCE! I think this is the only 2-way collision resolution. I think...
 				atom.nextdx *= 0.5
