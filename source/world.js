@@ -9,8 +9,8 @@ const makeWorld = () => {
 	const right = makeAtom({...ELEMENT_VOID, turns: 1, x: WORLD_WIDTH-ELEMENT_VOID.height})
 	world.atoms = [top, bottom, left, right]
 
-	// Debug
-	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 300}))
+	// TINKERING
+	/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 300}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 50, x: 340}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
@@ -20,7 +20,7 @@ const makeWorld = () => {
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 180}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 240}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 260}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 320}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 320}))*/
 
 	/*addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 290, y: 180}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 290, y: 300}))*/
@@ -31,7 +31,14 @@ const makeWorld = () => {
 	//addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 120, y: 385}))
 	//addAtom(world, makeAtom({...ELEMENT_BOX_DOUBLE, x: 135, y: 160}))
 
-	// chaos test:
+	// MAX SPEED TEST
+
+	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200}))
+
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 360}))
+
+	// CHAOTIC TEST
 	/*
 	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200}))
 	addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
@@ -40,9 +47,13 @@ const makeWorld = () => {
 	
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 400}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
+	
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 240}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 350, y: 400}))
 
 	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 290, y: 170}))
 	*/
+	
 
 	return world
 }
