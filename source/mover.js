@@ -282,7 +282,8 @@ const remergeCandidate = (candidate) => {
 		if (cbounds[back] === pbounds[front]) continue
 		const gap = cbounds[back] - pbounds[front]
 		//gap.d
-		catom[cutName] += cbounds[back] - pbounds[front]
+		const direction = (key === "bottom" || key === "right")? 1 : -1
+		catom[cutName] += (cbounds[back] - pbounds[front]) * direction
 	}
 }
 
