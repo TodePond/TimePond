@@ -65,11 +65,10 @@ const DRAW_IMAGE = (self, context) => {
 	if (self.turns % 2 !== 0) context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
 	else {
 		context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
-		if (ONION_SKIN) {
-			const onionCount = 1
+		if (ONION_SKIN !== 0) {
 			const xDirection = self.flipX? -1 : 1
-			for (let i = 1; i <= onionCount; i++) {
-				context.translate(-self.dx/onionCount * i * xDirection, -self.dy/onionCount * i)
+			for (let i = 1; i <= ONION_SKIN; i++) {
+				context.translate(-self.dx/ONION_SKIN * i * xDirection, -self.dy/ONION_SKIN * i)
 				context.filter = "opacity(50%)"
 				context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
 			}
@@ -533,7 +532,7 @@ const ELEMENT_FROG = {
 	//cutRight: 5,
 	//cutLeft: 10,
 	//cutTop: 10,
-	//showBounds: true,
+	showBounds: FROGGY_BOUNDS,
 }
 
 const ELEMENT_BOX_DOUBLE = {

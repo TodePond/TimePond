@@ -1,7 +1,8 @@
 const URL_QUERY = new URLSearchParams(window.location.search)
 let SPEED_MOD = URL_QUERY.has("speed")? parseFloat(URL_QUERY.get("speed")) : 1
 let PAUSED = URL_QUERY.has("paused")? URL_QUERY.get("paused").as(Boolean) : false
-let ONION_SKIN = URL_QUERY.has("onion")? URL_QUERY.get("onion").as(Boolean) : false
+let FROGGY_BOUNDS = URL_QUERY.has("bounds")? URL_QUERY.get("bounds").as(Boolean) : false
+let ONION_SKIN = URL_QUERY.has("onion")? parseInt(URL_QUERY.get("onion")) : 0
 let STEP = false
 
 //=======//
