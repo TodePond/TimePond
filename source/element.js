@@ -340,7 +340,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 		// Register (or re-register) that I am currently using this portal
 		bself.portals[axis.front] = atom
 		
-		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
+		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: bself, world, axis})
 		
 
 	}
