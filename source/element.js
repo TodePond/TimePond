@@ -63,7 +63,18 @@ const DRAW_IMAGE = (self, context) => {
 
 	// Draw!
 	if (self.turns % 2 !== 0) context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
-	else context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
+	else {
+		context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
+		if (ONION_SKIN) {
+			const onionCount = 1
+			const xDirection = self.flipX? -1 : 1
+			for (let i = 1; i <= onionCount; i++) {
+				context.translate(-self.dx/onionCount * i * xDirection, -self.dy/onionCount * i)
+				context.filter = "opacity(50%)"
+				context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
+			}
+		}
+	}
 	context.restore()
 
 	// Debug: Showing bounding box!
@@ -224,6 +235,7 @@ const PORTAL_MOVE = {
 			variant.update = froggy.world.atoms.includes(froggy)? UPDATE_NONE : froggy.update
 			variant.onPromote = (self) => {
 				self.update = froggy.update
+				self.skipUpdate = true
 			}
 
 			const displacementOther = portal.target[axis.other.name] - portal[axis.other.name]

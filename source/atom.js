@@ -90,7 +90,12 @@ const deepishClone = (value) => {
 // Game Loop //
 //===========//
 const updateAtom = (atom, world) => {
-	atom.update(atom, world)
+	if (atom.skipUpdate === true) {
+		atom.skipUpdate = false
+	}
+	else {
+		atom.update(atom, world)
+	}
 	updateAtomLinks(atom, world)
 }
 
