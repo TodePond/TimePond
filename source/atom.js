@@ -1,6 +1,7 @@
 //=======//
 // Setup //
 //=======//
+let ATOM_ID = 0
 const makeAtom = ({
 	width = 50,
 	height = 50,
@@ -21,6 +22,7 @@ const makeAtom = ({
 	...args
 } = {}) => {
 	const atom = {
+		id: ATOM_ID++,
 		width,
 		height,
 		cutTop,
@@ -56,12 +58,15 @@ const makeAtom = ({
 const cloneAtom = (atom) => {
 	const clone = {}
 	for (const key in atom) {
-		clone[key] = deepishClone(atom[key])
+		clone[key] = deepishCloneAtomProperty(atom[key], key)
 	}
 	return makeAtom(clone)
 }
 
-const deepishClone = (value) => {
+const deepishCloneAtomProperty = (value, key) => {
+	if (key === "id") return ATOM_ID++
+	if (key === "portals") return {top: undefined, bottom: undefined, left: undefined, right: undefined}
+	if (key === "links") return []
 	if (typeof value === "undefined") return value
 	if (typeof value === "string") return value
 	if (typeof value === "number") return value

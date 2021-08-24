@@ -202,8 +202,8 @@ const GRAB_LINKEE = (self, hand, world) => {
 // Portals //
 //=========//
 const PORTAL_VOID = {
-	enter: () => {
-		//print("Enter voidal!")
+	enter: ({froggy}) => {
+		
 	},
 	exit: (atom, world) => {
 		//print("End voidal!")
@@ -236,6 +236,9 @@ const PORTAL_MOVE = {
 				self.update = froggy.update
 				self.skipUpdate = true
 			}
+
+			//variant.portals.d
+			//froggy.portals.d
 
 			const displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
 			let displacement = portal.target[axis.name] - portal[axis.name]
@@ -335,10 +338,10 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 		}
 
 		// Register (or re-register) that I am currently using this portal
-		if (portalIsNew) {
-			bself.portals[axis.front] = atom
-			if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
-		}
+		bself.portals[axis.front] = atom
+		
+		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: self, world, axis})
+		
 
 	}
 
@@ -357,6 +360,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 			return false
 		}
 	}
+	//bself.portals.d
 	
 	if (atom.portal.move !== undefined) atom.portal.move()
 	if (atom.portal.moveIn !== undefined) atom.portal.moveIn()

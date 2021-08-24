@@ -158,21 +158,6 @@ const moverMove = (self, world, dx, dy) => {
 	}
 }
 
-const remergeCandidate = (candidate) => {
-	const catom = candidate.atom
-	for (const key in catom.portals) {
-		const portal = catom.portals[key]
-		if (portal === undefined) continue
-		const cutName = "cut" + key.as(Capitalised)
-		const back = key
-		const front = getOppositeSideName(back)
-		const cbounds = getBounds(catom)
-		const pbounds = getBounds(portal)
-		if (cbounds[back] === pbounds[front]) continue
-		catom[cutName] -= cbounds[back] - pbounds[front]
-	}
-}
-
 const makeAxesInfo = (x, y, dx, dy) => {
 
 	const axes = {
@@ -267,15 +252,50 @@ const makeCandidate = (atom, axes) => {
 
 }
 
+// This cleans up all the merge bugs that exist lol
+/*const autoMergeCandidate = (candidate) => {
+	const catom = candidate.atom
+	for (const key in catom.portals) {
+		const portal = catom.portals[key]
+		if (portal === undefined) continue
+		const cutName = "cut" + key.as(Capitalised)
+		const back = key
+		const front = getOppositeSideName(back)
+		const cbounds = getBounds(catom)
+		const pbounds = getBounds(portal)
+		if (cbounds[back] === pbounds[front]) continue
+		const gap = 
+		catom[cutName] -= cbounds[back] - pbounds[front]
+	}
+}*/
+
+const remergeCandidate = (candidate) => {
+	const catom = candidate.atom
+	for (const key in catom.portals) {
+		const portal = catom.portals[key]
+		if (portal === undefined) continue
+		const cutName = "cut" + key.as(Capitalised)
+		const back = key
+		const front = getOppositeSideName(back)
+		const cbounds = getBounds(catom)
+		const pbounds = getBounds(portal)
+		if (cbounds[back] === pbounds[front]) continue
+		const gap = cbounds[back] - pbounds[front]
+		//gap.d
+		catom[cutName] += cbounds[back] - pbounds[front]
+	}
+}
+
 const emergeCandidate = (candidate, axes, nbounds = candidate.bounds) => {
 
 	const atom = candidate.atom
-
 	// Go through each of my portals...
 	for (const key in atom.portals) {
 		const portal = atom.portals[key]
 		if (portal === undefined) continue
 		const pbounds = getBounds(portal)
+		
+		//print(atom.id, key)
 
 		// I'm only interested in my BACK because I'm EMERGING!
 		for (const axis of axes) {
