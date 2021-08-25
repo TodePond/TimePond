@@ -18,6 +18,26 @@ const DRAW_CIRCLE = (self, context) => {
 const images = {}
 const DRAW_IMAGE = (self, context) => {
 
+	if (self === undefined) return
+
+	/*if (self.previousDraw !== undefined) {
+		let prev = self.previousDraw
+		DRAW_IMAGE(prev, context)
+		//self.trailCount--
+			
+	}
+
+	if (self.trailCount === undefined || self.trailCount < TRAIL_LENGTH) {
+		self.previousDraw = cloneAtom(self)
+		self.previousDraw.trailCount = self.trailCount + 1
+	}
+	else {
+		self.previousDraw = undefined
+	}*/
+
+	//self.previousDraw = cloneAtom(self)
+	//self.previousDraw.previousDraw = undefined
+
 	// Sprite
 	if (images[self.source] === undefined) {
 		const image = new Image()
@@ -39,9 +59,10 @@ const DRAW_IMAGE = (self, context) => {
 
 	// Cuts
 	let {cutRight, cutLeft, cutBottom, cutTop} = self
-	if (self.flipX) [cutLeft, cutRight] = [cutRight, cutLeft]
-	if (self.flipX)  for (let i = 0; i < self.turns; i++) [cutRight, cutTop, cutLeft, cutBottom] = [cutTop, cutLeft, cutBottom, cutRight]
-	if (!self.flipX) for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	//if (self.flipX) [cutLeft, cutRight] = [cutRight, cutLeft]
+	//if (self.flipX)  for (let i = 0; i < self.turns; i++) [cutRight, cutTop, cutLeft, cutBottom] = [cutTop, cutLeft, cutBottom, cutRight]
+	//if (!self.flipX) for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	
 	const cutWidth = cutRight + cutLeft
 	const cutHeight = cutBottom + cutTop
@@ -49,8 +70,8 @@ const DRAW_IMAGE = (self, context) => {
 	// Snippet
 	const snippetX = cutLeft*imageWidthRatio
 	const snippetY = cutTop*imageHeightRatio
-	const snippetWidth = image.width - cutWidth*imageWidthRatio
-	const snippetHeight = image.height - cutHeight*imageHeightRatio
+	const snippetWidth = image.width - (cutLeft*imageWidthRatio + cutRight*imageWidthRatio)
+	const snippetHeight = image.height - (cutTop*imageHeightRatio + cutBottom*imageHeightRatio)
 
 	// Flips and Rotations
 	context.save()
@@ -65,14 +86,14 @@ const DRAW_IMAGE = (self, context) => {
 	if (self.turns % 2 !== 0) context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
 	else {
 		context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
-		if (ONION_SKIN !== 0) {
+		/*if (ONION_SKIN !== 0) {
 			const xDirection = self.flipX? -1 : 1
 			for (let i = 1; i <= ONION_SKIN; i++) {
 				context.translate(-self.dx/ONION_SKIN * i * xDirection, -self.dy/ONION_SKIN * i)
 				context.filter = "opacity(50%)"
 				context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
 			}
-		}
+		}*/
 	}
 	context.restore()
 
@@ -228,6 +249,8 @@ const PORTAL_MOVE = {
 			variant[axis.cutBackName] = variant[axis.sizeName]/* - variant[axis.cutFrontName]*/
 			variant[axis.cutFrontName] = 0
 
+
+
 			variant.portals[axis.front] = undefined
 			variant.portals[axis.back] = portal.target
 			variant.links = []
@@ -252,6 +275,9 @@ const PORTAL_MOVE = {
 			})
 			
 			addAtom(world, variant)
+			//updateAtomLinks(froggy) //TODO: test this code. dangerous
+			
+			//variant.prevBounds = getBounds(variant)
 		}
 	},
 	end: () => {},
@@ -534,7 +560,7 @@ const ELEMENT_FROG = {
 	isMover: true,
 	//cutBottom: 10,
 	//cutRight: 5,
-	//cutLeft: 10,
+	//cutLeft: 20,
 	//cutTop: 10,
 	showBounds: FROGGY_BOUNDS,
 }

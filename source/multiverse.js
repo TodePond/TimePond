@@ -3,6 +3,7 @@ let SPEED_MOD = URL_QUERY.has("speed")? parseFloat(URL_QUERY.get("speed")) : 1
 let PAUSED = URL_QUERY.has("paused")? URL_QUERY.get("paused").as(Boolean) : false
 let FROGGY_BOUNDS = URL_QUERY.has("bounds")? URL_QUERY.get("bounds").as(Boolean) : false
 let ONION_SKIN = URL_QUERY.has("onion")? parseInt(URL_QUERY.get("onion")) : 0
+let TRAIL_LENGTH = URL_QUERY.has("trail")? parseInt(URL_QUERY.get("trail")) : 0
 let STEP = false
 
 //=======//
@@ -96,6 +97,7 @@ const hand = {
 	previous: {x: undefined, y: undefined}
 }
 
+let handStarting = {x: 0, y: 0}
 const CURSOR_SQUEEZE_EFFORT = 100
 const updateCursor = (multiverse, context) => {
 	const [cx, cy] = Mouse.position
@@ -117,6 +119,8 @@ const updateCursor = (multiverse, context) => {
 					if (grabbed !== undefined) {
 						hand.source = world
 						hand.previous = {x: mx, y: my}
+						handStarting.x = mx
+						handStarting.y = my
 					}
 				}
 			}
@@ -128,6 +132,7 @@ const updateCursor = (multiverse, context) => {
 	else {
 
 		// Move it to the dragged position!
+		//hand.atom.prevBounds = getBounds({...hand.atom})
 		moveAtom(hand.atom, x + hand.offset.x, y + hand.offset.y)
 		if (hand.atom.flipX !== undefined) {
 			const mdx = mx - hand.previous.x
@@ -137,11 +142,17 @@ const updateCursor = (multiverse, context) => {
 			const newX = hand.atom.x
 			hand.offset.x += newX-oldX
 		}
+		//REAL
 		hand.atom.dx = (mx - hand.previous.x)
 		hand.atom.dy = (my - hand.previous.y)
+
+		//DEBUG
+		/*hand.atom.dx = (mx - handStarting.x) / 10
+		hand.atom.dy = (my - handStarting.y) / 10*/
+
 		hand.atom.nextdx = hand.atom.dx
 		hand.atom.nextdy = hand.atom.dy
-		hand.jumpTick = 0
+		hand.atom.jumpTick = 0
 
 		/*for (const link of hand.atom.links) {
 			link.atom.dx = (mx - hand.previous.x)

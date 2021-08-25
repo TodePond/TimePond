@@ -86,6 +86,7 @@ const addAtom = (world, atom) => {
 	for (const link of atom.links) {
 		addAtom(world, link.atom)
 	}
+	atom.prevBounds = getBounds(atom)
 	updateAtomLinks(atom)
 }
 

@@ -1,5 +1,6 @@
 
 const moverUpdate = (self, world) => {
+	//self.prevBounds = {...getBounds(self)}
 	moverMove(self, world, self.dx, self.dy)
 }
 

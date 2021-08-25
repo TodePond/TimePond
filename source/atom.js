@@ -64,6 +64,7 @@ const cloneAtom = (atom) => {
 }
 
 const deepishCloneAtomProperty = (value, key) => {
+	if (key === "prevBounds") return undefined
 	if (key === "id") return ATOM_ID++
 	if (key === "portals") return {top: undefined, bottom: undefined, left: undefined, right: undefined}
 	if (key === "links") return []
@@ -99,6 +100,8 @@ const updateAtom = (atom, world) => {
 		atom.skipUpdate = false
 	}
 	else {
+		
+		//atom.prevBounds = getBounds(atom)
 		atom.update(atom, world)
 	}
 	updateAtomLinks(atom, world)
@@ -106,6 +109,7 @@ const updateAtom = (atom, world) => {
 
 const updateAtomLinks = (atom) => {
 	for (const link of atom.links) {
+		//link.atom.prevBounds = getBounds(link.atom)
 		for (const key of LINKED_PROPERTIES) {
 
 			if (link.offset[key] !== undefined) {
@@ -116,8 +120,10 @@ const updateAtomLinks = (atom) => {
 			else {
 				link.atom[key] = atom[key]
 			}
+
 			
 		}
+		
 		updateAtomLinks(link.atom)
 	}
 }
@@ -174,9 +180,9 @@ const flipAtom = (atom) => {
 	atom.flipX = !atom.flipX
 	const [cutLeft, cutRight] = [atom.cutRight, atom.cutLeft]
 	const cutDiff = cutLeft - cutRight
-	atom.cutLeft = cutLeft
-	atom.cutRight = cutRight
-	atom.x -= cutDiff
+	atom.cutLeft = cutRight
+	atom.cutRight = cutLeft
+	//atom.x -= cutDiff
 }
 
 const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
