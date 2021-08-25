@@ -54,8 +54,17 @@ const DRAW_IMAGE = (self, context) => {
 	const boundsHeight = bounds.bottom - bounds.top
 	const boundsDimensionDiff = boundsWidth - boundsHeight
 
-	const centerX = (bounds.right + bounds.left)/2
-	const centerY = (bounds.bottom + bounds.top)/2
+	let centerX = (bounds.right + bounds.left)/2
+	let centerY = (bounds.bottom + bounds.top)/2
+	const centerDiff = centerX - centerY
+
+	if (self.turns === 1) {
+		//centerY += boundsDimensionDiff/2
+	}
+/*	else if (self.turns === 3) {
+		centerY -= boundsDimensionDiff/2
+		centerX -= boundsDimensionDiff/4
+	}*/
 
 	// Cuts
 	let {cutRight, cutLeft, cutBottom, cutTop} = self
@@ -63,15 +72,19 @@ const DRAW_IMAGE = (self, context) => {
 	//if (self.flipX)  for (let i = 0; i < self.turns; i++) [cutRight, cutTop, cutLeft, cutBottom] = [cutTop, cutLeft, cutBottom, cutRight]
 	//if (!self.flipX) for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
-	
+
 	const cutWidth = cutRight + cutLeft
 	const cutHeight = cutBottom + cutTop
 
 	// Snippet
 	const snippetX = cutLeft*imageWidthRatio
 	const snippetY = cutTop*imageHeightRatio
-	const snippetWidth = image.width - (cutLeft*imageWidthRatio + cutRight*imageWidthRatio)
-	const snippetHeight = image.height - (cutTop*imageHeightRatio + cutBottom*imageHeightRatio)
+	const snippetWidth = image.width - cutWidth*imageWidthRatio
+	const snippetHeight = image.height - cutHeight*imageHeightRatio
+
+	const flipWidthRatio = image.height/self.width
+	const flipHeightRatio = image.width/self.height
+
 
 	// Flips and Rotations
 	context.save()
@@ -83,18 +96,23 @@ const DRAW_IMAGE = (self, context) => {
 	}
 
 	// Draw!
-	if (self.turns % 2 !== 0) context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
+	/*if (self.turns % 2 !== 0) {
+		//context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
+		cutLeft.d
+		context.drawImage(image, snippetX, snippetY, snippetWidth+boundsDimensionDiff, snippetHeight-boundsDimensionDiff, bounds.left+boundsDimensionDiff/2, bounds.top-boundsDimensionDiff/2, boundsHeight, boundsWidth)
+	}
 	else {
 		context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
-		/*if (ONION_SKIN !== 0) {
-			const xDirection = self.flipX? -1 : 1
-			for (let i = 1; i <= ONION_SKIN; i++) {
-				context.translate(-self.dx/ONION_SKIN * i * xDirection, -self.dy/ONION_SKIN * i)
-				context.filter = "opacity(50%)"
-				context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
-			}
-		}*/
+	}*/
+
+	if (self.turns % 2 !== 0) {
+		context.drawImage(image, cutLeft*flipWidthRatio, cutTop*flipHeightRatio, image.width - cutLeft*flipWidthRatio - cutRight*flipWidthRatio, image.height - cutTop*flipHeightRatio - cutBottom*flipHeightRatio, bounds.left + boundsDimensionDiff/2, bounds.top - boundsDimensionDiff/2, boundsHeight, boundsWidth)
 	}
+	else {
+		context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
+	}
+
+	//context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
 	context.restore()
 
 	// Debug: Showing bounding box!
@@ -559,7 +577,7 @@ const ELEMENT_FROG = {
 	height: 254/6,
 	isMover: true,
 	//cutBottom: 10,
-	//cutRight: 5,
+	//cutRight: 20,
 	//cutLeft: 20,
 	//cutTop: 10,
 	showBounds: FROGGY_BOUNDS,
