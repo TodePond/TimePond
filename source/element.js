@@ -68,10 +68,10 @@ const DRAW_IMAGE = (self, context) => {
 
 	// Cuts
 	let {cutRight, cutLeft, cutBottom, cutTop} = self
-	//if (self.flipX) [cutLeft, cutRight] = [cutRight, cutLeft]
 	//if (self.flipX)  for (let i = 0; i < self.turns; i++) [cutRight, cutTop, cutLeft, cutBottom] = [cutTop, cutLeft, cutBottom, cutRight]
 	//if (!self.flipX) for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	if (self.flipX) [cutLeft, cutRight] = [cutRight, cutLeft]
 
 	const cutWidth = cutRight + cutLeft
 	const cutHeight = cutBottom + cutTop
