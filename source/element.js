@@ -329,7 +329,7 @@ const PORTAL_MOVE = {
 				}
 
 				const link = linkAtom(froggy, variant, {
-					[axis.other.name]: () => variantStartingPlaceOther - (froggy[axis.name] - froggyStartingPlaceOther) - 1,
+					[axis.other.name]: () => variantStartingPlaceOther - (froggy[axis.name] - froggyStartingPlaceOther) - 1, //TODO: remove need for minus one
 					[axis.name]: () => variantStartingPlace + (froggy[axis.other.name] - froggyStartingPlace),
 					["turns"]: (them, me) => me,
 					["width"]: (them, me) => me,
