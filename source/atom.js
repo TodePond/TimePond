@@ -46,11 +46,22 @@ const makeAtom = ({
 		links: [],
 		...args
 	}
+
+	
+
 	for (const autoLink of autoLinks) {
 		const latom = makeAtom(autoLink.element)
 		linkAtom(atom, latom, autoLink.offset, autoLink.transfer)
 	}
-	if (autoTurn) turnAtom(atom, turns)
+	
+	// Band-aid for old silly arguments idea
+	if (autoTurn) {
+		turnAtom(atom, turns)
+	}
+	else {
+		//atom.turns = turns
+	}
+
 	construct(atom)
 	return atom
 }
@@ -186,6 +197,10 @@ const flipAtom = (atom) => {
 }
 
 const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
+	if (atom.portals.top !== undefined) return false
+	if (atom.portals.bottom !== undefined) return false
+	if (atom.portals.right !== undefined) return false
+	if (atom.portals.left !== undefined) return false
 	if (atom.turns === undefined) atom.turns = 0
 	if (turns === 0) return true
 	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world, exceptions=[])

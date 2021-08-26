@@ -68,10 +68,16 @@ const DRAW_IMAGE = (self, context) => {
 
 	// Cuts
 	let {cutRight, cutLeft, cutBottom, cutTop} = self
-	//if (self.flipX)  for (let i = 0; i < self.turns; i++) [cutRight, cutTop, cutLeft, cutBottom] = [cutTop, cutLeft, cutBottom, cutRight]
-	//if (!self.flipX) for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
-	for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
-	if (self.flipX) [cutLeft, cutRight] = [cutRight, cutLeft]
+	if (!self.flipX) {
+		for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	}
+	if (self.flipX) {
+		for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+		//if (self.turns % 2 !== 0) [cutLeft, cutRight] = [cutRight, cutLeft]
+	}
+	//for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
+	
+	//else if (self.flipX && self.turns % 2 === 0) [cutTop, cutBottom] = [cutBottom, cutTop]
 
 	const cutWidth = cutRight + cutLeft
 	const cutHeight = cutBottom + cutTop
@@ -262,22 +268,14 @@ const PORTAL_MOVE = {
 	enter: ({portal, pbounds, froggy, world, axis, blockers}) => {
 		if (portal.target !== undefined) {
 
+			const fling = portal.target.turns - portal.turns
+			fling.d
+
 			const variant = cloneAtom(froggy)
 			
 			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
 			variant[axis.cutBackName] = size/* - variant[axis.cutFrontName]*/
 			variant[axis.cutFrontName] = 0
-
-			/*print("FROGGY")
-			print("right", froggy["cutRight"])
-			print("left", froggy["cutLeft"])
-			print("top", froggy["cutTop"])
-			print("bottom", froggy["cutBottom"])
-			print("VARIANT")
-			print("right", variant["cutRight"])
-			print("left", variant["cutLeft"])
-			print("top", variant["cutTop"])
-			print("bottom", variant["cutBottom"])*/
 
 			variant.portals[axis.front] = undefined
 			variant.portals[axis.back] = portal.target
@@ -300,10 +298,14 @@ const PORTAL_MOVE = {
 			linkAtom(froggy, variant, {
 				[axis.other.name]: v => v + displacementOther,
 				[axis.name]: v => v + displacement,
+				//["turns"]: (them, me) => me,
+				//["width"]: (them, me) => me,
+				//["height"]: (them, me) => me,
 			})
 			
+			//turnAtom(variant, fling)
+			updateAtomLinks(froggy) //TODO: test this code. dangerous
 			addAtom(world, variant)
-			//updateAtomLinks(froggy) //TODO: test this code. dangerous
 			
 			//variant.prevBounds = getBounds(variant)
 		}
@@ -593,10 +595,10 @@ const ELEMENT_FROG = {
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
 	isMover: true,
+	//cutTop: 10,
 	//cutBottom: 10,
 	//cutRight: 20,
 	//cutLeft: 20,
-	//cutTop: 10,
 	showBounds: FROGGY_BOUNDS,
 }
 
