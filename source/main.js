@@ -14,5 +14,8 @@ on.load(() => {
 
 on.keydown((e) => {
 	if (e.key === " ") PAUSED = !PAUSED
-	else if (e.key === "ArrowRight") STEP = true
+	else if (e.key === "ArrowRight") {
+		STEP = true
+		PAUSED = true
+	}
 })

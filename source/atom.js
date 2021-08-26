@@ -19,6 +19,7 @@ const makeAtom = ({
 	cutLeft = 0,
 	autoLinks = [],
 	construct = () => {},
+	flipX = false,
 	...args
 } = {}, {autoTurn = true} = {}) => {
 	const atom = {
@@ -47,8 +48,10 @@ const makeAtom = ({
 		...args
 	}
 
+	if (flipX) {
+		flipAtom(atom)
+	}
 	
-
 	for (const autoLink of autoLinks) {
 		const latom = makeAtom(autoLink.element)
 		linkAtom(atom, latom, autoLink.offset, autoLink.transfer)
@@ -193,11 +196,20 @@ const moveAtom = (atom, x, y) => {
 
 const flipAtom = (atom) => {
 	atom.flipX = !atom.flipX
-	const [cutLeft, cutRight] = [atom.cutRight, atom.cutLeft]
-	const cutDiff = cutLeft - cutRight
-	atom.cutLeft = cutRight
-	atom.cutRight = cutLeft
-	//atom.x -= cutDiff
+	const [newCutLeft, newCutRight] = [atom.cutRight, atom.cutLeft]
+	
+	atom.cutLeft = newCutLeft
+	atom.cutRight = newCutRight
+	const cutDiff = newCutLeft - newCutRight
+	atom.x -= cutDiff
+
+	//atom.cutBottom.d
+	/*print("")
+	print("FLIPPED")
+	print("cutBottom", atom.cutBottom)
+	print("cutTop", atom.cutTop)
+	print("cutLeft", atom.cutLeft)
+	print("cutRight", atom.cutRight)*/
 }
 
 const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[], overridePortals=false) => {
@@ -229,10 +241,19 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	old.x = atom.x
 	atom.height = width
 	atom.width = height
-	atom.cutBottom = cutRight
-	atom.cutLeft = cutBottom
-	atom.cutTop = cutLeft
-	atom.cutRight = cutTop
+
+	if (!atom.flipX) {
+		atom.cutBottom = cutRight
+		atom.cutLeft = cutBottom
+		atom.cutTop = cutLeft
+		atom.cutRight = cutTop
+	}
+	else {
+		atom.cutBottom = cutLeft
+		atom.cutLeft = cutTop
+		atom.cutTop = cutRight
+		atom.cutRight = cutBottom
+	}
 
 	const oldLinks = new Map()
 	for (const link of atom.links) {
@@ -259,11 +280,20 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 		for (const linkType of ["offset", "transfer"]) {
 			link[linkType].width = oldLink[linkType].height
 			link[linkType].height = oldLink[linkType].width
-			link[linkType].cutBottom = oldLink[linkType].cutRight
-			link[linkType].cutLeft = oldLink[linkType].cutBottom
-			link[linkType].cutTop = oldLink[linkType].cutLeft
-			link[linkType].cutRight = oldLink[linkType].cutTop
-			link[linkType].cutRight = oldLink[linkType].cutTop
+
+			if (!link.atom.flipX) {
+				link[linkType].cutBottom = oldLink[linkType].cutRight
+				link[linkType].cutLeft = oldLink[linkType].cutBottom
+				link[linkType].cutTop = oldLink[linkType].cutLeft
+				link[linkType].cutRight = oldLink[linkType].cutTop
+			}
+			else {
+				link[linkType].cutBottom = oldLink[linkType].cutLeft
+				link[linkType].cutLeft = oldLink[linkType].cutTop
+				link[linkType].cutTop = oldLink[linkType].cutRight
+				link[linkType].cutRight = oldLink[linkType].cutBottom
+			}
+
 			link[linkType].x = oldLink[linkType].y
 			link[linkType].y = oldLink[linkType].x
 			link[linkType].dx = oldLink[linkType].dy
@@ -310,6 +340,14 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 	}
 	atom.turns++
 	if (atom.turns >= 4) atom.turns = 0
+
+
+	/*print("")
+	print("TURNED")
+	print("cutBottom", atom.cutBottom)
+	print("cutTop", atom.cutTop)
+	print("cutLeft", atom.cutLeft)
+	print("cutRight", atom.cutRight)*/
 
 	return true
 }

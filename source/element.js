@@ -72,8 +72,10 @@ const DRAW_IMAGE = (self, context) => {
 		for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	}
 	if (self.flipX) {
+		//;[cutLeft, cutRight] = [cutRight, cutLeft]
+		if (self.turns % 2 === 0) [cutLeft, cutRight] = [cutRight, cutLeft]
+		//if (self.turns % 2 !== 0) [cutTop, cutBottom] = [cutBottom, cutTop]
 		for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
-		//if (self.turns % 2 !== 0) [cutLeft, cutRight] = [cutRight, cutLeft]
 	}
 	//for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	
@@ -300,10 +302,16 @@ const PORTAL_MOVE = {
 				displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
 			}
 			else if (variant.fling === 1) {
-				displacementOther = portal.target[axis.other.name] - froggy[axis.other.name]
-				if (axis.direction === -1) {
+
+				displacementOther = portal.target[axis.other.name] - froggy[axis.other.name].d
+				if (axis.name === "y" && axis.direction === -1) {
 					displacementOther -= variant[axis.cutBackName]
 					displacementOther += portal.target[axis.other.sizeName]
+				}
+				else if (axis.name === "x" && axis.direction.d === 1) {
+					axis.cutFrontName.d
+					froggy.d
+					//displacementOther -= variant[axis.cutBackName]
 				}
 				
 				const positionInPortal = froggy[axis.other.name] - portal[axis.other.name]
@@ -318,8 +326,6 @@ const PORTAL_MOVE = {
 			else {
 				throw new Error(`[TimePond] Invalid fling type ${variant.fling}... Please tell @todepond`)
 			}
-
-
 
 			linkAtom(froggy, variant, {
 				[axis.other.name]: v => v + displacementOther,
@@ -625,7 +631,7 @@ const ELEMENT_FROG = {
 	isMover: true,
 	//cutTop: 10,
 	//cutBottom: 10,
-	//cutRight: 20,
+	cutRight: 20,
 	//cutLeft: 20,
 	showBounds: FROGGY_BOUNDS,
 }
