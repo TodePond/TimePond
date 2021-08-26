@@ -200,18 +200,20 @@ const flipAtom = (atom) => {
 	//atom.x -= cutDiff
 }
 
-const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[]) => {
-	if (atom.portals.top !== undefined) return false
-	if (atom.portals.bottom !== undefined) return false
-	if (atom.portals.right !== undefined) return false
-	if (atom.portals.left !== undefined) return false
+const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, exceptions=[], overridePortals=false) => {
+	if (!overridePortals) {
+		if (atom.portals.top !== undefined) return false
+		if (atom.portals.bottom !== undefined) return false
+		if (atom.portals.right !== undefined) return false
+		if (atom.portals.left !== undefined) return false
+	}
 	if (atom.turns === undefined) atom.turns = 0
 	if (turns === 0) return true
-	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world, exceptions=[])
+	if (turns < 0) return turnAtom(atom, 4+turns, fallSafe, rejectIfOverlap, world, exceptions=[], overridePortals)
 	if (turns > 1) {
-		const result = turnAtom(atom, 1, fallSafe, rejectIfOverlap, world, exceptions=[])
+		const result = turnAtom(atom, 1, fallSafe, rejectIfOverlap, world, exceptions=[], overridePortals)
 		if (!result) return false
-		return turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world, exceptions=[])
+		return turnAtom(atom, turns-1, fallSafe, rejectIfOverlap, world, exceptions=[], overridePortals)
 	}
 	const old = {}
 	const obounds = getBounds(atom)
@@ -270,7 +272,7 @@ const turnAtom = (atom, turns=1, fallSafe=false, rejectIfOverlap=false, world, e
 			link[linkType].nextdy = oldLink[linkType].nextdx
 		}
 
-		turnAtom(link.atom, turns, fallSafe, false, world, exceptions)
+		turnAtom(link.atom, turns, fallSafe, false, world, exceptions, overridePortals)
 
 	}
 

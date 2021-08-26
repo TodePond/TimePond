@@ -38,14 +38,14 @@ const makeWorld = () => {
 	//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 190}))
 	
 	// HORIZ PORTAL
-	/*
+	
 	addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 350, turns: 0}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 100, turns: 1}))
-	*/
+	
 
 	// CHAOTIC TEST
-	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200, turns: 1}))
+	/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200, turns: 1}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 50, x: 340}))
 	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
@@ -56,7 +56,7 @@ const makeWorld = () => {
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 240}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 450, y: 350, turns: 1}))
 
-	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 290, y: 170}))
+	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 290, y: 170}))*/
 	
 	return world
 }

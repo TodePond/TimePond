@@ -268,10 +268,8 @@ const PORTAL_MOVE = {
 	enter: ({portal, pbounds, froggy, world, axis, blockers}) => {
 		if (portal.target !== undefined) {
 
-			const fling = portal.target.turns - portal.turns
-			//fling.d
-
 			const variant = cloneAtom(froggy)
+			variant.fling = portal.target.turns - portal.turns
 			
 			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
 			variant[axis.cutBackName] = size/* - variant[axis.cutFrontName]*/
@@ -306,8 +304,8 @@ const PORTAL_MOVE = {
 			updateAtomLinks(froggy)
 
 			variant.turns = froggy.turns //band-aid because makeAtom doesn't do turns properly
-
-			addAtom(world, variant)
+			addAtom(portal.target.world, variant)
+			turnAtom(variant, variant.fling, false, false, portal.target.world, [], true)
 			
 			//variant.prevBounds = getBounds(variant)
 		}
