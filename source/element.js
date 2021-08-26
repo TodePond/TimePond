@@ -325,7 +325,7 @@ const PORTAL_MOVE = {
 
 				variant.onPromote = (self) => {
 					self.update = froggy.update
-					self.skipUpdate = SVGComponentTransferFunctionElement
+					self.skipUpdate = true
 				}
 
 				const link = linkAtom(froggy, variant, {

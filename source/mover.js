@@ -19,7 +19,7 @@ const moverMove = (self, world, dx, dy) => {
 	const candidates = makeCandidates(self, axes)
 
 	// Make each collision candidate emerge from portals if needed
-	candidates.forEach(candidate => emergeCandidate(candidate, axes))
+	candidates.forEach(candidate => emergeCandidate(candidate, candidate.axes))
 
 	// Find the FIRST atom I would hit if I travel forever in each axis //
 	const candidateBlockers = candidates.map(candidate => getBlockers(candidate, axes))
@@ -148,7 +148,7 @@ const moverMove = (self, world, dx, dy) => {
 
 	// DODGY FIX! Make sure everything is cut correctly by portals
 	// Comment out these to uncover lots of bugs
-	candidates.forEach(candidate => emergeCandidate(candidate, axes, getBounds(candidate.atom)))
+	candidates.forEach(candidate => emergeCandidate(candidate, candidate.axes, getBounds(candidate.atom)))
 	candidates.forEach(candidate => remergeCandidate(candidate))
 
 	// Now that I've moved, I can safely rotate without messing anything else up!
@@ -240,12 +240,20 @@ const makeCandidate = (atom, axes) => {
 	caxes.dx.size = atom.width
 	caxes.dx.cutSmallName = "cutLeft"
 	caxes.dx.cutBigName = "cutRight"
+	caxes.dx.direction = caxes.dx.new > caxes.dx.old? 1 : -1
+	caxes.dx.back = caxes.dx.direction === 1? "left" : "right"
+	caxes.dx.front = caxes.dx.direction === 1? "right" : "left"
+	caxes.dx.cutBackName = "cut" + caxes.dx.back.as(Capitalised)
 
 	caxes.dy.old = atom.y
 	caxes.dy.new = natom.y
 	caxes.dy.size = atom.height
 	caxes.dy.cutSmallName = "cutTop"
 	caxes.dy.cutBigName = "cutBottom"
+	caxes.dy.direction = caxes.dy.new > caxes.dy.old? 1 : -1
+	caxes.dy.back = caxes.dy.direction === 1? "top" : "bottom"
+	caxes.dy.front = caxes.dy.direction === 1? "bottom" : "top"
+	caxes.dy.cutBackName = "cut" + caxes.dy.back.as(Capitalised)
 
 	// Put it all together...
 	const candidate = {
