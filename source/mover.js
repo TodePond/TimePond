@@ -179,6 +179,7 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dx.small = "left"
 	axes.dx.big = "right"
 	axes.dx.sizeName = "width"
+	axes.dx.otherSizeName = "height"
 	axes.dx.direction = dx >= 0? 1 : -1
 	axes.dx.front = axes.dx.direction === 1? axes.dx.big : axes.dx.small
 	axes.dx.back = axes.dx.front === axes.dx.big? axes.dx.small : axes.dx.big
@@ -191,6 +192,7 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dy.small = "top"
 	axes.dy.big = "bottom"
 	axes.dy.sizeName = "height"
+	axes.dy.otherSizeName = "width"
 	axes.dy.direction = dy >= 0? 1 : -1
 	axes.dy.front = axes.dy.direction === 1? axes.dy.big : axes.dy.small
 	axes.dy.back = axes.dy.front === axes.dy.small? axes.dy.big : axes.dy.small
