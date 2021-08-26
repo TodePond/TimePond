@@ -35,7 +35,9 @@ const makeWorld = () => {
 
 	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200}))
 
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 175}))
 	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 360}))
 
 	// CHAOTIC TEST

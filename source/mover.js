@@ -284,9 +284,9 @@ const remergeCandidate = (candidate) => {
 		const pbounds = getBounds(portal)
 		if (cbounds[back] === pbounds[front]) continue
 		const gap = cbounds[back] - pbounds[front]
-		//gap.d
+		
 		const direction = (key === "bottom" || key === "right")? 1 : -1
-		catom[cutName] += (cbounds[back] - pbounds[front]) * direction
+		catom[cutName] += gap * direction
 	}
 }
 

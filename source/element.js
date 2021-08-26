@@ -397,7 +397,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 		
 		const amountInPortal = axis.direction * (nbounds[axis.front] - abounds[axis.back])
 		bself[axis.cutFrontName] += amountInPortal
-		const remainingSize = baxis.size - bself[axis.cutBackName]
+		const remainingSize = baxis.size/* - bself[axis.cutBackName]*/
 		if (bself[axis.cutFrontName] >= remainingSize) {
 			removeAtom(world, bself, {includingChildren: false, destroy: true})
 		}
