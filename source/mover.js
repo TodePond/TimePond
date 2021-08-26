@@ -186,6 +186,8 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dx.other = axes.dy
 	axes.dx.cutFrontName = "cut" + axes.dx.front.as(Capitalised)
 	axes.dx.cutBackName = "cut" + axes.dx.back.as(Capitalised)
+	axes.dx.flingFrontName = axes.dx.direction === 1? "top" : "bottom"
+	axes.dx.flingBackName = axes.dx.direction === 1? "bottom" : "top"
 
 	axes.dy.name = "y"
 	axes.dy.dname = "dy"
@@ -199,6 +201,8 @@ const makeAxesInfo = (x, y, dx, dy) => {
 	axes.dy.other = axes.dx
 	axes.dy.cutFrontName = "cut" + axes.dy.front.as(Capitalised)
 	axes.dy.cutBackName = "cut" + axes.dy.back.as(Capitalised)
+	axes.dy.flingFrontName = axes.dy.direction === 1? "left" : "right"
+	axes.dy.flingBackName = axes.dy.direction === 1? "right" : "left"
 
 	return axes
 }

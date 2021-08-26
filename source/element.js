@@ -277,11 +277,9 @@ const PORTAL_MOVE = {
 			}
 			
 			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
-			variant[axis.cutBackName] = size/* - variant[axis.cutFrontName]*/
+			variant[axis.cutBackName] = size
 			variant[axis.cutFrontName] = 0
 
-			variant.portals[axis.front] = undefined
-			variant.portals[axis.back] = portal.target
 			variant.links = []
 			variant.update = froggy.world.atoms.includes(froggy)? UPDATE_NONE : froggy.update
 			variant.onPromote = (self) => {
@@ -296,26 +294,40 @@ const PORTAL_MOVE = {
 			let displacement = 0
 
 			if (variant.fling === 0) {
+				
+				variant.portals[axis.front] = undefined
+				variant.portals[axis.back] = portal.target
 				displacement = portal.target[axis.name] - portal[axis.name]
 				displacement += portal.target[axis.sizeName] * axis.direction // Go to other side of portal
 				
 				displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
+				
+				const link = linkAtom(froggy, variant, {
+					[axis.other.name]: v => v + displacementOther,
+					[axis.name]: v => v + displacement,
+					["turns"]: (them, me) => me,
+					["width"]: (them, me) => me,
+					["height"]: (them, me) => me,
+				})
 			}
 			else if (variant.fling === 1) {
 
-				displacementOther = portal.target[axis.other.name] - froggy[axis.other.name].d
-				if (axis.name === "y" && axis.direction === -1) {
-					displacementOther -= variant[axis.cutBackName]
-					displacementOther += portal.target[axis.other.sizeName]
-				}
-				else if (axis.name === "x" && axis.direction.d === 1) {
-					axis.cutFrontName.d
-					froggy.d
-					//displacementOther -= variant[axis.cutBackName]
-				}
-				
-				const positionInPortal = froggy[axis.other.name] - portal[axis.other.name]
-				displacement = portal.target[axis.name] - froggy[axis.name] + positionInPortal
+				variant.portals[axis.flingFrontName] = undefined
+				variant.portals[axis.flingBackName] = portal.target
+
+				const variantStartingPlaceOther = portal.target[axis.other.name]
+				const froggyStartingPlaceOther = froggy[axis.name]
+
+				const variantStartingPlace = portal.target[axis.name] + (froggy[axis.other.name] - portal[axis.other.name])
+				const froggyStartingPlace = froggy[axis.other.name]
+
+				const link = linkAtom(froggy, variant, {
+					[axis.other.name]: () => variantStartingPlaceOther - (froggy[axis.name] - froggyStartingPlaceOther),
+					[axis.name]: () => variantStartingPlace - (froggy[axis.other.name] - froggyStartingPlace),
+					["turns"]: (them, me) => me,
+					["width"]: (them, me) => me,
+					["height"]: (them, me) => me,
+				})
 			}
 			else if (variant.fling === 2) {
 				throw new Error(`[TimePond] Unimplemented fling type ${variant.fling}`)
@@ -326,18 +338,10 @@ const PORTAL_MOVE = {
 			else {
 				throw new Error(`[TimePond] Invalid fling type ${variant.fling}... Please tell @todepond`)
 			}
-
-			linkAtom(froggy, variant, {
-				[axis.other.name]: v => v + displacementOther,
-				[axis.name]: v => v + displacement,
-				["turns"]: (them, me) => me,
-				["width"]: (them, me) => me,
-				["height"]: (them, me) => me,
-			})
 			
 			updateAtomLinks(froggy)
-
 			variant.turns = froggy.turns //band-aid because makeAtom doesn't do turns properly
+
 			addAtom(portal.target.world, variant)
 			turnAtom(variant, variant.fling, false, false, portal.target.world, [], true)
 			
@@ -631,7 +635,7 @@ const ELEMENT_FROG = {
 	isMover: true,
 	//cutTop: 10,
 	//cutBottom: 10,
-	cutRight: 20,
+	//cutRight: 20,
 	//cutLeft: 20,
 	showBounds: FROGGY_BOUNDS,
 }

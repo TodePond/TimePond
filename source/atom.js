@@ -161,8 +161,10 @@ const linkAtom = (atom, latom, offset={}, transfer={}) => {
 			trans[key] = (parent, child, key, value=child[key]) => parent[key] = value
 		}
 	}
-	atom.links.push({atom: latom, offset: {...offset}, transfer: trans})
+	const link = {atom: latom, offset: {...offset}, transfer: trans}
+	atom.links.push(link)
 	latom.parent = atom
+	return link
 }
 
 const getDescendentsAndMe = (self) => {
