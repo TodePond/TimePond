@@ -269,7 +269,7 @@ const PORTAL_MOVE = {
 		if (portal.target !== undefined) {
 
 			const fling = portal.target.turns - portal.turns
-			fling.d
+			//fling.d
 
 			const variant = cloneAtom(froggy)
 			
@@ -298,13 +298,15 @@ const PORTAL_MOVE = {
 			linkAtom(froggy, variant, {
 				[axis.other.name]: v => v + displacementOther,
 				[axis.name]: v => v + displacement,
-				//["turns"]: (them, me) => me,
-				//["width"]: (them, me) => me,
-				//["height"]: (them, me) => me,
+				["turns"]: (them, me) => me,
+				["width"]: (them, me) => me,
+				["height"]: (them, me) => me,
 			})
 			
-			//turnAtom(variant, fling)
-			updateAtomLinks(froggy) //TODO: test this code. dangerous
+			updateAtomLinks(froggy)
+
+			variant.turns = froggy.turns //band-aid because makeAtom doesn't do turns properly
+
 			addAtom(world, variant)
 			
 			//variant.prevBounds = getBounds(variant)

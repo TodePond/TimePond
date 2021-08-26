@@ -53,12 +53,16 @@ const makeAtom = ({
 		const latom = makeAtom(autoLink.element)
 		linkAtom(atom, latom, autoLink.offset, autoLink.transfer)
 	}
-	
+
 	// Band-aid for old silly arguments idea
 	if (autoTurn) {
 		turnAtom(atom, turns)
 	}
 	else {
+		// I SHOULD do this
+		// But at this point, I've hardcoded fixes for it everywhere else in the code
+		// so I can't do it now
+		// fix it in TimePond 2
 		//atom.turns = turns
 	}
 
