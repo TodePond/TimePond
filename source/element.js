@@ -264,7 +264,7 @@ const PORTAL_MOVE = {
 
 			const variant = cloneAtom(froggy)
 			
-			const size = (froggy.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
+			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
 			variant[axis.cutBackName] = size/* - variant[axis.cutFrontName]*/
 			variant[axis.cutFrontName] = 0
 
