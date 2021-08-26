@@ -282,10 +282,6 @@ const PORTAL_MOVE = {
 
 			variant.links = []
 			variant.update = froggy.world.atoms.includes(froggy)? UPDATE_NONE : froggy.update
-			variant.onPromote = (self) => {
-				self.update = froggy.update
-				self.skipUpdate = true
-			}
 
 			//variant.portals.d
 			//froggy.portals.d
@@ -302,6 +298,12 @@ const PORTAL_MOVE = {
 				
 				displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
 				
+				
+				variant.onPromote = (self) => {
+					self.update = froggy.update
+					self.skipUpdate = true
+				}
+
 				const link = linkAtom(froggy, variant, {
 					[axis.other.name]: v => v + displacementOther,
 					[axis.name]: v => v + displacement,
@@ -321,12 +323,20 @@ const PORTAL_MOVE = {
 				const variantStartingPlace = portal.target[axis.name] + (froggy[axis.other.name] - portal[axis.other.name])
 				const froggyStartingPlace = froggy[axis.other.name]
 
+				variant.onPromote = (self) => {
+					self.update = froggy.update
+					self.skipUpdate = SVGComponentTransferFunctionElement
+				}
+
 				const link = linkAtom(froggy, variant, {
 					[axis.other.name]: () => variantStartingPlaceOther - (froggy[axis.name] - froggyStartingPlaceOther),
-					[axis.name]: () => variantStartingPlace - (froggy[axis.other.name] - froggyStartingPlace),
+					[axis.name]: () => variantStartingPlace + (froggy[axis.other.name] - froggyStartingPlace),
 					["turns"]: (them, me) => me,
 					["width"]: (them, me) => me,
 					["height"]: (them, me) => me,
+					
+					["nextdx"]: () => -froggy.dy,
+					["nextdy"]: () => froggy.dx,
 				})
 			}
 			else if (variant.fling === 2) {
