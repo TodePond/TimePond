@@ -270,6 +270,9 @@ const PORTAL_MOVE = {
 
 			const variant = cloneAtom(froggy)
 			variant.fling = portal.target.turns - portal.turns
+			while (variant.fling < 0) {
+				variant.fling += 4
+			}
 			
 			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
 			variant[axis.cutBackName] = size/* - variant[axis.cutFrontName]*/
@@ -287,11 +290,36 @@ const PORTAL_MOVE = {
 			//variant.portals.d
 			//froggy.portals.d
 
-			const displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
-			let displacement = portal.target[axis.name] - portal[axis.name]
+			let displacementOther = 0
+			let displacement = 0
 
-			// Move it to the other side of the portal
-			displacement += portal.target[axis.sizeName] * axis.direction
+			if (variant.fling === 0) {
+				displacement = portal.target[axis.name] - portal[axis.name]
+				displacement += portal.target[axis.sizeName] * axis.direction // Go to other side of portal
+				
+				displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
+			}
+			else if (variant.fling === 1) {
+				displacementOther = portal.target[axis.other.name] - froggy[axis.other.name]
+				if (axis.direction === -1) {
+					displacementOther -= variant[axis.cutBackName]
+					displacementOther += portal.target[axis.other.sizeName]
+				}
+				
+				const positionInPortal = froggy[axis.other.name] - portal[axis.other.name]
+				displacement = portal.target[axis.name] - froggy[axis.name] + positionInPortal
+			}
+			else if (variant.fling === 2) {
+				throw new Error(`[TimePond] Unimplemented fling type ${variant.fling}`)
+			}
+			else if (variant.fling === 3) {
+				throw new Error(`[TimePond] Unimplemented fling type ${variant.fling}`)
+			}
+			else {
+				throw new Error(`[TimePond] Invalid fling type ${variant.fling}... Please tell @todepond`)
+			}
+
+
 
 			linkAtom(froggy, variant, {
 				[axis.other.name]: v => v + displacementOther,
