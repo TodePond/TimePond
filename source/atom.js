@@ -20,7 +20,7 @@ const makeAtom = ({
 	autoLinks = [],
 	construct = () => {},
 	...args
-} = {}) => {
+} = {}, {autoTurn = true} = {}) => {
 	const atom = {
 		id: ATOM_ID++,
 		width,
@@ -50,7 +50,7 @@ const makeAtom = ({
 		const latom = makeAtom(autoLink.element)
 		linkAtom(atom, latom, autoLink.offset, autoLink.transfer)
 	}
-	turnAtom(atom, turns)
+	if (autoTurn) turnAtom(atom, turns)
 	construct(atom)
 	return atom
 }
@@ -60,7 +60,7 @@ const cloneAtom = (atom) => {
 	for (const key in atom) {
 		clone[key] = deepishCloneAtomProperty(atom[key], key)
 	}
-	return makeAtom(clone)
+	return makeAtom(clone, {autoTurn: false})
 }
 
 const deepishCloneAtomProperty = (value, key) => {

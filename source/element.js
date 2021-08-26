@@ -264,13 +264,20 @@ const PORTAL_MOVE = {
 
 			const variant = cloneAtom(froggy)
 			
-			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
+			const size = (froggy.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
 			variant[axis.cutBackName] = size/* - variant[axis.cutFrontName]*/
-
 			variant[axis.cutFrontName] = 0
 
-
-
+			/*print("FROGGY")
+			print("right", froggy["cutRight"])
+			print("left", froggy["cutLeft"])
+			print("top", froggy["cutTop"])
+			print("bottom", froggy["cutBottom"])
+			print("VARIANT")
+			print("right", variant["cutRight"])
+			print("left", variant["cutLeft"])
+			print("top", variant["cutTop"])
+			print("bottom", variant["cutBottom"])*/
 
 			variant.portals[axis.front] = undefined
 			variant.portals[axis.back] = portal.target
