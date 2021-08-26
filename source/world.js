@@ -39,7 +39,8 @@ const makeWorld = () => {
 	
 	// HORIZ PORTAL
 	addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200, flipX: true}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_VOID, x: 250, y: 300, turns: 1}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 250, y: 300, turns: 1}))
+	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 100, turns: 1}))
 
 	// CHAOTIC TEST
 	/*

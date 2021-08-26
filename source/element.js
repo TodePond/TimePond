@@ -351,6 +351,13 @@ const COLLIDED_POTION_ROTATE = ({self, atom, world}) => {
 
 const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds, abounds, iveHitSomething}) => {
 	
+	// Only allow going through this portal in the correct axis
+	const portalIsHoriz = atom.turns % 2 === 0
+	const movementIsVert = axis.dname === "dy"
+	if (portalIsHoriz !== movementIsVert) {
+		return true
+	}
+
 	//==================================================//
 	// BUMP edges of portal if I'm NOT going through it //
 	//==================================================//
