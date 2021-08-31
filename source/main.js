@@ -13,7 +13,10 @@ on.load(() => {
 })
 
 on.keydown((e) => {
-	if (e.key === " ") PAUSED = !PAUSED
+	if (e.key === " ") {
+		PAUSED = !PAUSED
+		e.preventDefault()
+	}
 	else if (e.key === "ArrowRight") {
 		STEP = true
 		PAUSED = true

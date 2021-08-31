@@ -35,6 +35,10 @@ const makeWorld = () => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 125}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 250}))
 	}
+	else if (EXPERIMENT_ID === "dimensionfall") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 160}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 300}))
+	}
 	else {
 		// PORTAL FLING 1
 		/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
@@ -91,13 +95,15 @@ const LINKED_PROPERTIES = [
 ]
 
 // TODO!!! These should allow you to NOT bring over specific links. Add a parameter and/or special link properties to cater to this.
-const addAtom = (world, atom) => {
+const addAtom = (world, atom, {ignoreLinks = false} = {}) => {
 	world.atoms.push(atom)
 	atom.world = world // I give up. Lets use state... :(
-	for (const link of atom.links) {
-		addAtom(world, link.atom)
+	if (!ignoreLinks) {
+		for (const link of atom.links) {
+			addAtom(world, link.atom)
+		}
 	}
-	atom.prevBounds = getBounds(atom)
+	//atom.prevBounds = getBounds(atom)
 	updateAtomLinks(atom)
 }
 
@@ -128,20 +134,87 @@ const moveAtomWorld = (atom, world, nworld) => {
 	addAtom(nworld, atom)
 }
 
-const numberWorldAtoms = (world) => {
+const numberAtoms = (atoms) => {
 	let i = 0
-	for (const atom of world.atoms) {
-		atom.world_id = i++
+	for (const atom of atoms) {
+		atom.atom_id = i++
 	}
 }
 
-const cloneWorld = (world) => {
-	numberWorldAtoms(world)
-	const clone_world = makeWorld()
-	for (const atom of world.atoms) {
-		addAtom(clone_world, atom)
+// target (for portals)
+// parent
+// links link.atom
+// portals.top left right bottom
+const betterCloneAtoms = (atoms, new_world) => {
+
+	// Number stuff relatively speaking
+	numberAtoms(atoms)
+	const cloned_atoms = []
+	for (const atom of atoms) {
+		const cloned_atom = {atom_id: atom.atom_id}
+		cloned_atoms[atom.atom_id] = cloned_atom
 	}
-	return clone_world
+
+	for (const atom of atoms) {
+		const cloned_atom = cloned_atoms[atom.atom_id]
+		for (const key in atom) {
+			if (key === "world") {
+				cloned_atom.world = new_world
+				continue
+			}
+			if (key === "id") {
+				cloned_atom.id = ATOM_ID++ //JUST FOR DEBUGGING NOT FOR ANYTHING ELSE
+				continue
+			}
+			if (key === "target" || key === "parent") {
+				if (atoms.includes(atom[key])) {
+					cloned_atom[key] = cloned_atoms[atom[key].atom_id]
+					continue
+				}
+			}
+			if (key === "portals") {
+				cloned_atom[key] = {}
+				for (const subKey in atom[key]) {
+					if (atoms.includes(atom[key][subKey])) {
+						cloned_atom[key][subKey] = cloned_atoms[atom[key][subKey].atom_id]
+					}
+					else {
+						cloned_atom[key][subKey] = atom[key][subKey]
+					}
+				}
+				continue
+			}
+			if (key === "links") {
+				cloned_atom.links = []
+				for (const link of atom.links) {
+					const cloned_link = {}
+					cloned_link.offset = link.offset
+					cloned_link.transfer = link.transfer
+
+					if (atoms.includes(link.atom).d) {
+						cloned_link.atom = cloned_atoms[link.atom.atom_id]
+					}
+					else {
+						cloned_link.atom = link.atom
+					}
+
+					cloned_atom.links.push(cloned_link)
+				}
+				continue
+			}
+
+			cloned_atom[key] = atom[key]
+
+		}
+	}
+	return cloned_atoms
+}
+
+const cloneWorld = (world) => {
+	const cloned_world = makeWorld()
+	const cloned_atoms = betterCloneAtoms(world.atoms, cloned_world)
+	cloned_world.atoms = cloned_atoms
+	return cloned_world
 }
 
 //===========//

@@ -43,7 +43,6 @@ const makeAtom = ({
 		grab,
 		flipX: false,
 		portals: {top: undefined, bottom: undefined, left: undefined, right: undefined},
-		children: [],
 		links: [],
 		...args
 	}
@@ -81,8 +80,9 @@ const cloneAtom = (atom) => {
 	return makeAtom(clone, {autoTurn: false})
 }
 
+
+
 const deepishCloneAtomProperty = (value, key) => {
-	if (key === "prevBounds") return undefined
 	if (key === "id") return ATOM_ID++
 	if (key === "portals") return {top: undefined, bottom: undefined, left: undefined, right: undefined}
 	if (key === "links") return []
