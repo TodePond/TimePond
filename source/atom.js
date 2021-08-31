@@ -188,6 +188,7 @@ const getLink = (child) => {
 	for (const link of parent.links) {
 		if (link.atom === child) return link
 	}
+	throw new Error(`[TimePond] There's an orphan! This shouldn't happen... I haven't made sure that all children have parent links properly :(`)
 }
 
 const moveAtom = (atom, x, y) => {

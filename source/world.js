@@ -27,6 +27,14 @@ const makeWorld = () => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 350, y: 320, turns: 1}))
 		addAtom(world, makeAtom({...ELEMENT_FROG, x: 100, y: 380, flipX: true}))
 	}
+	else if (EXPERIMENT_ID === "dimensionright") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 178, y: 330, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 350, y: 330, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 100, y: 380, flipX: true}))
+		
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 125}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 250}))
+	}
 	else {
 		// PORTAL FLING 1
 		/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
@@ -118,6 +126,22 @@ const removeAtom = (world, atom, {includingChildren = true, destroy = false} = {
 const moveAtomWorld = (atom, world, nworld) => {
 	removeAtom(world, atom)
 	addAtom(nworld, atom)
+}
+
+const numberWorldAtoms = (world) => {
+	let i = 0
+	for (const atom of world.atoms) {
+		atom.world_id = i++
+	}
+}
+
+const cloneWorld = (world) => {
+	numberWorldAtoms(world)
+	const clone_world = makeWorld()
+	for (const atom of world.atoms) {
+		addAtom(clone_world, atom)
+	}
+	return clone_world
 }
 
 //===========//

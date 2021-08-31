@@ -266,6 +266,14 @@ const PORTAL_VOID = {
 	}
 }
 
+const PORTAL_DIMENSION = {
+	enter: (event) => {
+		const clone_world = cloneWorld(event.world)
+		addWorld(multiverse, clone_world)
+		return PORTAL_MOVE.enter(event)
+	}
+}
+
 const PORTAL_MOVE = {
 	enter: ({portal, pbounds, froggy, world, axis, blockers}) => {
 		if (portal.target !== undefined) {
@@ -614,6 +622,13 @@ const ELEMENT_PORTAL_MOVE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_MOVE,
 	colour: Colour.Orange,
+	construct: makePortalTargeter(),
+}
+
+const ELEMENT_PORTAL_DIMENSION = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_DIMENSION,
+	colour: Colour.Blue,
 	construct: makePortalTargeter(),
 }
 
