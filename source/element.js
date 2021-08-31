@@ -266,12 +266,47 @@ const PORTAL_VOID = {
 	}
 }
 
+const PORTAL_PASTLINE = {
+	enter: (event) => {
+		
+		const variant = PORTAL_MOVE.enter(event)
+
+		const clone_world = cloneWorld(event.world.pastProjections[59])
+
+		removeAtom(event.world, variant, {includingChildren: false, destroy: false})
+		addAtom(clone_world, variant, {ignoreLinks: false})
+
+		const clone_portal = clone_world.atoms[event.portal.atom_id]
+		const clone_target = clone_portal.target
+
+		variant.portals[event.axis.back] = clone_target
+
+		/*clone_variant.parent = froggy
+		for (const link of froggy.links) {
+			if (link.atom === variant) {
+				link.atom = clone_variant
+			}
+		}*/
+		
+		//removeAtom(event.world, variant, {includingChildren: false})
+		//removeAtom(clone_world, clone_froggy, {includingChildren: false})
+
+		addWorld(multiverse, clone_world)
+		
+
+		//moveAtomWorld(clone_variant, event.world, clone_world)
+
+
+
+		return
+	}
+}
+
 const PORTAL_DIMENSION = {
 	enter: (event) => {
 		
 
 
-		const variant = PORTAL_MOVE.enter(event)
 
 		const clone_world = cloneWorld(event.world)
 
@@ -279,12 +314,14 @@ const PORTAL_DIMENSION = {
 		const clone_variant = clone_world.atoms[variant.atom_id]
 		const froggy = event.froggy
 
+		const variant = PORTAL_MOVE.enter(event)
 		clone_variant.parent = froggy
 		for (const link of froggy.links) {
 			if (link.atom === variant) {
 				link.atom = clone_variant
 			}
 		}
+		
 		
 		removeAtom(event.world, variant, {includingChildren: false})
 		removeAtom(clone_world, clone_froggy, {includingChildren: false})
@@ -653,6 +690,13 @@ const ELEMENT_PORTAL_DIMENSION = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_DIMENSION,
 	colour: Colour.Blue,
+	construct: makePortalTargeter(),
+}
+
+const ELEMENT_PORTAL_PASTLINE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_PASTLINE,
+	colour: Colour.Yellow,
 	construct: makePortalTargeter(),
 }
 

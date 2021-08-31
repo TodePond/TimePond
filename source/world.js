@@ -2,13 +2,16 @@
 // Setup //
 //=======//
 let hasMadeFirstWorld = false
-const makeWorld = () => {
+const makeWorld = ({isProjection = false} = {}) => {
 	const world = {}
 	const top = makeAtom(ELEMENT_VOID)
 	const bottom = makeAtom({...ELEMENT_VOID, y: WORLD_HEIGHT-ELEMENT_VOID.height})
 	const left = makeAtom({...ELEMENT_VOID, turns: 1})
 	const right = makeAtom({...ELEMENT_VOID, turns: 1, x: WORLD_WIDTH-ELEMENT_VOID.height})
 	world.atoms = [top, bottom, left, right]
+
+	world.pastProjections = []
+	world.isProjection = isProjection
 
 	if (hasMadeFirstWorld) return world
 	hasMadeFirstWorld = true
@@ -30,6 +33,15 @@ const makeWorld = () => {
 	else if (EXPERIMENT_ID === "dimensionright") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 178, y: 330, turns: 1}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 350, y: 330, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 100, y: 380, flipX: true}))
+		
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 125}))
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 250}))
+	}
+	
+	else if (EXPERIMENT_ID === "pastlineright") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 178, y: 330, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 350, y: 330, turns: 1}))
 		addAtom(world, makeAtom({...ELEMENT_FROG, x: 100, y: 380, flipX: true}))
 		
 		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 125}))
@@ -228,6 +240,14 @@ const prepWorld = (world) => {
 }
 
 const updateWorld = (world) => {
+
+	if (!world.isProjection) {
+		const projection = cloneWorld(world)
+		projection.isProjection = true
+		world.pastProjections.unshift(projection)
+		world.pastProjections.length = 60
+	}
+
 	for (const atom of world.atoms) {
 		atom.nextdx = atom.dx
 		atom.nextdy = atom.dy
