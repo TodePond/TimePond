@@ -32,8 +32,8 @@ const makeWorld = () => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 350, y: 330, turns: 1}))
 		addAtom(world, makeAtom({...ELEMENT_FROG, x: 100, y: 380, flipX: true}))
 		
-		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 125}))
-		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 250}))
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 125}))
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 205, y: 250}))
 	}
 	else if (EXPERIMENT_ID === "dimensionfall") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 160}))
@@ -191,7 +191,7 @@ const betterCloneAtoms = (atoms, new_world) => {
 					cloned_link.offset = link.offset
 					cloned_link.transfer = link.transfer
 
-					if (atoms.includes(link.atom).d) {
+					if (atoms.includes(link.atom)) {
 						cloned_link.atom = cloned_atoms[link.atom.atom_id]
 					}
 					else {

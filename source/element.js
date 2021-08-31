@@ -268,9 +268,31 @@ const PORTAL_VOID = {
 
 const PORTAL_DIMENSION = {
 	enter: (event) => {
+		
+
+
+		const variant = PORTAL_MOVE.enter(event)
+
 		const clone_world = cloneWorld(event.world)
+
+		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
+		const clone_variant = clone_world.atoms[variant.atom_id]
+		const froggy = event.froggy
+
+		clone_variant.parent = froggy
+		for (const link of froggy.links) {
+			if (link.atom === variant) {
+				link.atom = clone_variant
+			}
+		}
+		
+		removeAtom(event.world, variant, {includingChildren: false})
+		removeAtom(clone_world, clone_froggy, {includingChildren: false})
+
 		addWorld(multiverse, clone_world)
-		return PORTAL_MOVE.enter(event)
+
+
+		return
 	}
 }
 
@@ -364,6 +386,8 @@ const PORTAL_MOVE = {
 			turnAtom(variant, variant.fling, false, false, portal.target.world, [], true)
 			
 			//variant.prevBounds = getBounds(variant)
+
+			return variant
 		}
 	},
 	end: () => {},
