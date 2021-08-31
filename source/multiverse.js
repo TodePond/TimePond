@@ -4,6 +4,7 @@ let PAUSED = URL_QUERY.has("paused")? URL_QUERY.get("paused").as(Boolean) : fals
 let FROGGY_BOUNDS = URL_QUERY.has("bounds")? URL_QUERY.get("bounds").as(Boolean) : false
 let ONION_SKIN = URL_QUERY.has("onion")? parseInt(URL_QUERY.get("onion")) : 0
 let TRAIL_LENGTH = URL_QUERY.has("trail")? parseInt(URL_QUERY.get("trail")) : 0
+let EXPERIMENT_ID = URL_QUERY.has("experiment")? URL_QUERY.get("experiment") : "headpoke"
 let STEP = false
 
 //=======//

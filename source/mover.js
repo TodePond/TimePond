@@ -103,7 +103,6 @@ const moverMove = (self, world, dx, dy) => {
 				if (axis.direction === 1) {
 
 					// I'm on the ground!
-					self.nextdy = atom.dy
 					if (self.slip !== undefined) self.nextdx *= self.slip
 					else self.nextdx *= UPDATE_MOVER_FRICTION
 					self.grounded = true

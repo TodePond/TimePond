@@ -1,6 +1,7 @@
 //=======//
 // Setup //
 //=======//
+let hasMadeFirstWorld = false
 const makeWorld = () => {
 	const world = {}
 	const top = makeAtom(ELEMENT_VOID)
@@ -9,60 +10,53 @@ const makeWorld = () => {
 	const right = makeAtom({...ELEMENT_VOID, turns: 1, x: WORLD_WIDTH-ELEMENT_VOID.height})
 	world.atoms = [top, bottom, left, right]
 
-	// TINKERING
-	/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 300}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 50, x: 340}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
-
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 400}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 180}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 240}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 260}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 320}))*/
-
-	/*addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 290, y: 180}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 290, y: 300}))*/
-
-	//addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 300, y: 180}))
-
-	//addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 100, y: 370}))
-	//addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 120, y: 385}))
-	//addAtom(world, makeAtom({...ELEMENT_BOX_DOUBLE, x: 135, y: 160}))
-
-	//
-
-	//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))
-	//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
-	//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 190}))
+	if (hasMadeFirstWorld) return world
+	hasMadeFirstWorld = true
 	
-	// PORTAL FLING 1
-	addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, x: 135, y: 380, flipX: false}))
-	addAtom(world, makeAtom({...ELEMENT_LILYPAD, x: 120, y: 475, flipX: false}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 350, turns: 0}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 100, turns: 1}))
-	
-	//addAtom(world, makeAtom({...ELEMENT_FROG, x: 260, y: 440, flipX: true}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, x: 380, y: 440, flipX: false}))
-	//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 350, y: 320, turns: 3}))
-	//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 340, y: 240}))
-	
+	if (EXPERIMENT_ID === "freefall") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 300}))
+	}
+	else if (EXPERIMENT_ID === "headpoke") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 150}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 175, y: 380, flipX: false}))
+	}
+	else if (EXPERIMENT_ID === "jumpright") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 182, y: 320, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 350, y: 320, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 100, y: 380, flipX: true}))
+	}
+	else {
+		// PORTAL FLING 1
+		/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 135, y: 380, flipX: false}))
+		addAtom(world, makeAtom({...ELEMENT_LILYPAD, x: 120, y: 475, flipX: false}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 350, turns: 0}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 400, y: 150, turns: 1}))
+		*/
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 260, y: 440, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 380, y: 440, flipX: false}))
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 350, y: 320, turns: 3}))
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 340, y: 240}))
+		
 
-	// CHAOTIC TEST
-	/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200, turns: 1}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 50, x: 340}))
-	//addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
-	
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 400}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
-	
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 240}))
-	addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 450, y: 350, turns: 1}))
+		// CHAOTIC TEST
+		/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 120, y: 200, turns: 1}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, y: 100, x: 180}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, y: 50, x: 340}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, y: 400}))
+		
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 400}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
+		
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 240}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 450, y: 350, turns: 1}))
 
-	addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 290, y: 170}))*/
+		addAtom(world, makeAtom({...ELEMENT_PLATFORM, x: 290, y: 170}))*/
+	
+	}
+	
 	
 	return world
 }
