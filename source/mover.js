@@ -218,11 +218,18 @@ const makeCandidates = (self, axes) => {
 // it can still be manually edited though! woo
 const makeCandidate = (atom, axes) => {
 	
+	//print(atom.fling)
+
 	// This is what the new atom WOULD be after moving (if it doesn't hit anything)
 	const natom = {
 		...atom,
 		x: atom.x + axes.dx.value,
 		y: atom.y + axes.dy.value,
+	}
+
+	if (atom.fling === 1) {
+		natom.x = atom.x - axes.dy.value
+		natom.y = atom.y + axes.dx.value
 	}
 
 	// Current bounds and new bounds

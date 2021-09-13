@@ -12,8 +12,10 @@ let STEP = false
 //=======//
 const makeMultiverse = () => {
 	const multiverse = {}
-	multiverse.worlds = [makeWorld()]
+	multiverse.worlds = []
 	multiverse.void = {atoms: []}
+	const world = makeWorld()
+	addWorld(multiverse, world)
 
 	// Menu
 	addMenuElement(ELEMENT_FROG, multiverse)
@@ -72,8 +74,10 @@ const makeMultiverseCanvas = (multiverse) => {
 //=====//
 // API //
 //=====//
+let worldCount = 0
 const addWorld = (multiverse, world) => {
 	multiverse.worlds.push(world)
+	world.id = worldCount++
 	trigger("resize")
 }
 

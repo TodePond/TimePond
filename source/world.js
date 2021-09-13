@@ -15,8 +15,37 @@ const makeWorld = ({isProjection = false} = {}) => {
 
 	if (hasMadeFirstWorld) return world
 	hasMadeFirstWorld = true
-	
-	if (EXPERIMENT_ID === "freefall") {
+
+	if (EXPERIMENT_ID === "empty") {
+
+	}
+	else if (EXPERIMENT_ID === "simpleport") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 150}))
+	}
+	else if (EXPERIMENT_ID === "fling") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		/*
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 400, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 150, turns: 1}))
+		*/
+		
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 460}))
+		//addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 400, y: 150, turns: 1}))
+		
+	}
+	else if (EXPERIMENT_ID === "simplepastline") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 100, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 150}))
+	}
+	else if (EXPERIMENT_ID === "simpledimension") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 100, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 150}))
+	}
+	else if (EXPERIMENT_ID === "freefall") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 300}))
 	}
@@ -50,6 +79,10 @@ const makeWorld = ({isProjection = false} = {}) => {
 	else if (EXPERIMENT_ID === "dimensionfall") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 160}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 300}))
+	}
+	else if (EXPERIMENT_ID === "pastlinefall") {
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 160}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 300}))
 	}
 	else {
 		// PORTAL FLING 1
@@ -170,17 +203,30 @@ const betterCloneAtoms = (atoms, new_world) => {
 	for (const atom of atoms) {
 		const cloned_atom = cloned_atoms[atom.atom_id]
 		for (const key in atom) {
+			if (key === "atom_id") {
+				continue
+			}
 			if (key === "world") {
 				cloned_atom.world = new_world
 				continue
 			}
 			if (key === "id") {
-				cloned_atom.id = ATOM_ID++ //JUST FOR DEBUGGING NOT FOR ANYTHING ELSE
+				//cloned_atom.id = ATOM_ID++ //JUST FOR DEBUGGING NOT FOR ANYTHING ELSE
 				continue
 			}
 			if (key === "target" || key === "parent") {
 				if (atoms.includes(atom[key])) {
 					cloned_atom[key] = cloned_atoms[atom[key].atom_id]
+					continue
+				}
+				const a = atom[key]
+				if (a === undefined) {
+					cloned_atom[key] = undefined
+					continue
+				}
+				if (!a.world.atoms.includes(a)) {
+					cloned_atom[key] = undefined
+					if (key === "parent" && cloned_atom.onPromote !== undefined) cloned_atom.onPromote(cloned_atom)
 					continue
 				}
 			}
@@ -203,14 +249,20 @@ const betterCloneAtoms = (atoms, new_world) => {
 					cloned_link.offset = link.offset
 					cloned_link.transfer = link.transfer
 
-					if (atoms.includes(link.atom)) {
+					if (atoms[link.atom.atom_id] === link.atom) {
 						cloned_link.atom = cloned_atoms[link.atom.atom_id]
+						//cloned_link.atom = link.atom
+						cloned_atom.links.push(cloned_link)
 					}
 					else {
 						cloned_link.atom = link.atom
+						const a = cloned_link.atom
+						if (a.world.atoms.includes(a)) {
+							cloned_atom.links.push(cloned_link)
+						}
 					}
 
-					cloned_atom.links.push(cloned_link)
+					
 				}
 				continue
 			}
@@ -219,6 +271,9 @@ const betterCloneAtoms = (atoms, new_world) => {
 
 		}
 	}
+
+
+
 	return cloned_atoms
 }
 
@@ -226,6 +281,7 @@ const cloneWorld = (world) => {
 	const cloned_world = makeWorld()
 	const cloned_atoms = betterCloneAtoms(world.atoms, cloned_world)
 	cloned_world.atoms = cloned_atoms
+	cloned_world.id = world.id
 	return cloned_world
 }
 
@@ -239,13 +295,20 @@ const prepWorld = (world) => {
 	}
 }
 
+const savePastProjection = (world) => {
+	const projection = cloneWorld(world)
+	projection.isProjection = true
+	world.pastProjections.unshift(projection)
+	world.pastProjections.length = 60
+}
+
 const updateWorld = (world) => {
 
 	if (!world.isProjection) {
-		const projection = cloneWorld(world)
-		projection.isProjection = true
-		world.pastProjections.unshift(projection)
-		world.pastProjections.length = 60
+		if (world.projection_skip > 0) {
+			world.projection_skip--
+		}
+		else savePastProjection(world)
 	}
 
 	for (const atom of world.atoms) {

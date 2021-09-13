@@ -73,7 +73,7 @@ const DRAW_IMAGE = (self, context) => {
 	}
 	if (self.flipX) {
 		//;[cutLeft, cutRight] = [cutRight, cutLeft]
-		if (self.turns % 2 === 0) [cutLeft, cutRight] = [cutRight, cutLeft]
+		if (self.turns % 2 !== 0) [cutLeft, cutRight] = [cutRight, cutLeft]
 		//if (self.turns % 2 !== 0) [cutTop, cutBottom] = [cutBottom, cutTop]
 		for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	}
@@ -269,17 +269,28 @@ const PORTAL_VOID = {
 const PORTAL_PASTLINE = {
 	enter: (event) => {
 		
-		const variant = PORTAL_MOVE.enter(event)
+		const projection = event.world.pastProjections[30]
 
-		const clone_world = cloneWorld(event.world.pastProjections[59])
+		//print(projection.id)
 
-		removeAtom(event.world, variant, {includingChildren: false, destroy: false})
-		addAtom(clone_world, variant, {ignoreLinks: false})
-
+		const clone_world = cloneWorld(projection)
+		savePastProjection(clone_world)
+		clone_world.projection_skip = 1
+		
 		const clone_portal = clone_world.atoms[event.portal.atom_id]
 		const clone_target = clone_portal.target
+		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
 
-		variant.portals[event.axis.back] = clone_target
+		addWorld(multiverse, clone_world)
+		const variant = PORTAL_MOVE.enter(event, {target: clone_target})
+		
+		//clone_froggy.d
+		//event.froggy.links[0].atom.d
+
+		//removeAtom(event.world, variant, {includingChildren: false, destroy: false})
+		//addAtom(clone_world, variant, {ignoreLinks: false})
+
+		//variant.portals[event.axis.back] = clone_target
 
 		/*clone_variant.parent = froggy
 		for (const link of froggy.links) {
@@ -289,9 +300,8 @@ const PORTAL_PASTLINE = {
 		}*/
 		
 		//removeAtom(event.world, variant, {includingChildren: false})
-		//removeAtom(clone_world, clone_froggy, {includingChildren: false})
+		//removeAtom(clone_world, clone_froggy)
 
-		addWorld(multiverse, clone_world)
 		
 
 		//moveAtomWorld(clone_variant, event.world, clone_world)
@@ -309,24 +319,26 @@ const PORTAL_DIMENSION = {
 
 
 		const clone_world = cloneWorld(event.world)
+		addWorld(multiverse, clone_world)
+		
+		const clone_portal = clone_world.atoms[event.portal.atom_id]
+		const clone_target = clone_portal.target
 
+		const variant = PORTAL_MOVE.enter(event, {target: clone_target})
 		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
 		const clone_variant = clone_world.atoms[variant.atom_id]
 		const froggy = event.froggy
 
-		const variant = PORTAL_MOVE.enter(event)
-		clone_variant.parent = froggy
+		/*clone_variant.parent = froggy
 		for (const link of froggy.links) {
 			if (link.atom === variant) {
 				link.atom = clone_variant
 			}
-		}
+		}*/
 		
-		
-		removeAtom(event.world, variant, {includingChildren: false})
+		//removeAtom(event.world, variant, {includingChildren: false})
 		removeAtom(clone_world, clone_froggy, {includingChildren: false})
 
-		addWorld(multiverse, clone_world)
 
 
 		return
@@ -334,14 +346,15 @@ const PORTAL_DIMENSION = {
 }
 
 const PORTAL_MOVE = {
-	enter: ({portal, pbounds, froggy, world, axis, blockers}) => {
-		if (portal.target !== undefined) {
+	enter: ({portal, pbounds, froggy, world, axis, blockers}, {target = portal.target} = {}) => {
+		if (target !== undefined) {
 
 			const variant = cloneAtom(froggy)
-			variant.fling = portal.target.turns - portal.turns
+			variant.fling = target.turns - portal.turns
 			while (variant.fling < 0) {
 				variant.fling += 4
 			}
+			//if (variant.fling === 3) variant.fling = 1
 			
 			const size = (variant.turns % 2 === 0)? variant[axis.sizeName] : variant[axis.otherSizeName]
 			variant[axis.cutBackName] = size
@@ -359,16 +372,17 @@ const PORTAL_MOVE = {
 			if (variant.fling === 0) {
 				
 				variant.portals[axis.front] = undefined
-				variant.portals[axis.back] = portal.target
-				displacement = portal.target[axis.name] - portal[axis.name]
-				displacement += portal.target[axis.sizeName] * axis.direction // Go to other side of portal
+				variant.portals[axis.back] = target
+				displacement = target[axis.name] - portal[axis.name]
+				displacement += target[axis.sizeName] * axis.direction // Go to other side of portal
 				
-				displacementOther = portal.target[axis.other.name] - portal[axis.other.name]
+				displacementOther = target[axis.other.name] - portal[axis.other.name]
 				
 				
 				variant.onPromote = (self) => {
 					self.update = froggy.update
 					self.skipUpdate = true
+					self.fling = undefined
 				}
 
 				const link = linkAtom(froggy, variant, {
@@ -382,19 +396,21 @@ const PORTAL_MOVE = {
 			else if (variant.fling === 1) {
 
 				variant.portals[axis.flingFrontName] = undefined
-				variant.portals[axis.flingBackName] = portal.target
+				variant.portals[axis.flingBackName] = target
 
-				const variantStartingPlaceOther = portal.target[axis.other.name]
+				const variantStartingPlaceOther = target[axis.other.name]
 				const froggyStartingPlaceOther = portal[axis.name] - froggy[axis.sizeName]
 
-				const variantStartingPlace = portal.target[axis.name] + (froggy[axis.other.name] - portal[axis.other.name])
+				const variantStartingPlace = target[axis.name] + (froggy[axis.other.name] - portal[axis.other.name])
 				const froggyStartingPlace = froggy[axis.other.name]
 
 				variant.onPromote = (self) => {
 					self.update = froggy.update
 					self.skipUpdate = true
+					self.fling = undefined
 				}
 
+				const flipXDirection = froggy.flipX? -1 : 1
 				const link = linkAtom(froggy, variant, {
 					[axis.other.name]: () => variantStartingPlaceOther - (froggy[axis.name] - froggyStartingPlaceOther) - 1, //TODO: remove need for minus one
 					[axis.name]: () => variantStartingPlace + (froggy[axis.other.name] - froggyStartingPlace),
@@ -416,11 +432,13 @@ const PORTAL_MOVE = {
 				throw new Error(`[TimePond] Invalid fling type ${variant.fling}... Please tell @todepond`)
 			}
 			
+			const flipXDirection = froggy.flipX? -1 : 1
 			updateAtomLinks(froggy)
 			variant.turns = froggy.turns //band-aid because makeAtom doesn't do turns properly
+			
 
-			addAtom(portal.target.world, variant)
-			turnAtom(variant, variant.fling, false, false, portal.target.world, [], true)
+			addAtom(target.world, variant)
+			turnAtom(variant, variant.fling * flipXDirection, false, false, target.world, [], true)
 			
 			//variant.prevBounds = getBounds(variant)
 
@@ -539,6 +557,7 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 			bself[axis.cutFrontName] = 0
 			return false
 		}
+		
 	}
 	//bself.portals.d
 	
