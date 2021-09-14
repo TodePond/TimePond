@@ -37,6 +37,14 @@ const makeWorld = ({isProjection = false} = {}) => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 400, y: 150, turns: 1}))
 		
 	}
+	else if (EXPERIMENT_ID === "pastlinefling") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 100, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 400, y: 150, turns: 1}))
+		
+	}
 	else if (EXPERIMENT_ID === "simplepastline") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 100, y: 360}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 150}))

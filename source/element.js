@@ -266,6 +266,12 @@ const PORTAL_VOID = {
 	}
 }
 
+const PORTAL_PASTNOWLINE = {
+	enter: (event) => {
+		return PORTAL_PASTLINE.enter(event)
+	},
+}
+
 const PORTAL_PASTLINE = {
 	enter: (event) => {
 		
@@ -282,7 +288,9 @@ const PORTAL_PASTLINE = {
 		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
 
 		addWorld(multiverse, clone_world)
-		const variant = PORTAL_MOVE.enter(event, {target: clone_target})
+		PORTAL_MOVE.enter(event, {target: clone_target})
+
+		clone_froggy.variantParent = event.froggy
 		
 		//clone_froggy.d
 		//event.froggy.links[0].atom.d
@@ -420,6 +428,9 @@ const PORTAL_MOVE = {
 					
 					["nextdx"]: () => -froggy.dy,
 					["nextdy"]: () => froggy.dx,
+					
+					["dx"]: () => -froggy.dy,
+					["dy"]: () => froggy.dx,
 				})
 			}
 			else if (variant.fling === 2) {
@@ -681,7 +692,7 @@ const ELEMENT_LILYPAD = {
 const ELEMENT_PORTAL_VOID = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_VOID,
-	colour: Colour.Purple,
+	colour: Colour.White,
 }
 
 const makePortalTargeter = () => {
@@ -716,6 +727,13 @@ const ELEMENT_PORTAL_PASTLINE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_PASTLINE,
 	colour: Colour.Yellow,
+	construct: makePortalTargeter(),
+}
+
+const ELEMENT_PORTAL_PASTNOWLINE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_PASTNOWLINE,
+	colour: Colour.Purple,
 	construct: makePortalTargeter(),
 }
 
