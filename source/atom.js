@@ -190,7 +190,9 @@ const getLink = (child) => {
 	}
 	//print(child.world.id)
 	//print(parent.world.id)
+	print("orphan in world", child.world.id)
 	throw new Error(`[TimePond] There's an orphan! This shouldn't happen... I haven't made sure that all children have parent links properly :(`)
+	
 }
 
 const moveAtom = (atom, x, y) => {

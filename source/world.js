@@ -54,6 +54,15 @@ const makeWorld = ({isProjection = false} = {}) => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 400, y: 150, turns: 1}))
 		
 	}
+	else if (EXPERIMENT_ID === "pastnowlinefling") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 100, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 400, y: 150, turns: 1}))
+		
+	}
 	else if (EXPERIMENT_ID === "simplepastline") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 100, y: 360}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 150}))
@@ -203,6 +212,8 @@ const numberAtoms = (atoms) => {
 	}
 }
 
+// THIS FUNCTION IS TOTALLY BROKEN
+// AVOID AT ALL COSTS
 // target (for portals)
 // parent
 // links link.atom
@@ -320,12 +331,23 @@ const savePastProjection = (world) => {
 }
 
 const saveFutureProjection = (world) => {
+	//world.futureProjections = []
 	const projection = cloneWorld(world)
 	projection.isProjection = true
 	world.futureProjection = projection
 	for (let i = 0; i < 30; i++) {
-		updateWorld(projection)
+		//const p = cloneWorld(world.futureProjection)
+		//p.isProjection = true
+		const p = world.futureProjection
+		updateWorld(p)
+		prepWorld(p)
+		//world.futureProjection = p
 	}
+}
+
+const fullUpdateWorld = (world) => {
+	updateWorld(world)
+	prepWorld(world)
 }
 
 const updateWorld = (world) => {
@@ -337,9 +359,20 @@ const updateWorld = (world) => {
 		else {
 			savePastProjection(world)
 		}
+		//print("update real", world.id)
 
-		saveFutureProjection(world)
-
+	}
+	
+	if (!world.isProjection && world.atoms.some(a => a.requiresFutureProjections)) {
+		if (world.futureProjection === undefined || !world.futureProjection.isProjection) {
+			saveFutureProjection(world)
+			print("save", world.id)
+		}
+		else {
+			saveFutureProjection(world)
+			//fullUpdateWorld(world.futureProjection)
+			//print("update", world.id)
+		}
 	}
 
 	for (const atom of world.atoms) {
@@ -365,8 +398,13 @@ const drawWorld = (world, context, colourBackground = true) => {
 		context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 	}
 
-	for (const atom of world.atoms) {
-		drawAtom(atom, context)
+	//if (world.pastProjections === undefined) return
+	//const projection = world.pastProjections[30]
+	const projection = world
+	if (projection !== undefined) {
+		for (const atom of projection.atoms) {
+			drawAtom(atom, context)
+		}
 	}
 
 }

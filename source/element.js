@@ -269,14 +269,69 @@ const PORTAL_VOID = {
 
 const PORTAL_PASTNOWLINE = {
 	enter: (event) => {
-		return PORTAL_PASTLINE.enter(event)
-	},
+		
+		const projection = event.world.pastProjections[30]
+
+		
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+		
+		//print(projection.id)
+
+		const clone_world = cloneWorld(projection)
+		savePastProjection(clone_world)
+		clone_world.projection_skip = 1
+		
+		const clone_portal = clone_world.atoms[event.portal.atom_id]
+		const clone_target = clone_portal.target
+		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
+
+		if (!event.world.isProjection) {
+			addWorld(multiverse, clone_world)
+		}
+		PORTAL_MOVE.enter(event, {target: clone_target})
+
+		clone_froggy.variantParent = event.froggy
+		
+		//clone_froggy.d
+		//event.froggy.links[0].atom.d
+
+		//removeAtom(event.world, variant, {includingChildren: false, destroy: false})
+		//addAtom(clone_world, variant, {ignoreLinks: false})
+
+		//variant.portals[event.axis.back] = clone_target
+
+		/*clone_variant.parent = froggy
+		for (const link of froggy.links) {
+			if (link.atom === variant) {
+				link.atom = clone_variant
+			}
+		}*/
+		
+		//removeAtom(event.world, variant, {includingChildren: false})
+		//removeAtom(clone_world, clone_froggy)
+
+		
+
+		//moveAtomWorld(clone_variant, event.world, clone_world)
+
+
+
+		return
+	}
 }
 
 
 const PORTAL_FUTURELINE = {
 	enter: (event) => {
-		
+
+		if (event.world.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
 		const projection = event.world.futureProjection
 
 		if (projection === undefined) {
@@ -286,6 +341,8 @@ const PORTAL_FUTURELINE = {
 
 		const clone_world = projection
 		projection.isProjection = false
+		event.world.futureProjection = undefined
+		saveFutureProjection(event.world)
 		//savePastProjection(clone_world)
 		/*clone_world.projection_skip = 1*/
 		
@@ -293,11 +350,14 @@ const PORTAL_FUTURELINE = {
 		const clone_target = clone_portal.target
 		const clone_froggy = clone_world.atoms.find(a => a.atom_id === event.froggy.atom_id)
 
-		if (!event.world.isProjection) {
-			addWorld(multiverse, clone_world)
-		}
+		print(event.world.isProjection, event.world.id)
+		addWorld(multiverse, clone_world)
+		
 		PORTAL_MOVE.enter(event, {target: clone_target})
 
+		
+		//event.world.futureProjection = undefined
+		//saveFutureProjection(event.world)
 		//if (clone_froggy != undefined) clone_froggy.variantParent = event.froggy
 		//else print(clone_froggy)
 		
@@ -318,6 +378,12 @@ const PORTAL_PASTLINE = {
 	enter: (event) => {
 		
 		const projection = event.world.pastProjections[30]
+
+		
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
 
 		//print(projection.id)
 
@@ -368,6 +434,11 @@ const PORTAL_DIMENSION = {
 	enter: (event) => {
 		
 
+		
+		if (event.world.isProjection) {
+			//PORTAL_VOID.enter(event) 
+			return
+		}
 
 
 		const clone_world = cloneWorld(event.world)
@@ -800,6 +871,7 @@ const ELEMENT_PORTAL_FUTURELINE = {
 	portal: PORTAL_FUTURELINE,
 	colour: Colour.Red,
 	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
 }
 
 const ELEMENT_PORTAL_PASTNOWLINE = {
