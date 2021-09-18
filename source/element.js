@@ -661,6 +661,17 @@ const ELEMENT_BOX = {
 	]*/
 }
 
+const ELEMENT_LEAF = {
+	colour: Colour.Green,
+	draw: DRAW_RECTANGLE,
+	update: UPDATE_MOVER,
+	grab: GRAB_DRAG,
+	isMover: true,
+	width: 20,
+	height: 10,
+	maxSpeed: 2,
+}
+
 const ELEMENT_PLATFORM = {
 	colour: Colour.Silver,
 	draw: DRAW_RECTANGLE,

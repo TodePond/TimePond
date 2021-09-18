@@ -146,6 +146,15 @@ const moverMove = (self, world, dx, dy) => {
 	self.nextdy += UPDATE_MOVER_GRAVITY
 	self.nextdx *= UPDATE_MOVER_AIR_RESISTANCE
 
+	if (self.maxSpeed !== undefined) {
+		const speed = Math.hypot(self.nextdx, self.nextdy)
+		if (speed > self.maxSpeed) {
+			const ratio = speed / self.maxSpeed
+			self.nextdy /= ratio
+			self.nextdx /= ratio
+		}
+	}
+
 	// Now that I've checked all potential collisions, and corrected myself...
 	// MOVE to the new position!
 	self.x = axes.dx.new

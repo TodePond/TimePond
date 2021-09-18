@@ -20,6 +20,7 @@ const makeMultiverse = () => {
 	// Menu
 	addMenuElement(ELEMENT_FROG, multiverse)
 	addMenuElement(ELEMENT_BOX, multiverse)
+	addMenuElement(ELEMENT_LEAF, multiverse)
 	addMenuElement(ELEMENT_PLATFORM, multiverse)
 	addMenuElement(ELEMENT_LILYPAD, multiverse)
 	addMenuElement(ELEMENT_POTION_ROTATE, multiverse)
