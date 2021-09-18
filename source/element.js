@@ -74,6 +74,7 @@ const DRAW_IMAGE = (self, context) => {
 	if (self.flipX) {
 		//;[cutLeft, cutRight] = [cutRight, cutLeft]
 		if (self.turns % 2 !== 0) [cutLeft, cutRight] = [cutRight, cutLeft]
+		if (self.turns % 2 === 0) [cutLeft, cutRight] = [cutRight, cutLeft]
 		//if (self.turns % 2 !== 0) [cutTop, cutBottom] = [cutBottom, cutTop]
 		for (let i = 0; i < self.turns; i++) [cutRight, cutBottom, cutLeft, cutTop] = [cutBottom, cutLeft, cutTop, cutRight]
 	}
@@ -272,6 +273,47 @@ const PORTAL_PASTNOWLINE = {
 	},
 }
 
+
+const PORTAL_FUTURELINE = {
+	enter: (event) => {
+		
+		const projection = event.world.futureProjection
+
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const clone_world = projection
+		projection.isProjection = false
+		//savePastProjection(clone_world)
+		/*clone_world.projection_skip = 1*/
+		
+		const clone_portal = clone_world.atoms.find(a => a.atom_id === event.portal.atom_id)
+		const clone_target = clone_portal.target
+		const clone_froggy = clone_world.atoms.find(a => a.atom_id === event.froggy.atom_id)
+
+		if (!event.world.isProjection) {
+			addWorld(multiverse, clone_world)
+		}
+		PORTAL_MOVE.enter(event, {target: clone_target})
+
+		//if (clone_froggy != undefined) clone_froggy.variantParent = event.froggy
+		//else print(clone_froggy)
+		
+		//clone_froggy.variantParent = event.froggy
+
+		if (clone_froggy === undefined) return true
+		//else {
+			//clone_froggy.variantParent = event.froggy
+		//}
+
+		//clone_froggy.hh
+
+		return
+	}
+}
+
 const PORTAL_PASTLINE = {
 	enter: (event) => {
 		
@@ -287,7 +329,9 @@ const PORTAL_PASTLINE = {
 		const clone_target = clone_portal.target
 		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
 
-		addWorld(multiverse, clone_world)
+		if (!event.world.isProjection) {
+			addWorld(multiverse, clone_world)
+		}
 		PORTAL_MOVE.enter(event, {target: clone_target})
 
 		clone_froggy.variantParent = event.froggy
@@ -399,6 +443,7 @@ const PORTAL_MOVE = {
 					["turns"]: (them, me) => me,
 					["width"]: (them, me) => me,
 					["height"]: (them, me) => me,
+					["flipX"]: (them, me) => me,
 				})
 			}
 			else if (variant.fling === 1) {
@@ -431,6 +476,7 @@ const PORTAL_MOVE = {
 					
 					["dx"]: () => -froggy.dy,
 					["dy"]: () => froggy.dx,
+					["flipX"]: (them, me) => me,
 				})
 			}
 			else if (variant.fling === 2) {
@@ -450,6 +496,7 @@ const PORTAL_MOVE = {
 
 			addAtom(target.world, variant)
 			turnAtom(variant, variant.fling * flipXDirection, false, false, target.world, [], true)
+			//if (variant.turns % 4 === 1) flipAtom(variant)
 			
 			//variant.prevBounds = getBounds(variant)
 
@@ -530,6 +577,8 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 
 	const portalIsNew = bself.portals[axis.front] === undefined
 
+	let induceError = false
+
 	// BEGIN to cut myself down to go into portal
 	if (portalIsNew) {
 
@@ -549,7 +598,10 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 		// Register (or re-register) that I am currently using this portal
 		bself.portals[axis.front] = atom
 		
-		if (atom.portal.enter !== undefined) atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: bself, world, axis})
+		if (atom.portal.enter !== undefined) {
+			const result = atom.portal.enter({pbounds: abounds, fnbounds: nbounds, portal: atom, froggy: bself, world, axis})
+			if (result === true) induceError = true
+		}
 		
 
 	}
@@ -576,6 +628,8 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 	if (atom.portal.moveIn !== undefined) atom.portal.moveIn()
 
 	if (bself.portals[axis.front] !== atom) throw new Error(`[TimePond] An atom tried to go through two portals in the same direction.`)
+
+	if (induceError) return "induce"
 	return false
 
 }
@@ -727,6 +781,13 @@ const ELEMENT_PORTAL_PASTLINE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_PASTLINE,
 	colour: Colour.Yellow,
+	construct: makePortalTargeter(),
+}
+
+const ELEMENT_PORTAL_FUTURELINE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_FUTURELINE,
+	colour: Colour.Red,
 	construct: makePortalTargeter(),
 }
 

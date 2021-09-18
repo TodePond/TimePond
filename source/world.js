@@ -25,8 +25,8 @@ const makeWorld = ({isProjection = false} = {}) => {
 	}
 	else if (EXPERIMENT_ID === "fling") {
 		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
-		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
-		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
 		/*
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 400, y: 360}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 100, y: 150, turns: 1}))
@@ -43,6 +43,14 @@ const makeWorld = ({isProjection = false} = {}) => {
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 100, y: 460}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 400, y: 150, turns: 1}))
+		
+	}
+	else if (EXPERIMENT_ID === "futurelinefling") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 100, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 400, y: 150, turns: 1}))
 		
 	}
 	else if (EXPERIMENT_ID === "simplepastline") {
@@ -310,13 +318,27 @@ const savePastProjection = (world) => {
 	world.pastProjections.length = 60
 }
 
+const saveFutureProjection = (world) => {
+	const projection = cloneWorld(world)
+	projection.isProjection = true
+	world.futureProjection = projection
+	for (let i = 0; i < 30; i++) {
+		updateWorld(projection)
+	}
+}
+
 const updateWorld = (world) => {
 
 	if (!world.isProjection) {
 		if (world.projection_skip > 0) {
 			world.projection_skip--
 		}
-		else savePastProjection(world)
+		else {
+			savePastProjection(world)
+		}
+
+		saveFutureProjection(world)
+
 	}
 
 	for (const atom of world.atoms) {

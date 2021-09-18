@@ -31,6 +31,7 @@ const moverMove = (self, world, dx, dy) => {
 	// If there are any draws, put portals last
 	orderBlockers(blockers, axes)
 
+	let induce = false
 	//===================================================//
 	// COLLIDE with the closest atoms to me in each axis //
 	//===================================================//
@@ -67,19 +68,24 @@ const moverMove = (self, world, dx, dy) => {
 			if (bself.preCollide !== undefined) {
 				const result = bself.preCollide({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
 				if (result === false) modResult = false
+				if (result === "induce") modResult = result
 			}
 			if (atom.preCollided !== undefined) {
 				const result = atom.preCollided({self, bself, atom, axis, baxis, world, bounds: blocker.cbounds, nbounds: blocker.cnbounds, abounds: blocker.bounds, iveHitSomething, blockers: blockers[axis.dname]})
 				if (result === false) modResult = false
+				if (result === "induce") modResult = result
 			}
+			
+			if (modResult === "induce") return
 			
 			// SNAP to the surface!
 			const newOffset = axis.front === axis.small? -bself[baxis.cutSmallName] : -baxis.size + bself[baxis.cutBigName]
 			baxis.new = bbounds[axis.back] + newOffset
 			const snapMovement = baxis.new - baxis.old
 			axis.new = self[axis.name] + snapMovement
+
 			
-			if (iveHitSomething === true || modResult === false) continue
+			if (iveHitSomething === true || modResult === false || modResult === "induce") continue
 
 			// Change ACCELERATIONS!
 			// Moving right or left
@@ -133,6 +139,8 @@ const moverMove = (self, world, dx, dy) => {
 		}
 
 	}
+
+	//if (induce) sdhjds
 	
 	// Apply natural forces
 	self.nextdy += UPDATE_MOVER_GRAVITY
