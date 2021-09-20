@@ -178,6 +178,10 @@ const transferToParent = (child, key, value) => {
 	const parent = child.parent
 	if (parent === undefined) return
 	const link = getLink(child)
+	if (link === undefined) {
+		print("orphan - no parent to transfer to")
+		return
+	}
 	link.transfer[key](parent, child, key, value)
 	if (parent.parent !== undefined) transferToParent(parent, key, parent[key])
 }
@@ -191,7 +195,9 @@ const getLink = (child) => {
 	//print(child.world.id)
 	//print(parent.world.id)
 	print("orphan in world", child.world.id)
-	throw new Error(`[TimePond] There's an orphan! This shouldn't happen... I haven't made sure that all children have parent links properly :(`)
+	//removeAtom(child.world, child, {includingChildren: true, destroy: true})
+	//child.cutRight = 0
+	//throw new Error(`[TimePond] There's an orphan! This shouldn't happen... I haven't made sure that all children have parent links properly :(`)
 	
 }
 

@@ -341,6 +341,7 @@ const PORTAL_FUTURELINE = {
 
 		const clone_world = projection
 		projection.isProjection = false
+		projection.futureProjection = undefined
 		event.world.futureProjection = undefined
 		saveFutureProjection(event.world)
 		//savePastProjection(clone_world)
@@ -348,14 +349,15 @@ const PORTAL_FUTURELINE = {
 		
 		const clone_portal = clone_world.atoms.find(a => a.atom_id === event.portal.atom_id)
 		const clone_target = clone_portal.target
-		const clone_froggy = clone_world.atoms.find(a => a.atom_id === event.froggy.atom_id)
 
 		print(event.world.isProjection, event.world.id)
 		addWorld(multiverse, clone_world)
 		
 		PORTAL_MOVE.enter(event, {target: clone_target})
-
 		
+		const clone_froggy = clone_world.atoms.find(a => a.atom_id === event.froggy.atom_id).d
+
+		saveFutureProjection(projection)
 		//event.world.futureProjection = undefined
 		//saveFutureProjection(event.world)
 		//if (clone_froggy != undefined) clone_froggy.variantParent = event.froggy
@@ -363,7 +365,7 @@ const PORTAL_FUTURELINE = {
 		
 		//clone_froggy.variantParent = event.froggy
 
-		if (clone_froggy === undefined) return true
+		//if (clone_froggy === undefined) return true
 		//else {
 			//clone_froggy.variantParent = event.froggy
 		//}
@@ -513,6 +515,14 @@ const PORTAL_MOVE = {
 					[axis.name]: v => v + displacement,
 					["turns"]: (them, me) => me,
 					["width"]: (them, me) => me,
+					
+					
+					["nextdx"]: () => froggy.dx,
+					["nextdy"]: () => froggy.dy,
+					
+					["dx"]: () => froggy.dx,
+					["dy"]: () => froggy.dy,
+
 					["height"]: (them, me) => me,
 					["flipX"]: (them, me) => me,
 				})

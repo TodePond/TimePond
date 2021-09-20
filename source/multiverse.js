@@ -27,6 +27,7 @@ const makeMultiverse = () => {
 	addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
 	addMenuElement(ELEMENT_PORTAL_PASTNOWLINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastnowlinal")
 	addMenuElement(ELEMENT_PORTAL_PASTLINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastlinal")
+	addMenuElement(ELEMENT_PORTAL_FUTURELINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastlinal")
 	addMenuElement(ELEMENT_PORTAL_DIMENSION, multiverse, ELEMENT_SPAWNER_PORTAL, "Dimensial")
 	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
 	//addMenuElement(ELEMENT_BOX_DOUBLE, multiverse)

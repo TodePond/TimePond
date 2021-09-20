@@ -46,11 +46,11 @@ const makeWorld = ({isProjection = false} = {}) => {
 		
 	}
 	else if (EXPERIMENT_ID === "futurelinefling") {
-		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
-		addAtom(world, makeAtom({...ELEMENT_LEAF, x: 50, y: 100, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 75, y: 150, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 100, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
-		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 100, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 50, y: 460}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 400, y: 150, turns: 1}))
 		
 	}
@@ -70,6 +70,11 @@ const makeWorld = ({isProjection = false} = {}) => {
 	else if (EXPERIMENT_ID === "simpledimension") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 100, y: 360}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_DIMENSION, x: 300, y: 150}))
+	}
+	else if (EXPERIMENT_ID === "simplefuture") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 100, y: 360}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 300, y: 150}))
 	}
 	else if (EXPERIMENT_ID === "freefall") {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_MOVE, x: 300, y: 160}))
@@ -348,6 +353,17 @@ const saveFutureProjection = (world) => {
 const fullUpdateWorld = (world) => {
 	updateWorld(world)
 	prepWorld(world)
+	
+}
+
+const killOrphans = (world) => {
+	for (const atom of world.atoms) {
+		if (atom.parent === undefined) continue
+		if (!atom.parent.links.some(link => link.atom === atom)) {
+			removeAtom(world, atom)
+			print("ORPHAN")
+		}
+	}
 }
 
 const updateWorld = (world) => {
@@ -369,8 +385,8 @@ const updateWorld = (world) => {
 			print("save", world.id)
 		}
 		else {
-			saveFutureProjection(world)
-			//fullUpdateWorld(world.futureProjection)
+			//saveFutureProjection(world)
+			fullUpdateWorld(world.futureProjection)
 			//print("update", world.id)
 		}
 	}
@@ -383,6 +399,8 @@ const updateWorld = (world) => {
 	for (const atom of world.atoms) {
 		updateAtom(atom, world)
 	}
+
+	killOrphans(world)
 }
 
 const updateWorldLinks = (world) => {
