@@ -197,6 +197,11 @@ const updateCursor = (multiverse, context) => {
 			if (canDrop) {
 				hand.atom = undefined
 			}
+
+			for (const world of multiverse.worlds) {
+				saveFutureProjection(world)
+			}
+
 		}
 		
 		// Help keep track of hand speed

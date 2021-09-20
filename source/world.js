@@ -46,11 +46,11 @@ const makeWorld = ({isProjection = false} = {}) => {
 		
 	}
 	else if (EXPERIMENT_ID === "futurelinefling") {
-		addAtom(world, makeAtom({...ELEMENT_FROG, x: 75, y: 150, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 150, flipX: true}))
 		addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 100, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
-		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 50, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 100, y: 460}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_FUTURELINE, x: 400, y: 150, turns: 1}))
 		
 	}
