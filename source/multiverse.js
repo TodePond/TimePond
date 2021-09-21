@@ -84,6 +84,20 @@ const addWorld = (multiverse, world) => {
 	trigger("resize")
 }
 
+const removeWorld = (multiverse, world) => {
+	const id = multiverse.worlds.indexOf(world)
+	multiverse.worlds.splice(id, 1)
+	trigger("resize")
+}
+
+
+const replaceWorld = (target, source) => {
+	const tid = multiverse.worlds.indexOf(target)
+	const sid = multiverse.worlds.indexOf(source)
+	multiverse.worlds[tid] = source
+	multiverse.worlds[sid] = target
+}
+
 //===========//
 // Game Loop //
 //===========//

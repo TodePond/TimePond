@@ -267,6 +267,49 @@ const PORTAL_VOID = {
 	}
 }
 
+const PORTAL_PASTNOW = {
+	enter: (event) => {
+		
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const realWorld = event.world.realWorld
+		if (realWorld.isProjection) {
+			"hi".d
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		//clone_world.futureProjection = undefined
+		clone_world.future_projection_skip = 30
+		//clone_world.projection_skip = 1
+		//clone_world.isProjection = false
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		PORTAL_MOVE.enter(event, {target: clone_target})
+		print("nowline from", clone_portal, "to", clone_target)
+
+		replaceWorld(realWorld, clone_world)
+		realWorld.pruneTimer = 30
+
+		return
+
+	}
+}
+
 const PORTAL_PASTNOWLINE = {
 	enter: (event) => {
 		
@@ -304,61 +347,6 @@ const PORTAL_PASTNOWLINE = {
 
 		return
 
-
-		/*const projection = event.world.pastProjections[30]
-
-		
-		if (projection === undefined) {
-			print("nowline")
-
-			const realWorld = projection.
-
-			PORTAL_VOID.enter(event) 
-			return
-		}
-		
-		//print(projection.id)
-
-		const clone_world = cloneWorld(projection)
-		savePastProjection(clone_world)
-		clone_world.projection_skip = 1
-		
-		const clone_portal = clone_world.atoms[event.portal.atom_id]
-		const clone_target = clone_portal.target
-		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
-
-		if (!event.world.isProjection) {
-			addWorld(multiverse, clone_world)
-		}
-		PORTAL_MOVE.enter(event, {target: clone_target})
-
-		clone_froggy.variantParent = event.froggy
-		
-		//clone_froggy.d
-		//event.froggy.links[0].atom.d
-
-		//removeAtom(event.world, variant, {includingChildren: false, destroy: false})
-		//addAtom(clone_world, variant, {ignoreLinks: false})
-
-		//variant.portals[event.axis.back] = clone_target
-
-		/*clone_variant.parent = froggy
-		for (const link of froggy.links) {
-			if (link.atom === variant) {
-				link.atom = clone_variant
-			}
-		}*/
-		
-		//removeAtom(event.world, variant, {includingChildren: false})
-		//removeAtom(clone_world, clone_froggy)
-
-		
-
-		//moveAtomWorld(clone_variant, event.world, clone_world)
-
-
-
-		return
 	}
 }
 
@@ -927,6 +915,14 @@ const ELEMENT_PORTAL_PASTNOWLINE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_PASTNOWLINE,
 	colour: Colour.Purple,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
+
+const ELEMENT_PORTAL_PASTNOW = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_PASTNOW,
+	colour: Colour.Cyan,
 	construct: makePortalTargeter(),
 	requiresFutureProjections: true,
 }

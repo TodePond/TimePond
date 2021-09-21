@@ -63,6 +63,24 @@ const makeWorld = ({isProjection = false} = {}) => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 450, y: 180, turns: 1}))
 		
 	}
+	else if (EXPERIMENT_ID === "pastnowfling") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOW, x: 105, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOW, x: 450, y: 180, turns: 1}))
+		
+	}
+	else if (EXPERIMENT_ID === "pastnow") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOW, x: 100, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOW, x: 310, y: 150, turns: 0}))
+		
+	}
 	else if (EXPERIMENT_ID === "pastnowline") {
 		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 90, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
@@ -391,6 +409,16 @@ const killOrphans = (world) => {
 }
 
 const updateWorld = (world) => {
+
+	if (world.pruneTimer !== undefined) {
+		if (world.pruneTimer <= 0) {
+			removeWorld(multiverse, world)
+		}
+		else {
+			world.pruneTimer--
+		}
+
+	}
 
 	if (!world.isProjection) {
 		if (world.projection_skip > 0) {
