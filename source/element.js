@@ -270,10 +270,49 @@ const PORTAL_VOID = {
 const PORTAL_PASTNOWLINE = {
 	enter: (event) => {
 		
-		const projection = event.world.pastProjections[30]
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const realWorld = event.world.realWorld
+		if (realWorld.isProjection) {
+			"hi".d
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		//clone_world.futureProjection = undefined
+		clone_world.future_projection_skip = 30
+		//clone_world.projection_skip = 1
+		//clone_world.isProjection = false
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		PORTAL_MOVE.enter(event, {target: clone_target})
+		print("nowline from", clone_portal, "to", clone_target)
+
+		return
+
+
+		/*const projection = event.world.pastProjections[30]
 
 		
 		if (projection === undefined) {
+			print("nowline")
+
+			const realWorld = projection.
+
 			PORTAL_VOID.enter(event) 
 			return
 		}
@@ -889,6 +928,7 @@ const ELEMENT_PORTAL_PASTNOWLINE = {
 	portal: PORTAL_PASTNOWLINE,
 	colour: Colour.Purple,
 	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
 }
 
 const ELEMENT_POTION = {

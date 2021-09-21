@@ -55,12 +55,31 @@ const makeWorld = ({isProjection = false} = {}) => {
 		
 	}
 	else if (EXPERIMENT_ID === "pastnowlinefling") {
-		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 100, flipX: true}))
-		addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 105, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 450, y: 180, turns: 1}))
+		
+	}
+	else if (EXPERIMENT_ID === "pastnowline") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 100, y: 460}))
-		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 400, y: 150, turns: 1}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 310, y: 150, turns: 0}))
+		
+	}
+	else if (EXPERIMENT_ID === "pastnowlinebounce") {
+		addAtom(world, makeAtom({...ELEMENT_FROG, x: 75, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 450, y: 50, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 250, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 50, y: 460}))
+		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTNOWLINE, x: 220, y: 300, turns: 0}))
+		addAtom(world, makeAtom({...ELEMENT_LILYPAD, x: 312, y: 475}))
 		
 	}
 	else if (EXPERIMENT_ID === "simplepastline") {
@@ -244,7 +263,7 @@ const betterCloneAtoms = (atoms, new_world) => {
 				continue
 			}
 			if (key === "id") {
-				//cloned_atom.id = ATOM_ID++ //JUST FOR DEBUGGING NOT FOR ANYTHING ELSE
+				cloned_atom.id = atom.id //JUST FOR DEBUGGING NOT FOR ANYTHING ELSE //HAHA I USED IT FOR SOMETHING ELSE WHAT A BAD IDEA
 				continue
 			}
 			if (key === "target" || key === "parent") {
@@ -335,19 +354,24 @@ const savePastProjection = (world) => {
 	world.pastProjections.length = 60
 }
 
-const saveFutureProjection = (world) => {
+const saveFutureProjection = (world, num=30, autoCatchUp=true) => {
 	//world.futureProjections = []
 	const projection = cloneWorld(world)
 	projection.isProjection = true
 	world.futureProjection = projection
-	for (let i = 0; i < 30; i++) {
+	projection.realWorld = world
+	for (let i = 0; i < num; i++) {
 		//const p = cloneWorld(world.futureProjection)
 		//p.isProjection = true
 		const p = world.futureProjection
+		p.isOnCatchup = i < num-1
+		if (!autoCatchUp) p.isOnCatchup = true
 		updateWorld(p)
 		prepWorld(p)
 		//world.futureProjection = p
+		p.isOnCatchup = false
 	}
+	projection.isOnCatchup = false
 }
 
 const fullUpdateWorld = (world) => {
@@ -381,11 +405,24 @@ const updateWorld = (world) => {
 	
 	if (!world.isProjection && world.atoms.some(a => a.requiresFutureProjections)) {
 		if (world.futureProjection === undefined || !world.futureProjection.isProjection) {
-			saveFutureProjection(world)
-			print("save", world.id)
+			if (world.future_projection_skip > 0) {
+				world.future_projection_skip--
+				//saveFutureProjection(world, 30, false)
+				//print("skip", world)
+			}
+			else {
+
+				saveFutureProjection(world)
+			}
 		}
 		else {
-			//saveFutureProjection(world)
+			/*if (world.future_projection_skip > 0) {
+				world.future_projection_skip--
+			}
+			else {
+				saveFutureProjection(world)
+			}*/
+			world.futureProjection.isOnCatchup = false
 			fullUpdateWorld(world.futureProjection)
 			//print("update", world.id)
 		}
