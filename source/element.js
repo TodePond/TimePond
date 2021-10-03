@@ -268,7 +268,79 @@ const PORTAL_VOID = {
 }
 
 const PORTAL_BOUNCE = {
-	
+	enter: (event) => {
+		
+		const realWorld = event.world.realWorld
+		if (event.world.bounceTimer !== undefined) {
+			event.froggy.nextdy *= -0.9
+			event.world.bounceTimer = undefined
+			return
+		}
+
+		if (event.world.isCrashTest) {
+			event.world.crashSuccess = true
+			return "CRASH"
+		}
+
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		if (realWorld.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const crashTestRealWorld = cloneWorld(event.world)
+		const crashTestWorld = cloneWorld(realWorld)
+		crashTestWorld.realWorld = crashTestRealWorld
+		crashTestWorld.future_projection_skip = 30
+
+		crashTestRealWorld.isCrashTest = true
+		crashTestWorld.isCrashTest = true
+
+		const crash_froggy = crashTestRealWorld.atoms.find(a => a.id === event.froggy.id)
+		const crash_portal = crashTestWorld.atoms.find(a => a.id === event.portal.id)
+		const crash_target = crash_portal.target
+		PORTAL_MOVE.enter({portal:crash_portal, froggy: crash_froggy, axis: event.axis}, {target: crash_target})
+		for (let i = 0; i < 31; i++) {
+			fullUpdateWorld(crashTestRealWorld)
+			fullUpdateWorld(crashTestWorld)
+		}
+
+		if (!crashTestWorld.crashSuccess) {
+			print("PARADOX")
+			realWorld.bounceTimer = 30
+			//realWorld.future_projection_skip = 30
+			//saveFutureProjection(realWorld)
+			return
+		}
+
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		clone_world.future_projection_skip = 30
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		PORTAL_MOVE.enter(event, {target: clone_target})
+		print("nowline from", clone_portal, "to", clone_target)
+
+		replaceWorld(realWorld, clone_world)
+		realWorld.pruneTimer = 30
+
+		return
+
+	}
 }
 
 const PORTAL_PASTNOW = {

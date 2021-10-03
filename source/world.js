@@ -437,6 +437,12 @@ const killOrphans = (world) => {
 const updateWorld = (world) => {
 
 	if (world.overridePaused) return
+	if (world.bounceTimer !== undefined) {
+		world.bounceTimer--
+		if (world.bounceTimer < 0) {
+			world.bounceTimer = undefined
+		}
+	}
 
 	if (world.pruneTimer !== undefined) {
 		if (world.pruneTimer <= 0) {
