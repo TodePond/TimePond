@@ -51,6 +51,12 @@ const makeMultiverse = () => {
 		addMenuElement(ELEMENT_PLATFORM, multiverse)
 		addMenuElement(ELEMENT_LILYPAD, multiverse)
 	}
+	else if (MENU_ID === "purple") {
+		addMenuElement(ELEMENT_FROG_PURPLE, multiverse)
+		addMenuElement(ELEMENT_BOX, multiverse)
+		addMenuElement(ELEMENT_PLATFORM, multiverse)
+		addMenuElement(ELEMENT_LILYPAD, multiverse)
+	}
 	else if (MENU_ID === "rainbow") {
 		addMenuElement(ELEMENT_FROG, multiverse)
 		addMenuElement(ELEMENT_FROG_YELLOW, multiverse)
@@ -274,6 +280,7 @@ const drawMultiverse = (multiverse, context) => {
 	context.translate(0, MENU_HEIGHT)
 	for (let i = 0; i < multiverse.worlds.length; i++) {
 		const world = multiverse.worlds[i]
+		if (world.isHidden) continue
 		drawWorld(world, context)
 		if (i >= multiverse.worlds.length-1) break
 		x += WORLD_WIDTH

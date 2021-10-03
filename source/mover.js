@@ -355,7 +355,7 @@ const emergeCandidate = (candidate, axes, nbounds = candidate.bounds) => {
 			if (atom[axis.cutBackName] <= 0) {
 				atom.portals[axis.back] = undefined
 				atom[axis.cutBackName] = 0
-				if (portal.portal.exit !== undefined) portal.portal.exit()
+				if (portal.portal.exit !== undefined) portal.portal.exit({froggy: atom})
 			}
 
 		}

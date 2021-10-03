@@ -272,6 +272,8 @@ const removeAtom = (world, atom, {includingChildren = true, destroy = false} = {
 	}
 
 	if (includingChildren) {
+		
+		if (atom === undefined) throw new Error("needed error")
 		for (const link of atom.links) {
 			removeAtom(world, link.atom, {destroy})
 		}
@@ -447,13 +449,9 @@ const killOrphans = (world) => {
 const updateWorld = (world) => {
 
 	if (world.overridePaused) return
-	if (world.bounceTimer !== undefined) {
-		world.bounceTimer--
-		if (world.bounceTimer < 0) {
-			world.bounceTimer = undefined
-			saveFutureProjection(world)
-		}
-	}
+	
+
+	
 
 	if (world.pruneTimer !== undefined) {
 		if (world.pruneTimer <= 0) {
@@ -464,9 +462,17 @@ const updateWorld = (world) => {
 		}
 
 	}
+	if (world.bounceTimer !== undefined) {
+		world.bounceTimer--
+		if (world.bounceTimer < 0) {
+			world.bounceTimer = undefined
+			saveFutureProjection(world)
+		}
+	}
 
 	let isFreeze = false
 	const freezeExceptions = []
+
 
 	if (world.fadeReliance !== undefined) {
 		if (world.fadeReliance > 0) {
@@ -477,6 +483,25 @@ const updateWorld = (world) => {
 			if (atom.isFreezeFadeType) {
 				isFreeze = true
 				freezeExceptions.push(atom.fadeReliantOn)
+				continue
+			}
+
+			else if (atom.isMadFadeType) {
+				print("MAD")
+				world.fadeReliance = undefined
+				removeAtom(world, atom.fadeReliantOn, {destroy: false})
+				const mad = makeAtom({...ELEMENT_FROG_CYAN_MAD, x: atom.fadeReliantOn.x, y: atom.fadeReliantOn.y, flipX: atom.fadeReliantOn.flipX})
+				addAtom(world, mad)
+				atom.fadeReliantOn = undefined
+				continue
+			}
+
+			else if (atom.isNexusFadeType) {
+				//atom.fadeReliantOn.world.pruneTimer.d
+				//const reworld = cloneWorld(world)
+				//const id = multiverse.worlds.indexOf(world)
+				//multiverse.worlds[id] = reworld
+				addWorld(multiverse, cloneWorld(atom.nexusWorldStart))
 				continue
 			}
 
@@ -593,6 +618,9 @@ const updateWorldLinks = (world) => {
 }
 
 const drawWorld = (world, context, colourBackground = true) => {
+
+	if (world.isHidden) return
+
 
 	if (colourBackground) {
 		context.fillStyle = Colour.Grey

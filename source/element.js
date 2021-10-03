@@ -454,6 +454,59 @@ const PORTAL_FREEZE = {
 	}
 }
 
+const PORTAL_MAD = {
+	enter: (event) => {
+		
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event)
+			//event.froggy.fadeReliantOn = undefined
+			if (event.froggy.fadeRelier !== undefined) event.froggy.fadeRelier.d.fadeReliantOn = undefined
+			event.world.fadeReliance = undefined
+			return
+		}
+
+		const realWorld = event.world.realWorld
+		if (realWorld.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		//clone_world.futureProjection = undefined
+		clone_world.future_projection_skip = 30
+		//clone_world.projection_skip = 1
+		//clone_world.isProjection = false
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		const variant = PORTAL_MOVE.enter(event, {target: clone_target})
+		const clone_froggy = clone_world.atoms.find(a => a.id === event.froggy.id)
+		print("nowline from", clone_portal, "to", clone_target)
+
+		replaceWorld(realWorld, clone_world)
+		realWorld.pruneTimer = 30
+
+		variant.fadeReliantOn = clone_froggy
+		clone_froggy.fadeRelier = variant
+		variant.isMadFadeType = true
+		//variant.fadeReliantOn = clone_froggy
+		//clone_froggy.fadeReliantOn = variant
+		clone_world.fadeReliance = 30
+
+		return
+
+	}
+}
+
 const PORTAL_PASTNOW = {
 	enter: (event) => {
 		
@@ -642,6 +695,98 @@ const PORTAL_FUTURELINE = {
 		return
 	}
 }
+const PORTAL_NEXUS = {
+	enter: (event) => {
+		
+		const realWorld = event.world.realWorld
+		if (event.world.bounceTimer !== undefined) {
+			//event.froggy.nextdy *= -0.9
+			//event.world.bounceTimer = undefined
+			//return
+			print("nexus")
+			
+			return PORTAL_PASTLINE.enter(event)
+		}
+
+		if (event.world.isCrashTest) {
+			if (event.froggy.id === event.world.crashNeededFroggy) {
+				event.world.crashSuccess = true
+				return "CRASH"
+			}
+		}
+
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		if (realWorld.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const crashTestRealWorld = cloneWorld(event.world)
+		const crashTestWorld = cloneWorld(realWorld)
+		crashTestWorld.realWorld = crashTestRealWorld
+		crashTestWorld.future_projection_skip = 30
+
+		crashTestRealWorld.isCrashTest = true
+		crashTestWorld.isCrashTest = true
+
+		const crash_froggy = crashTestRealWorld.atoms.find(a => a.id === event.froggy.id)
+		const crash_portal = crashTestWorld.atoms.find(a => a.id === event.portal.id)
+		const crash_target = crash_portal.target
+		
+		crashTestRealWorld.crashNeededFroggy = event.froggy.id
+		crashTestWorld.crashNeededFroggy = event.froggy.id
+
+		PORTAL_MOVE.enter({portal:crash_portal, froggy: crash_froggy, axis: event.axis}, {target: crash_target})
+		for (let i = 0; i < 31; i++) {
+			fullUpdateWorld(crashTestRealWorld)
+			fullUpdateWorld(crashTestWorld)
+		}
+
+		if (!crashTestWorld.crashSuccess) {
+			print("PARADOX")
+			realWorld.bounceTimer = 30
+			//realWorld.future_projection_skip = 30
+			//saveFutureProjection(realWorld)
+			return PORTAL_VOID.enter(event)
+		}
+
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		clone_world.future_projection_skip = 30
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		PORTAL_MOVE.enter(event, {target: clone_target})
+		print("nowline from", clone_portal, "to", clone_target)
+
+		realWorld.isHidden = true
+		replaceWorld(realWorld, clone_world)
+		realWorld.pruneTimer = 31
+
+		return
+
+	},
+	exit: (event) => {
+		const froggy = event.froggy
+		froggy.cutTop = 0
+		froggy.cutLeft = 0
+		froggy.cutRight = 0
+		froggy.cutBottom = 0
+	}
+}
 
 const PORTAL_PASTLINE = {
 	enter: (event) => {
@@ -671,6 +816,71 @@ const PORTAL_PASTLINE = {
 
 		clone_froggy.variantParent = event.froggy
 		
+		//clone_froggy.d
+		//event.froggy.links[0].atom.d
+
+		//removeAtom(event.world, variant, {includingChildren: false, destroy: false})
+		//addAtom(clone_world, variant, {ignoreLinks: false})
+
+		//variant.portals[event.axis.back] = clone_target
+
+		/*clone_variant.parent = froggy
+		for (const link of froggy.links) {
+			if (link.atom === variant) {
+				link.atom = clone_variant
+			}
+		}*/
+		
+		//removeAtom(event.world, variant, {includingChildren: false})
+		//removeAtom(clone_world, clone_froggy)
+
+		
+
+		//moveAtomWorld(clone_variant, event.world, clone_world)
+
+
+
+		return
+	}
+}
+
+const PORTAL_REWRITE = {
+	enter: (event) => {
+		
+		if (event.world.bounceTimer !== undefined) {
+			return PORTAL_VOID.enter(event) 
+		}
+		
+		const projection = event.world.pastProjections[30]
+
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//print(projection.id)
+
+		const clone_world = cloneWorld(projection)
+		savePastProjection(clone_world)
+		clone_world.projection_skip = 1
+		
+		const clone_portal = clone_world.atoms[event.portal.atom_id]
+		const clone_target = clone_portal.target
+		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
+
+		if (!event.world.isProjection) {
+			addWorld(multiverse, clone_world)
+		}
+		PORTAL_MOVE.enter(event, {target: clone_target})
+
+		clone_froggy.variantParent = event.froggy
+		
+		replaceWorld(event.world, clone_world)
+
+		event.world.pruneTimer = 30
+		event.world.isHidden = true
+		clone_world.bounceTimer = 31
+
 		//clone_froggy.d
 		//event.froggy.links[0].atom.d
 
@@ -1136,11 +1346,26 @@ const ELEMENT_PORTAL_DIMENSION = {
 	construct: makePortalTargeter(),
 }
 
+const ELEMENT_PORTAL_REWRITE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_REWRITE,
+	colour: Colour.Yellow,
+	construct: makePortalTargeter(),
+}
+
 const ELEMENT_PORTAL_PASTLINE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_PASTLINE,
 	colour: Colour.Yellow,
 	construct: makePortalTargeter(),
+}
+
+const ELEMENT_PORTAL_NEXUS = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_NEXUS,
+	colour: Colour.Yellow,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
 }
 
 const ELEMENT_PORTAL_FUTURELINE = {
@@ -1200,6 +1425,15 @@ const ELEMENT_PORTAL_FREEZE = {
 	requiresFutureProjections: true,
 }
 
+const ELEMENT_PORTAL_MAD = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_MAD,
+	colour: Colour.Cyan,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
+
+
 
 const ELEMENT_POTION = {
 	colour: Colour.Purple,
@@ -1258,6 +1492,22 @@ const ELEMENT_FROG_CYAN = {
 	source: "images/Cyan/Other@0.25x.png",
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
+	isMover: true,
+	//cutTop: 10,
+	//cutBottom: 10,
+	//cutRight: 20,
+	//cutLeft: 20,
+	showBounds: FROGGY_BOUNDS,
+}
+
+const ELEMENT_FROG_CYAN_MAD = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Cyan/Mad@0.25x.png",
+	width: 100 * 0.75/* - 11 - 7*/,
+	height: 84 * 0.75,
 	isMover: true,
 	//cutTop: 10,
 	//cutBottom: 10,
