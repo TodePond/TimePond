@@ -43,7 +43,6 @@ const makeWorld = ({isProjection = false} = {}) => {
 		//addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 400, flipX: true}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 100, y: 460}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 400, y: 150, turns: 1}))
-		
 	}
 	else if (EXPERIMENT_ID === "futurelinefling") {
 		addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 150, flipX: true}))
@@ -458,9 +457,16 @@ const killOrphans = (world) => {
 const updateWorld = (world) => {
 
 	if (world.overridePaused) return
-	
-
-	
+	if (world.isSlow) {
+		if (world.slowTick === undefined) {
+			world.slowTick = true
+		}
+		if (world.slowTick) {
+			world.slowTick = !world.slowTick
+			return
+		}
+		world.slowTick = !world.slowTick
+	}
 
 	if (world.pruneTimer !== undefined) {
 		if (world.pruneTimer <= 0) {

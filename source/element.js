@@ -957,6 +957,10 @@ const PORTAL_MOVE = {
 	enter: ({portal, pbounds, froggy, world, axis, blockers}, {target = portal.target} = {}) => {
 		if (target !== undefined) {
 
+			if (world.isProjection) {
+				return
+			}
+
 			const variant = cloneAtom(froggy)
 			variant.fling = target.turns - portal.turns
 			while (variant.fling < 0) {
