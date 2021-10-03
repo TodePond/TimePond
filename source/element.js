@@ -114,6 +114,10 @@ const DRAW_IMAGE = (self, context) => {
 		context.drawImage(image, snippetX, snippetY, snippetWidth, snippetHeight, bounds.left, bounds.top, boundsWidth, boundsHeight)
 	}*/
 
+	const alpha = self.opacity !== undefined? self.opacity : 1.0
+	context.globalAlpha = alpha
+	//print(self.opacity)
+
 	if (self.turns % 2 !== 0) {
 		context.drawImage(image, cutLeft*flipWidthRatio, cutTop*flipHeightRatio, image.width - cutLeft*flipWidthRatio - cutRight*flipWidthRatio, image.height - cutTop*flipHeightRatio - cutBottom*flipHeightRatio, bounds.left + boundsDimensionDiff/2, bounds.top - boundsDimensionDiff/2, boundsHeight, boundsWidth)
 	}
@@ -273,13 +277,15 @@ const PORTAL_BOUNCE = {
 		const realWorld = event.world.realWorld
 		if (event.world.bounceTimer !== undefined) {
 			event.froggy.nextdy *= -0.9
-			event.world.bounceTimer = undefined
+			//event.world.bounceTimer = undefined
 			return
 		}
 
 		if (event.world.isCrashTest) {
-			event.world.crashSuccess = true
-			return "CRASH"
+			if (event.froggy.id === event.world.crashNeededFroggy) {
+				event.world.crashSuccess = true
+				return "CRASH"
+			}
 		}
 
 		//print(event.world.id)
@@ -308,6 +314,10 @@ const PORTAL_BOUNCE = {
 		const crash_froggy = crashTestRealWorld.atoms.find(a => a.id === event.froggy.id)
 		const crash_portal = crashTestWorld.atoms.find(a => a.id === event.portal.id)
 		const crash_target = crash_portal.target
+		
+		crashTestRealWorld.crashNeededFroggy = event.froggy.id
+		crashTestWorld.crashNeededFroggy = event.froggy.id
+
 		PORTAL_MOVE.enter({portal:crash_portal, froggy: crash_froggy, axis: event.axis}, {target: crash_target})
 		for (let i = 0; i < 31; i++) {
 			fullUpdateWorld(crashTestRealWorld)
@@ -337,6 +347,54 @@ const PORTAL_BOUNCE = {
 
 		replaceWorld(realWorld, clone_world)
 		realWorld.pruneTimer = 30
+
+		return
+
+	}
+}
+
+const PORTAL_FADE = {
+	enter: (event) => {
+		
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const realWorld = event.world.realWorld
+		if (realWorld.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		//clone_world.futureProjection = undefined
+		clone_world.future_projection_skip = 30
+		//clone_world.projection_skip = 1
+		//clone_world.isProjection = false
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		const variant = PORTAL_MOVE.enter(event, {target: clone_target})
+		const clone_froggy = clone_world.atoms.find(a => a.id === event.froggy.id)
+		print("nowline from", clone_portal, "to", clone_target)
+
+		replaceWorld(realWorld, clone_world)
+		realWorld.pruneTimer = 30
+
+		variant.fadeReliantOn = clone_froggy
+		//variant.fadeReliantOn = clone_froggy
+		//clone_froggy.fadeReliantOn = variant
+		clone_world.fadeReliance = 30
 
 		return
 
@@ -1067,6 +1125,14 @@ const ELEMENT_PORTAL_FUTURENOW = {
 const ELEMENT_PORTAL_BOUNCE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_BOUNCE,
+	colour: Colour.Cyan,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
+
+const ELEMENT_PORTAL_FADE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_FADE,
 	colour: Colour.Cyan,
 	construct: makePortalTargeter(),
 	requiresFutureProjections: true,

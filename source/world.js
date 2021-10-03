@@ -441,6 +441,7 @@ const updateWorld = (world) => {
 		world.bounceTimer--
 		if (world.bounceTimer < 0) {
 			world.bounceTimer = undefined
+			saveFutureProjection(world)
 		}
 	}
 
@@ -452,6 +453,25 @@ const updateWorld = (world) => {
 			world.pruneTimer--
 		}
 
+	}
+
+	if (world.fadeReliance !== undefined) {
+		if (world.fadeReliance > 0) {
+			world.fadeReliance--
+		}
+		else for (const atom of world.atoms) {
+			if (atom.opacity === undefined) atom.opacity = 1
+			//print(atom.fadeReliantOn)
+			if (world.atoms.includes(atom.fadeReliantOn)) {
+				atom.opacity -= 0.02
+				if (atom.opacity <= 0) {
+					removeAtom(world, atom)
+				}
+			}
+			else {
+				atom.opacity = 1.0
+			}
+		}
 	}
 
 	if (world.futureNowRecordings !== undefined) {
