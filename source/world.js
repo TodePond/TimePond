@@ -169,6 +169,15 @@ const makeWorld = ({isProjection = false} = {}) => {
 		addAtom(world, makeAtom({...pelement, x: 300, y: 160}))
 		addAtom(world, makeAtom({...pelement, x: 300, y: 300}))
 	}
+	else if (EXPERIMENT_ID === "gright") {
+		const ptype = PORTAL_TYPE_ID
+		const pelement = eval("ELEMENT_PORTAL_" + ptype)
+		const felement = eval("ELEMENT_FROG_" + MENU_ID.as(UpperCase))
+		
+		addAtom(world, makeAtom({...pelement, x: 182, y: 320, turns: 1}))
+		addAtom(world, makeAtom({...pelement, x: 350, y: 320, turns: 1}))
+		if (!NO_FROG_SPAWN_ID)addAtom(world, makeAtom({...felement, x: 100, y: 380, flipX: true}))
+	}
 	else if (EXPERIMENT_ID === "gsimple") {
 		const ptype = PORTAL_TYPE_ID
 		const pelement = eval("ELEMENT_PORTAL_" + ptype)

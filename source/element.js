@@ -791,6 +791,11 @@ const PORTAL_NEXUS = {
 const PORTAL_PASTLINE = {
 	enter: (event) => {
 		
+		// UNCOMMENT WHEN NOT DOING NEXUS
+		/*if (event.world.bounceTimer !== undefined) {
+			return PORTAL_VOID.enter(event) 
+		}*/
+
 		const projection = event.world.pastProjections[30]
 
 		
@@ -815,7 +820,8 @@ const PORTAL_PASTLINE = {
 		PORTAL_MOVE.enter(event, {target: clone_target})
 
 		clone_froggy.variantParent = event.froggy
-		
+		clone_world.bounceTimer = 31
+
 		//clone_froggy.d
 		//event.froggy.links[0].atom.d
 
