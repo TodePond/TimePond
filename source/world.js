@@ -178,6 +178,16 @@ const makeWorld = ({isProjection = false} = {}) => {
 		addAtom(world, makeAtom({...pelement, x: 100, y: 360}))
 		addAtom(world, makeAtom({...pelement, x: 300, y: 150}))
 	}
+	else if (EXPERIMENT_ID === "ggen") {
+		const ptype = PORTAL_TYPE_ID
+		const pelement = eval("ELEMENT_PORTAL_" + ptype)
+		const felement = eval("ELEMENT_FROG_" + MENU_ID.as(UpperCase))
+		if (!NO_FROG_SPAWN_ID) addAtom(world, makeAtom({...felement, x: 20, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 20, y: 90, flipX: true}))
+		addAtom(world, makeAtom({...ELEMENT_LILYPAD, x: 100, y: 470}))
+		addAtom(world, makeAtom({...pelement, x: 210, y: 460}))
+		addAtom(world, makeAtom({...pelement, x: 450, y: 150, turns: 1}))
+	}
 	else {
 		// PORTAL FLING 1
 		/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
@@ -455,11 +465,21 @@ const updateWorld = (world) => {
 
 	}
 
+	let isFreeze = false
+	const freezeExceptions = []
+
 	if (world.fadeReliance !== undefined) {
 		if (world.fadeReliance > 0) {
 			world.fadeReliance--
 		}
 		else for (const atom of world.atoms) {
+
+			if (atom.isFreezeFadeType) {
+				isFreeze = true
+				freezeExceptions.push(atom.fadeReliantOn)
+				continue
+			}
+
 			if (atom.opacity === undefined) atom.opacity = 1
 			//print(atom.fadeReliantOn)
 			if (world.atoms.includes(atom.fadeReliantOn)) {
@@ -472,6 +492,20 @@ const updateWorld = (world) => {
 				atom.opacity = 1.0
 			}
 		}
+	}
+	
+	if (isFreeze) {
+		for (const atom of freezeExceptions) {
+			if (atom !== undefined) {
+				atom.nextdx = atom.dx
+				atom.nextdy = atom.dy
+			}
+		}
+		
+		for (const atom of freezeExceptions) {
+			if (atom !== undefined) updateAtom(atom, world)
+		}
+		return
 	}
 
 	if (world.futureNowRecordings !== undefined) {

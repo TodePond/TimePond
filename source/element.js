@@ -401,6 +401,59 @@ const PORTAL_FADE = {
 	}
 }
 
+const PORTAL_FREEZE = {
+	enter: (event) => {
+		
+		//print(event.world.id)
+		if (event.world.isProjection && event.world.isOnCatchup !== true) {
+			//print("proj")
+		}
+		else {
+			//print("bye")
+			PORTAL_VOID.enter(event)
+			//event.froggy.fadeReliantOn = undefined
+			if (event.froggy.fadeRelier !== undefined) event.froggy.fadeRelier.d.fadeReliantOn = undefined
+			event.world.fadeReliance = undefined
+			return
+		}
+
+		const realWorld = event.world.realWorld
+		if (realWorld.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//realWorld.futureProjection = undefined
+		//saveFutureProjection(realWorld)
+		const clone_world = cloneWorld(realWorld)
+		//clone_world.futureProjection = undefined
+		clone_world.future_projection_skip = 30
+		//clone_world.projection_skip = 1
+		//clone_world.isProjection = false
+
+		addWorld(multiverse, clone_world)
+
+		const clone_portal = clone_world.atoms.find(a => a.id === event.portal.id)
+		const clone_target = clone_portal.target
+		const variant = PORTAL_MOVE.enter(event, {target: clone_target})
+		const clone_froggy = clone_world.atoms.find(a => a.id === event.froggy.id)
+		print("nowline from", clone_portal, "to", clone_target)
+
+		replaceWorld(realWorld, clone_world)
+		realWorld.pruneTimer = 30
+
+		variant.fadeReliantOn = clone_froggy
+		clone_froggy.fadeRelier = variant
+		variant.isFreezeFadeType = true
+		//variant.fadeReliantOn = clone_froggy
+		//clone_froggy.fadeReliantOn = variant
+		clone_world.fadeReliance = 30
+
+		return
+
+	}
+}
+
 const PORTAL_PASTNOW = {
 	enter: (event) => {
 		
@@ -1137,6 +1190,16 @@ const ELEMENT_PORTAL_FADE = {
 	construct: makePortalTargeter(),
 	requiresFutureProjections: true,
 }
+
+
+const ELEMENT_PORTAL_FREEZE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_FREEZE,
+	colour: Colour.Cyan,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
+
 
 const ELEMENT_POTION = {
 	colour: Colour.Purple,
