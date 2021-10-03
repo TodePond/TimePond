@@ -267,6 +267,10 @@ const PORTAL_VOID = {
 	}
 }
 
+const PORTAL_BOUNCE = {
+	
+}
+
 const PORTAL_PASTNOW = {
 	enter: (event) => {
 		
@@ -282,7 +286,6 @@ const PORTAL_PASTNOW = {
 
 		const realWorld = event.world.realWorld
 		if (realWorld.isProjection) {
-			"hi".d
 			PORTAL_VOID.enter(event) 
 			return
 		}
@@ -350,6 +353,60 @@ const PORTAL_PASTNOWLINE = {
 	}
 }
 
+const PORTAL_FUTURENOW = {
+	enter: (event) => {
+
+		if (event.world.isProjection) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const projection = event.world.futureProjection
+
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		const clone_world = projection
+		projection.isProjection = false
+		projection.futureProjection = undefined
+		event.world.futureProjection = undefined
+		saveFutureProjection(event.world)
+		//savePastProjection(clone_world)
+		/*clone_world.projection_skip = 1*/
+		
+		const clone_portal = clone_world.atoms.find(a => a.atom_id === event.portal.atom_id)
+		const clone_target = clone_portal.target
+
+		print(event.world.isProjection, event.world.id)
+		addWorld(multiverse, clone_world)
+		clone_world.futureNowRecordings = []
+		clone_world.futureNowBaseWorld = event.world
+		
+		PORTAL_MOVE.enter(event, {target: clone_target})
+		
+		const clone_froggy = clone_world.atoms.find(a => a.atom_id === event.froggy.atom_id).d
+
+		saveFutureProjection(projection)
+		//event.world.futureProjection = undefined
+		//saveFutureProjection(event.world)
+		//if (clone_froggy != undefined) clone_froggy.variantParent = event.froggy
+		//else print(clone_froggy)
+		
+		//clone_froggy.variantParent = event.froggy
+
+		//if (clone_froggy === undefined) return true
+		//else {
+			//clone_froggy.variantParent = event.froggy
+		//}
+
+		//clone_froggy.hh
+		//replaceWorld(clone_world, event.world)
+
+		return
+	}
+}
 
 const PORTAL_FUTURELINE = {
 	enter: (event) => {
@@ -927,6 +984,22 @@ const ELEMENT_PORTAL_PASTNOW = {
 	requiresFutureProjections: true,
 }
 
+const ELEMENT_PORTAL_FUTURENOW = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_FUTURENOW,
+	colour: Colour.Red,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
+
+const ELEMENT_PORTAL_BOUNCE = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_BOUNCE,
+	colour: Colour.Cyan,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
+
 const ELEMENT_POTION = {
 	colour: Colour.Purple,
 	draw: DRAW_CIRCLE,
@@ -950,6 +1023,86 @@ const ELEMENT_FROG = {
 	update: UPDATE_MOVER_BEING,
 	grab: GRAB_DRAG,
 	source: "images/Blank@0.25x.png",
+	width: 354/6/* - 11 - 7*/,
+	height: 254/6,
+	isMover: true,
+	//cutTop: 10,
+	//cutBottom: 10,
+	//cutRight: 20,
+	//cutLeft: 20,
+	showBounds: FROGGY_BOUNDS,
+}
+
+const ELEMENT_FROG_YELLOW = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Yellow/Other@0.25x.png",
+	width: 354/6/* - 11 - 7*/,
+	height: 254/6,
+	isMover: true,
+	//cutTop: 10,
+	//cutBottom: 10,
+	//cutRight: 20,
+	//cutLeft: 20,
+	showBounds: FROGGY_BOUNDS,
+}
+
+const ELEMENT_FROG_CYAN = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Cyan/Other@0.25x.png",
+	width: 354/6/* - 11 - 7*/,
+	height: 254/6,
+	isMover: true,
+	//cutTop: 10,
+	//cutBottom: 10,
+	//cutRight: 20,
+	//cutLeft: 20,
+	showBounds: FROGGY_BOUNDS,
+}
+
+const ELEMENT_FROG_PURPLE = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Purple/Other@0.25x.png",
+	width: 354/6/* - 11 - 7*/,
+	height: 254/6,
+	isMover: true,
+	//cutTop: 10,
+	//cutBottom: 10,
+	//cutRight: 20,
+	//cutLeft: 20,
+	showBounds: FROGGY_BOUNDS,
+}
+
+const ELEMENT_FROG_GREEN = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Green/Other@0.25x.png",
+	width: 354/6/* - 11 - 7*/,
+	height: 254/6,
+	isMover: true,
+	//cutTop: 10,
+	//cutBottom: 10,
+	//cutRight: 20,
+	//cutLeft: 20,
+	showBounds: FROGGY_BOUNDS,
+}
+
+const ELEMENT_FROG_BLACK = {
+	//filter: "invert(58%) sepia(77%) saturate(5933%) hue-rotate(336deg) brightness(110%) contrast(108%)",
+	draw: DRAW_IMAGE,
+	update: UPDATE_MOVER_BEING,
+	grab: GRAB_DRAG,
+	source: "images/Black/Other@0.25x.png",
 	width: 354/6/* - 11 - 7*/,
 	height: 254/6,
 	isMover: true,

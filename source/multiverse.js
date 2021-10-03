@@ -4,7 +4,10 @@ let PAUSED = URL_QUERY.has("paused")? URL_QUERY.get("paused").as(Boolean) : fals
 let FROGGY_BOUNDS = URL_QUERY.has("bounds")? URL_QUERY.get("bounds").as(Boolean) : false
 let ONION_SKIN = URL_QUERY.has("onion")? parseInt(URL_QUERY.get("onion")) : 0
 let TRAIL_LENGTH = URL_QUERY.has("trail")? parseInt(URL_QUERY.get("trail")) : 0
-let EXPERIMENT_ID = URL_QUERY.has("experiment")? URL_QUERY.get("experiment") : "headpoke"
+let EXPERIMENT_ID = URL_QUERY.has("experiment")? URL_QUERY.get("experiment") : ""
+let PORTAL_TYPE_ID = URL_QUERY.has("portal")? URL_QUERY.get("portal").as(UpperCase) : "MOVE"
+let MENU_ID = URL_QUERY.has("menu")? URL_QUERY.get("menu") : undefined
+let NO_FROG_SPAWN_ID = URL_QUERY.has("nofrog")? URL_QUERY.get("nofrog").as(Boolean) : false
 let STEP = false
 
 //=======//
@@ -18,19 +21,44 @@ const makeMultiverse = () => {
 	addWorld(multiverse, world)
 
 	// Menu
-	addMenuElement(ELEMENT_FROG, multiverse)
-	addMenuElement(ELEMENT_BOX, multiverse)
-	addMenuElement(ELEMENT_LEAF, multiverse)
-	addMenuElement(ELEMENT_PLATFORM, multiverse)
-	addMenuElement(ELEMENT_LILYPAD, multiverse)
-	addMenuElement(ELEMENT_POTION_ROTATE, multiverse)
-	addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
-	addMenuElement(ELEMENT_PORTAL_PASTNOWLINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastnowlinal")
-	addMenuElement(ELEMENT_PORTAL_PASTLINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastlinal")
-	addMenuElement(ELEMENT_PORTAL_FUTURELINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastlinal")
-	addMenuElement(ELEMENT_PORTAL_DIMENSION, multiverse, ELEMENT_SPAWNER_PORTAL, "Dimensial")
-	addMenuElement(ELEMENT_PORTAL_VOID, multiverse, ELEMENT_SPAWNER_PORTAL, "Voidal")
-	//addMenuElement(ELEMENT_BOX_DOUBLE, multiverse)
+	if (MENU_ID === undefined) {
+		addMenuElement(ELEMENT_FROG, multiverse)
+		addMenuElement(ELEMENT_BOX, multiverse)
+		addMenuElement(ELEMENT_LEAF, multiverse)
+		addMenuElement(ELEMENT_PLATFORM, multiverse)
+		addMenuElement(ELEMENT_LILYPAD, multiverse)
+		addMenuElement(ELEMENT_POTION_ROTATE, multiverse)
+		addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
+		addMenuElement(ELEMENT_PORTAL_PASTNOWLINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastnowlinal")
+		addMenuElement(ELEMENT_PORTAL_PASTLINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastlinal")
+		addMenuElement(ELEMENT_PORTAL_FUTURELINE, multiverse, ELEMENT_SPAWNER_PORTAL, "Pastlinal")
+		addMenuElement(ELEMENT_PORTAL_DIMENSION, multiverse, ELEMENT_SPAWNER_PORTAL, "Dimensial")
+		addMenuElement(ELEMENT_PORTAL_PASTNOW, multiverse, ELEMENT_SPAWNER_PORTAL)
+		//addMenuElement(ELEMENT_BOX_DOUBLE, multiverse)
+	}
+	else if (MENU_ID === "yellow") {
+		addMenuElement(ELEMENT_FROG_YELLOW, multiverse)
+		addMenuElement(ELEMENT_BOX, multiverse)
+		addMenuElement(ELEMENT_PLATFORM, multiverse)
+		addMenuElement(ELEMENT_LILYPAD, multiverse)
+		addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
+		addMenuElement(ELEMENT_PORTAL_FUTURENOW, multiverse, ELEMENT_SPAWNER_PORTAL)
+		addMenuElement(ELEMENT_PORTAL_PASTNOW, multiverse, ELEMENT_SPAWNER_PORTAL)
+	}
+	else if (MENU_ID === "cyan") {
+		addMenuElement(ELEMENT_FROG_CYAN, multiverse)
+		addMenuElement(ELEMENT_BOX, multiverse)
+		addMenuElement(ELEMENT_PLATFORM, multiverse)
+		addMenuElement(ELEMENT_LILYPAD, multiverse)
+	}
+	else if (MENU_ID === "rainbow") {
+		addMenuElement(ELEMENT_FROG, multiverse)
+		addMenuElement(ELEMENT_FROG_YELLOW, multiverse)
+		addMenuElement(ELEMENT_FROG_CYAN, multiverse)
+		addMenuElement(ELEMENT_FROG_PURPLE, multiverse)
+		addMenuElement(ELEMENT_FROG_GREEN, multiverse)
+		//addMenuElement(ELEMENT_FROG_BLACK, multiverse)
+	}
 
 	return multiverse
 }
@@ -94,8 +122,8 @@ const removeWorld = (multiverse, world) => {
 const replaceWorld = (target, source) => {
 	const tid = multiverse.worlds.indexOf(target)
 	const sid = multiverse.worlds.indexOf(source)
-	multiverse.worlds[tid] = source
-	multiverse.worlds[sid] = target
+	if (tid !== -1) multiverse.worlds[tid] = source
+	if (sid !== -1) multiverse.worlds[sid] = target
 }
 
 //===========//

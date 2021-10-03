@@ -152,6 +152,32 @@ const makeWorld = ({isProjection = false} = {}) => {
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 160}))
 		addAtom(world, makeAtom({...ELEMENT_PORTAL_PASTLINE, x: 300, y: 300}))
 	}
+	else if (EXPERIMENT_ID === "gfling") {
+		const ptype = PORTAL_TYPE_ID
+		const pelement = eval("ELEMENT_PORTAL_" + ptype)
+		const felement = eval("ELEMENT_FROG_" + MENU_ID.as(UpperCase))
+		if (!NO_FROG_SPAWN_ID) addAtom(world, makeAtom({...felement, x: 130, y: 90, flipX: true}))
+		
+		addAtom(world, makeAtom({...pelement, x: 100, y: 460}))
+		addAtom(world, makeAtom({...pelement, x: 400, y: 150, turns: 1}))
+	}
+	else if (EXPERIMENT_ID === "gfall") {
+		const ptype = PORTAL_TYPE_ID
+		const pelement = eval("ELEMENT_PORTAL_" + ptype)
+		const felement = eval("ELEMENT_FROG_" + MENU_ID.as(UpperCase))
+		if (!NO_FROG_SPAWN_ID) addAtom(world, makeAtom({...felement, x: 130, y: 90, flipX: true}))
+		addAtom(world, makeAtom({...pelement, x: 300, y: 160}))
+		addAtom(world, makeAtom({...pelement, x: 300, y: 300}))
+	}
+	else if (EXPERIMENT_ID === "gsimple") {
+		const ptype = PORTAL_TYPE_ID
+		const pelement = eval("ELEMENT_PORTAL_" + ptype)
+		const felement = eval("ELEMENT_FROG_" + MENU_ID.as(UpperCase))
+		if (!NO_FROG_SPAWN_ID) addAtom(world, makeAtom({...felement, x: 130, y: 90, flipX: true}))
+		//addAtom(world, makeAtom({...ELEMENT_LEAF, x: 20, y: 90, flipX: true}))
+		addAtom(world, makeAtom({...pelement, x: 100, y: 360}))
+		addAtom(world, makeAtom({...pelement, x: 300, y: 150}))
+	}
 	else {
 		// PORTAL FLING 1
 		/*addAtom(world, makeAtom({...ELEMENT_FROG, x: 130, y: 200, flipX: false}))
@@ -410,14 +436,46 @@ const killOrphans = (world) => {
 
 const updateWorld = (world) => {
 
+	if (world.overridePaused) return
+
 	if (world.pruneTimer !== undefined) {
 		if (world.pruneTimer <= 0) {
-			removeWorld(multiverse, world)
+			return removeWorld(multiverse, world)
 		}
 		else {
 			world.pruneTimer--
 		}
 
+	}
+
+	if (world.futureNowRecordings !== undefined) {
+
+		if (world.futureNowReplay !== undefined) {
+			
+			if (world.futureNowRecordings[world.futureNowReplay] === undefined) {
+				removeWorld(multiverse, world)
+				world.futureNowBaseWorld.overridePaused = false
+				return
+			}
+
+			replaceWorld(world.futureNowBaseWorld, world.futureNowRecordings[world.futureNowReplay])
+			world.futureNowRecordings[world.futureNowReplay].overridePaused = true
+			world.futureNowBaseWorld = world.futureNowRecordings[world.futureNowReplay]
+			world.futureNowReplay++
+		}
+		else {
+			const copy = cloneWorld(world)
+			world.futureNowRecordings.push(copy)
+			
+			if (world.futureNowRecordings.length >= 29) {
+
+				//removeWorld(multiverse, world.futureNowBaseWorld)
+				//world.futureNowRecordings = undefined
+				world.futureNowReplay = 0
+				
+				
+			}
+		}
 	}
 
 	if (!world.isProjection) {
