@@ -6,7 +6,7 @@ let ONION_SKIN = URL_QUERY.has("onion")? parseInt(URL_QUERY.get("onion")) : 0
 let TRAIL_LENGTH = URL_QUERY.has("trail")? parseInt(URL_QUERY.get("trail")) : 0
 let EXPERIMENT_ID = URL_QUERY.has("experiment")? URL_QUERY.get("experiment") : ""
 let PORTAL_TYPE_ID = URL_QUERY.has("portal")? URL_QUERY.get("portal").as(UpperCase) : "MOVE"
-let BONUS_ID = URL_QUERY.has("bonus")? URL_QUERY.get("bonus") : "slow"
+let BONUS_ID = URL_QUERY.has("bonus")? URL_QUERY.get("bonus") : ""
 let MENU_ID = URL_QUERY.has("menu")? URL_QUERY.get("menu") : undefined
 let NO_FROG_SPAWN_ID = URL_QUERY.has("nofrog")? URL_QUERY.get("nofrog").as(Boolean) : false
 let STEP = false
@@ -63,17 +63,16 @@ const makeMultiverse = () => {
 		addMenuElement(ELEMENT_BOX, multiverse)
 		addMenuElement(ELEMENT_PLATFORM, multiverse)
 		addMenuElement(ELEMENT_LILYPAD, multiverse)
+		addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
 		if (BONUS_ID === "slow") {
 			const slowverse = makeWorld()
 			slowverse.isSlow = true
 			addWorld(multiverse, slowverse)
-			addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
 		}
 		else if (BONUS_ID === "rewind") {
 			const slowverse = makeWorld()
 			slowverse.isReverse = true
 			addWorld(multiverse, slowverse)
-			addMenuElement(ELEMENT_PORTAL_MOVE, multiverse, ELEMENT_SPAWNER_PORTAL, "Portal")
 		}
 	}
 	else if (MENU_ID === "rainbow") {

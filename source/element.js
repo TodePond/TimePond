@@ -792,9 +792,9 @@ const PORTAL_PASTLINE = {
 	enter: (event) => {
 		
 		// UNCOMMENT WHEN NOT DOING NEXUS
-		/*if (event.world.bounceTimer !== undefined) {
+		if (event.world.bounceTimer !== undefined) {
 			return PORTAL_VOID.enter(event) 
-		}*/
+		}
 
 		const projection = event.world.pastProjections[30]
 
@@ -821,6 +821,76 @@ const PORTAL_PASTLINE = {
 
 		clone_froggy.variantParent = event.froggy
 		clone_world.bounceTimer = 31
+
+		//clone_froggy.d
+		//event.froggy.links[0].atom.d
+
+		//removeAtom(event.world, variant, {includingChildren: false, destroy: false})
+		//addAtom(clone_world, variant, {ignoreLinks: false})
+
+		//variant.portals[event.axis.back] = clone_target
+
+		/*clone_variant.parent = froggy
+		for (const link of froggy.links) {
+			if (link.atom === variant) {
+				link.atom = clone_variant
+			}
+		}*/
+		
+		//removeAtom(event.world, variant, {includingChildren: false})
+		//removeAtom(clone_world, clone_froggy)
+
+		
+
+		//moveAtomWorld(clone_variant, event.world, clone_world)
+
+
+
+		return
+	}
+}
+
+const PORTAL_REFROG = {
+	enter: (event) => {
+		return PORTAL_MOVE.enter(event)
+	}
+}
+
+const PORTAL_REWIND = {
+	enter: (event) => {
+		
+		/*if (event.world.bounceTimer !== undefined) {
+			return PORTAL_VOID.enter(event) 
+		}*/
+
+		const projection = event.world
+
+		
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//print(projection.id)
+
+		const clone_world = cloneWorld(projection)
+		savePastProjection(clone_world)
+		//clone_world.projection_skip = 1
+		
+		const clone_portal = clone_world.atoms[event.portal.atom_id]
+		const clone_target = clone_portal.target
+		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
+
+		if (!event.world.isProjection) {
+			addWorld(multiverse, clone_world)
+		}
+
+		clone_world.rewindAutoPlay = event.world.pastProjections.map(w => cloneWorld(w))
+
+		//PORTAL_MOVE.enter(event, {target: clone_target})
+
+		//clone_froggy.variantParent = event.froggy
+		//clone_world.bounceTimer = 31
 
 		//clone_froggy.d
 		//event.froggy.links[0].atom.d
@@ -1370,6 +1440,14 @@ const ELEMENT_PORTAL_PASTLINE = {
 	construct: makePortalTargeter(),
 }
 
+const ELEMENT_PORTAL_REWIND = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_REWIND,
+	colour: Colour.Yellow,
+	construct: makePortalTargeter(),
+}
+
+
 const ELEMENT_PORTAL_NEXUS = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_NEXUS,
@@ -1443,7 +1521,13 @@ const ELEMENT_PORTAL_MAD = {
 	requiresFutureProjections: true,
 }
 
-
+const ELEMENT_PORTAL_REFROG = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_REFROG,
+	colour: Colour.Black,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+}
 
 const ELEMENT_POTION = {
 	colour: Colour.Purple,

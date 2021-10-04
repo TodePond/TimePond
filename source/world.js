@@ -415,7 +415,7 @@ const savePastProjection = (world) => {
 	const projection = cloneWorld(world)
 	projection.isProjection = true
 	world.pastProjections.unshift(projection)
-	world.pastProjections.length = 60
+	//world.pastProjections.length = 60
 }
 
 const saveFutureProjection = (world, num=30, autoCatchUp=true) => {
@@ -457,6 +457,22 @@ const killOrphans = (world) => {
 const updateWorld = (world) => {
 
 	if (world.overridePaused) return
+
+	if (world.rewindAutoPlay !== undefined) {
+		//if (world.rewindI === undefined) world.rewindI = 0
+		const next = world.rewindAutoPlay.shift()
+		if (next !== undefined) {
+			world.atoms = next.atoms
+			world.rewindPrev = next
+			return
+		}
+		world.rewindAutoPlay = undefined
+		savePastProjection(world)
+		
+		const id = multiverse.worlds.indexOf(world)
+		multiverse.worlds[id] = cloneWorld(world.rewindPrev)
+	}
+
 	if (world.isSlow) {
 		if (world.slowTick === undefined) {
 			world.slowTick = true
