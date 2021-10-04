@@ -1,7 +1,42 @@
 
 const moverUpdate = (self, world) => {
+
+	if (self.refrogTrackPlay === true) {
+		if (!(self.refrogTrack instanceof Array) && self.refrogTrack instanceof Object) {
+			self.refrogTrack = Array.from(self.refrogTrack)
+		}
+		const step = self.refrogTrack.pop()
+		const prev = self.refrogTrackPrev
+		if (prev !== undefined && step !== undefined) {
+			const dx = step.x - prev.x
+			const dy = step.y - prev.y
+			self.dx = dx
+			self.dy = dy
+			self.nextdx = dx
+			self.nextdy = dy
+		}
+		self.refrogTrackPrev = step
+
+		if (self.refrogTrack.length === 0) {
+			self.refrogTrackPlay = undefined
+			self.refrogTrack = undefined
+			self.refrogTrackPrev = undefined
+		}
+		
+	}
+
 	//self.prevBounds = {...getBounds(self)}
-	moverMove(self, world, self.dx, self.dy)
+	const hit = moverMove(self, world, self.dx, self.dy)
+	if (hit) {
+		self.refrogTrackPlay = undefined
+		self.refrogTrack = undefined
+		self.refrogTrackPrev = undefined
+
+		if (world.bonusAtoms !== undefined && world.bonusAtoms.includes(self)) {
+			world.rewindPrev = undefined
+			world.rewindAutoPlay = undefined
+		}
+	}
 }
 
 const moverMove = (self, world, dx, dy) => {
@@ -35,6 +70,7 @@ const moverMove = (self, world, dx, dy) => {
 	//===================================================//
 	// COLLIDE with the closest atoms to me in each axis //
 	//===================================================//
+	let iveReallyHitSomething = false
 	for (const axis of axes) {
 
 		let iveHitSomething = false
@@ -136,6 +172,7 @@ const moverMove = (self, world, dx, dy) => {
 			
 			// Update other blocker infos maybe? nah they can do it!
 			iveHitSomething = true
+			iveReallyHitSomething = true
 		}
 
 	}
@@ -174,6 +211,8 @@ const moverMove = (self, world, dx, dy) => {
 		turnAtom(self, self.nextturns, true, true, world)
 		self.nextturns = 0
 	}
+
+	return iveReallyHitSomething
 }
 
 const makeAxesInfo = (x, y, dx, dy) => {

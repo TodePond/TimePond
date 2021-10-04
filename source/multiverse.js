@@ -2,6 +2,7 @@ const URL_QUERY = new URLSearchParams(window.location.search)
 let SPEED_MOD = URL_QUERY.has("speed")? parseFloat(URL_QUERY.get("speed")) : 1
 let PAUSED = URL_QUERY.has("paused")? URL_QUERY.get("paused").as(Boolean) : false
 let FROGGY_BOUNDS = URL_QUERY.has("bounds")? URL_QUERY.get("bounds").as(Boolean) : false
+let INVERT = URL_QUERY.has("invert")? URL_QUERY.get("invert").as(Boolean) : false
 let ONION_SKIN = URL_QUERY.has("onion")? parseInt(URL_QUERY.get("onion")) : 0
 let TRAIL_LENGTH = URL_QUERY.has("trail")? parseInt(URL_QUERY.get("trail")) : 0
 let EXPERIMENT_ID = URL_QUERY.has("experiment")? URL_QUERY.get("experiment") : ""
@@ -75,6 +76,13 @@ const makeMultiverse = () => {
 			addWorld(multiverse, slowverse)
 		}
 	}
+	else if (MENU_ID === "black") {
+		addMenuElement(ELEMENT_FROG_BLACK, multiverse)
+		addMenuElement(ELEMENT_PORTAL_REFROG, multiverse, ELEMENT_SPAWNER_PORTAL)
+		//addMenuElement(ELEMENT_BOX, multiverse)
+		//addMenuElement(ELEMENT_PLATFORM, multiverse)
+		//addMenuElement(ELEMENT_LILYPAD, multiverse)
+	}
 	else if (MENU_ID === "rainbow") {
 		addMenuElement(ELEMENT_FROG, multiverse)
 		addMenuElement(ELEMENT_FROG_YELLOW, multiverse)
@@ -110,7 +118,7 @@ const makeMultiverseCanvas = (multiverse) => {
 	const stage = Stage.make()
 	stage.tick = () => {}
 	const {context, canvas} = stage
-	canvas.style["background-color"] = Colour.Black
+	canvas.style["background-color"] = INVERT? Colour.Grey : Colour.Black
 	//canvas.style["image-rendering"] = "pixelated"
 	on.resize(() => {
 		const multiverseHeight = getMultiverseHeight(multiverse, canvas)
@@ -261,6 +269,7 @@ const updateCursor = (multiverse, context) => {
 			
 			// If there's room, drop it!
 			if (canDrop) {
+				hand.atom.refrogTrack = undefined
 				hand.atom = undefined
 			}
 

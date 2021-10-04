@@ -424,6 +424,9 @@ const saveFutureProjection = (world, num=30, autoCatchUp=true) => {
 	projection.isProjection = true
 	world.futureProjection = projection
 	projection.realWorld = world
+	if (world.futureProjLength !== undefined) {
+		num = world.futureProjLength
+	}
 	for (let i = 0; i < num; i++) {
 		//const p = cloneWorld(world.futureProjection)
 		//p.isProjection = true
@@ -456,14 +459,45 @@ const killOrphans = (world) => {
 
 const updateWorld = (world) => {
 
+	for (const atom of world.atoms) {
+		if (atom.futureProjLength !== undefined) {
+			world.futureProjLength = atom.futureProjLength
+			break
+		}
+	}
+
 	if (world.overridePaused) return
 
 	if (world.rewindAutoPlay !== undefined) {
+
+		if (world.bonusAtoms !== undefined) {
+			for (const ba of world.bonusAtoms) {
+				for (const a of world.atoms) {
+					if (a === ba) continue
+					if (a.update === UPDATE_MOVER_BEING) {
+
+						if (atomOverlaps(ba, a)) {
+							world.rewindPrev = undefined
+							world.rewindAutoPlay = undefined
+						}
+					}
+				}
+			}
+		}
+
 		//if (world.rewindI === undefined) world.rewindI = 0
 		const next = world.rewindAutoPlay.shift()
 		if (next !== undefined) {
 			world.atoms = next.atoms
 			world.rewindPrev = next
+			if (world.bonusAtoms !== undefined) {
+				world.atoms.push(...world.bonusAtoms)
+				for (const a of world.bonusAtoms) {
+					a.nextdx = a.dx
+					a.nextdy = a.dy
+					updateAtom(a, world)
+				}
+			}
 			return
 		}
 		world.rewindAutoPlay = undefined
@@ -640,6 +674,20 @@ const updateWorld = (world) => {
 	}
 
 	killOrphans(world)
+	
+
+	if (world.atoms.some(a => a.requiresRefrogTracking)) {
+		for (const atom of world.atoms) {
+			if (!(atom.refrogTrack instanceof Array) && atom.refrogTrack instanceof Object) {
+				atom.refrogTrack = Array.from(atom.refrogTrack)
+			}
+			if (atom.refrogTrackPlay === true) continue
+			if (atom.refrogTrack === undefined) {
+				atom.refrogTrack = []
+			}
+			atom.refrogTrack.push({x: atom.x, y: atom.y})
+		}
+	}
 }
 
 const updateWorldLinks = (world) => {
@@ -654,7 +702,7 @@ const drawWorld = (world, context, colourBackground = true) => {
 
 
 	if (colourBackground) {
-		context.fillStyle = Colour.Grey
+		context.fillStyle = INVERT? Colour.Silver : Colour.Grey
 		context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 	}
 

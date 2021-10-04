@@ -155,6 +155,7 @@ const drawAtom = (atom, context) => {
 // Usefuls //
 //=========//
 const linkAtom = (atom, latom, offset={}, transfer={}) => {
+	if (atom === undefined) return
 	const trans = {...transfer}
 	for (const key of LINKED_PROPERTIES) {
 		if (trans[key] === undefined) {

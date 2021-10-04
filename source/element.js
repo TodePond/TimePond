@@ -852,7 +852,82 @@ const PORTAL_PASTLINE = {
 
 const PORTAL_REFROG = {
 	enter: (event) => {
-		return PORTAL_MOVE.enter(event)
+		const variant = PORTAL_MOVE.enter(event)
+		if (variant !== undefined) {
+			variant.refrogTrackPlay = true
+		}
+	}
+}
+
+const PORTAL_INVERT = {
+	enter: (event) => {
+		
+		/*if (event.world.bounceTimer !== undefined) {
+			return PORTAL_VOID.enter(event) 
+		}*/
+
+		const projection = event.world
+
+		
+		if (projection === undefined) {
+			PORTAL_VOID.enter(event) 
+			return
+		}
+
+		//print(projection.id)
+
+		const clone_world = cloneWorld(projection)
+		savePastProjection(clone_world)
+		//clone_world.projection_skip = 1
+		
+		const clone_portal = clone_world.atoms[event.portal.atom_id]
+		const clone_target = clone_portal.target
+		const clone_froggy = clone_world.atoms[event.froggy.atom_id]
+
+		if (!event.world.isProjection) {
+			addWorld(multiverse, clone_world)
+		}
+
+		clone_world.rewindAutoPlay = event.world.pastProjections.map(w => cloneWorld(w))
+		//replaceWorld(clone_world, event.world)
+		//event.world.isHidden = true
+		//event.world.pruneTimer = 200
+		//PORTAL_MOVE.enter(event, {target: clone_target})
+
+		//clone_froggy.variantParent = event.froggy
+		//clone_world.bounceTimer = 31
+
+		//clone_froggy.d
+		//event.froggy.links[0].atom.d
+
+		//removeAtom(event.world, variant, {includingChildren: false, destroy: false})
+		//addAtom(clone_world, variant, {ignoreLinks: false})
+
+		//variant.portals[event.axis.back] = clone_target
+
+		/*clone_variant.parent = froggy
+		for (const link of froggy.links) {
+			if (link.atom === variant) {
+				link.atom = clone_variant
+			}
+		}*/
+		
+		//removeAtom(event.world, variant, {includingChildren: false})
+		//removeAtom(clone_world, clone_froggy)
+
+		
+
+		//moveAtomWorld(clone_variant, event.world, clone_world)
+
+		const variant = PORTAL_MOVE.enter(event)
+		moveAtomWorld(variant, event.world, clone_world)
+		if (clone_world.bonusAtoms === undefined) {
+			clone_world.bonusAtoms = []
+		}
+		clone_world.bonusAtoms.push(variant)
+
+
+		return
 	}
 }
 
@@ -1027,9 +1102,10 @@ const PORTAL_MOVE = {
 	enter: ({portal, pbounds, froggy, world, axis, blockers}, {target = portal.target} = {}) => {
 		if (target !== undefined) {
 
-			if (world.isProjection) {
+			// UNCOMMENT FOR SOME THINGS!?!?!
+			/*if (world !== undefined && world.isProjection) {
 				return
-			}
+			}*/
 
 			const variant = cloneAtom(froggy)
 			variant.fling = target.turns - portal.turns
@@ -1043,7 +1119,9 @@ const PORTAL_MOVE = {
 			variant[axis.cutFrontName] = 0
 
 			variant.links = []
-			variant.update = froggy.world.atoms.includes(froggy)? UPDATE_NONE : froggy.update
+			if (froggy !== undefined && froggy.world !== undefined) {
+				variant.update = froggy.world.atoms.includes(froggy)? UPDATE_NONE : froggy.update
+			}
 
 			//variant.portals.d
 			//froggy.portals.d
@@ -1265,7 +1343,10 @@ const COLLIDED_PORTAL = ({self, bself, atom, axis, baxis, world, bounds, nbounds
 	if (atom.portal.move !== undefined) atom.portal.move()
 	if (atom.portal.moveIn !== undefined) atom.portal.moveIn()
 
-	if (bself.portals[axis.front] !== atom) throw new Error(`[TimePond] An atom tried to go through two portals in the same direction.`)
+	if (bself.portals[axis.front] !== atom) {
+		return true
+		//throw new Error(`[TimePond] An atom tried to go through two portals in the same direction.`)
+	}
 
 	if (induceError) return "induce"
 	return false
@@ -1320,7 +1401,7 @@ const ELEMENT_PLATFORM = {
 }
 
 const ELEMENT_VOID = {
-	colour: Colour.Black,
+	colour: INVERT? Colour.Black : Colour.Black,
 	draw: DRAW_RECTANGLE,
 	update: UPDATE_STATIC,
 	grab: GRAB_STATIC,
@@ -1367,11 +1448,11 @@ const ELEMENT_PORTAL = {
 			offset: {width: (w) => w, y: (y) => y-2, x: (x) => x, height: () => 2,},
 		},*/
 		{
-			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black, foo: "hi"},
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: INVERT? Colour.White : Colour.Black, foo: "hi"},
 			offset: {width: () => 2, x: (x) => x-2},
 		},
 		{
-			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: Colour.Black, foo: "hi"},
+			element: {...ELEMENT_PLATFORM, grab: GRAB_LINKEE, colour: INVERT? Colour.White : Colour.Black, foo: "hi"},
 			offset: {width: () => 2, x: (x) => x+125},
 		},
 		/*{
@@ -1496,6 +1577,17 @@ const ELEMENT_PORTAL_BOUNCE = {
 	requiresFutureProjections: true,
 }
 
+const ELEMENT_PORTAL_INVERT = {
+	...ELEMENT_PORTAL,
+	portal: PORTAL_INVERT,
+	colour: Colour.Black,
+	construct: makePortalTargeter(),
+	requiresFutureProjections: true,
+	futureProjLength: 30,
+	requiresRefrogTracking: true,
+}
+
+
 const ELEMENT_PORTAL_FADE = {
 	...ELEMENT_PORTAL,
 	portal: PORTAL_FADE,
@@ -1526,7 +1618,8 @@ const ELEMENT_PORTAL_REFROG = {
 	portal: PORTAL_REFROG,
 	colour: Colour.Black,
 	construct: makePortalTargeter(),
-	requiresFutureProjections: true,
+	//requiresFutureProjections: true,
+	requiresRefrogTracking: true,
 }
 
 const ELEMENT_POTION = {
