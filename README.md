@@ -8,3 +8,4 @@ It lets you play with time-travelling frogs!
 
 My patrons voted for it at [patreon.com/todepond](https://patreon.com/todepond)
 
+Most of the time-travel experiments are hidden behind URL parameters. Sorry about that. If you want me to update this so it's easier to use, let me know: I'm [@TodePond](https://twitter.com/todepond).
