@@ -8,4 +8,9 @@ It lets you play with time-travelling frogs!
 
 My patrons voted for it at [patreon.com/todepond](https://patreon.com/todepond)
 
-Most of the time-travel experiments are hidden behind URL parameters. Sorry about that. If you want me to update this so it's easier to use, let me know: I'm [@TodePond](https://twitter.com/todepond).
+Most of the time-travel experiments are hidden behind URL parameters. Sorry about that!<br>
+Here are some things you can try out though:
+
+|  | Simple | Right | Fling | Fall | Bump |
+| --- | --- | --- | --- | --- | --- |
+| Teleport | [Teleport + Simple](https://timepond.cool?experiment=gsimple&menu=yellow&portal=move) | [Teleport + Right](https://timepond.cool?experiment=gright&menu=yellow&portal=move) | [Teleport + Fling](https://timepond.cool?experiment=gfling&menu=yellow&portal=move) | [Teleport + Fall](https://timepond.cool?experiment=gfall&menu=yellow&portal=move) | [Teleport + Bump](https://timepond.cool?experiment=ggen&menu=yellow&portal=move) | 
