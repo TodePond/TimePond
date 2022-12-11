@@ -1,4 +1,4 @@
-<img align="right" height="100" src="http://todepond.com/IMG/TimePondLegend@0.5x.png">
+<img align="right" height="100" src="http://img.todepond.com/IMG/TimePondLegend@0.5x.png">
 
 # TimePond
 TimePond is a time-travel physics engine.<br>
